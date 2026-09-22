@@ -29,10 +29,11 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
   const [attachExternalIpOpen, setAttachExternalIpOpen] = useState(false);
   const [detachExternalIpOpen, setDetachExternalIpOpen] = useState(false);
   const { runPowerAction } = useVmPowerAction();
-  const { data: externalIpAttachments = [] } = useExternalIPAttachments(
-    { filter: computeInstanceAttachmentFilter(vm.id) },
-    { enabled: Boolean(vm.status?.externalIpAddress) },
-  );
+  const { data: externalIpAttachments = [], isLoading: isLoadingExternalIpAttachments } =
+    useExternalIPAttachments(
+      { filter: computeInstanceAttachmentFilter(vm.id) },
+      { enabled: Boolean(vm.status?.externalIpAddress) },
+    );
 
   const state = vm.status?.state;
   const canStart = state === ComputeInstanceState.STOPPED;
@@ -113,25 +114,29 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
           Restart
         </Button>
         <Button
-            variant="secondary"
-            icon={<GlobeIcon />}
-            isDisabled={isDetachingExternalIp || (!hasAttachedExternalIp && !canAttachExternalIp)}
-            isLoading={isDetachingExternalIp}
-            onClick={() => {
-              if (hasAttachedExternalIp && externalIpAttachment) {
-                setDetachExternalIpOpen(true);
-              } else if (canAttachExternalIp) {
-                setAttachExternalIpOpen(true);
-              }
-            }}
-          >
-            {t(
-              isDetachingExternalIp
-                ? 'Detaching external IP'
-                : hasAttachedExternalIp
-                  ? 'Detach external IP'
-                  : 'Attach external IP',
-            )}
+          variant="secondary"
+          icon={<GlobeIcon />}
+          isDisabled={
+            isLoadingExternalIpAttachments ||
+            isDetachingExternalIp ||
+            (!hasAttachedExternalIp && !canAttachExternalIp)
+          }
+          isLoading={isLoadingExternalIpAttachments || isDetachingExternalIp}
+          onClick={() => {
+            if (hasAttachedExternalIp && externalIpAttachment) {
+              setDetachExternalIpOpen(true);
+            } else if (canAttachExternalIp) {
+              setAttachExternalIpOpen(true);
+            }
+          }}
+        >
+          {t(
+            isDetachingExternalIp
+              ? 'Detaching external IP'
+              : hasAttachedExternalIp
+                ? 'Detach external IP'
+                : 'Attach external IP',
+          )}
         </Button>
         <Button
           variant="danger"

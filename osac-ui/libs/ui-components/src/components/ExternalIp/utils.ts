@@ -1,7 +1,6 @@
 import type { TFunction } from 'i18next';
 
-import { ExternalIPState } from '@osac/types';
-import type { ExternalIP } from '@osac/types';
+import { type ExternalIP, ExternalIPState } from '@osac/types';
 import type { ExternalIpAttachedTargetKind } from '@osac/ui-components/api/v1/external-ip-data';
 
 export const externalIpDisplayName = (externalIp: ExternalIP): string =>

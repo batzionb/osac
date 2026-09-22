@@ -3,7 +3,8 @@ import { useMemo } from 'react';
 import type { ExternalIP, ExternalIPAttachment, ExternalIPPool, NATGateway } from '@osac/types';
 import { ExternalIPAttachments, ExternalIPPools, ExternalIPs, NATGateways } from '@osac/types';
 
-import { cel } from '../cel';
+import { cel, escapeCelStringLiteral } from '../cel';
+import type { CelFilter } from '../cel';
 import { type ListParams } from '../types';
 import { useListResource } from '../use-resource';
 
@@ -28,6 +29,9 @@ export const poolIdsFilter = (ids: readonly string[]) =>
 
 export const attachmentExternalIpIdsFilter = (ids: readonly string[]) =>
   cel<ExternalIPAttachment>((filter) => filter.field('spec.externalIp.id').isIn(ids));
+
+export const computeInstanceAttachmentFilter = (computeInstanceId: string) =>
+  `this.spec.compute_instance.id == "${escapeCelStringLiteral(computeInstanceId)}"` as CelFilter;
 
 export const natGatewayExternalIpIdsFilter = (ids: readonly string[]) =>
   cel<NATGateway>((filter) => filter.field('spec.externalIp.id').isIn(ids));

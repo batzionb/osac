@@ -11,7 +11,10 @@ import type { ComputeInstance } from '@osac/types';
 import { ComputeInstanceState } from '@osac/types';
 
 import AttachExternalIpModal from './AttachExternalIpModal';
+import DetachExternalIpModal from './DetachExternalIpModal';
 import VmDeleteConfirmModal from './VmDeleteConfirmModal';
+import { useExternalIPAttachments } from '../../../api/v1/external-ip';
+import { computeInstanceAttachmentFilter } from '../../../api/v1/external-ip-data';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { useVmPowerAction } from '../useVmPowerAction';
 
@@ -24,7 +27,12 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
   const navigate = useNavigate();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [attachExternalIpOpen, setAttachExternalIpOpen] = useState(false);
+  const [detachExternalIpOpen, setDetachExternalIpOpen] = useState(false);
   const { runPowerAction } = useVmPowerAction();
+  const { data: externalIpAttachments = [] } = useExternalIPAttachments(
+    { filter: computeInstanceAttachmentFilter(vm.id) },
+    { enabled: Boolean(vm.status?.externalIpAddress) },
+  );
 
   const state = vm.status?.state;
   const canStart = state === ComputeInstanceState.STOPPED;
@@ -34,6 +42,8 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
   const canDelete = state !== ComputeInstanceState.DELETING;
   const canAttachExternalIp =
     state === ComputeInstanceState.RUNNING && !vm.status?.externalIpAddress;
+  const externalIpAttachment = externalIpAttachments[0];
+  const hasAttachedExternalIp = Boolean(vm.status?.externalIpAddress);
 
   return (
     <>
@@ -49,6 +59,13 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
           vm={vm}
           onClose={() => setAttachExternalIpOpen(false)}
           onSuccess={() => setAttachExternalIpOpen(false)}
+        />
+      )}
+      {detachExternalIpOpen && externalIpAttachment && (
+        <DetachExternalIpModal
+          attachment={externalIpAttachment}
+          externalIpAddress={vm.status?.externalIpAddress}
+          onClose={() => setDetachExternalIpOpen(false)}
         />
       )}
       <Flex
@@ -95,14 +112,16 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
         <Button
           variant="secondary"
           icon={<GlobeIcon />}
-          isDisabled={!canAttachExternalIp}
+          isDisabled={!hasAttachedExternalIp && !canAttachExternalIp}
           onClick={() => {
-            if (canAttachExternalIp) {
+            if (hasAttachedExternalIp && externalIpAttachment) {
+              setDetachExternalIpOpen(true);
+            } else if (canAttachExternalIp) {
               setAttachExternalIpOpen(true);
             }
           }}
         >
-          {t('Attach external IP')}
+          {t(hasAttachedExternalIp ? 'Detach external IP' : 'Attach external IP')}
         </Button>
         <Button
           variant="danger"

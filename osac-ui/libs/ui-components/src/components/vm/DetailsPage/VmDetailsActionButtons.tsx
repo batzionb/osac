@@ -126,7 +126,13 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
               }
             }}
           >
-            {t(hasAttachedExternalIp ? 'Detach external IP' : 'Attach external IP')}
+            {t(
+              isDetachingExternalIp
+                ? 'Detaching external IP'
+                : hasAttachedExternalIp
+                  ? 'Detach external IP'
+                  : 'Attach external IP',
+            )}
           </Button>
           {isDetachingExternalIp ? <div>{t('Detaching...')}</div> : null}
         </div>

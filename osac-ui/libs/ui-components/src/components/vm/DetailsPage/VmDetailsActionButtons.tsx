@@ -112,26 +112,24 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
         >
           Restart
         </Button>
-        <Button
-          variant="secondary"
-          icon={<GlobeIcon />}
-          isDisabled={isDetachingExternalIp || (!hasAttachedExternalIp && !canAttachExternalIp)}
-          onClick={() => {
-            if (hasAttachedExternalIp && externalIpAttachment) {
-              setDetachExternalIpOpen(true);
-            } else if (canAttachExternalIp) {
-              setAttachExternalIpOpen(true);
-            }
-          }}
-        >
-          {t(
-            isDetachingExternalIp
-              ? 'Detaching external IP'
-              : hasAttachedExternalIp
-                ? 'Detach external IP'
-                : 'Attach external IP',
-          )}
-        </Button>
+        <div>
+          <Button
+            variant="secondary"
+            icon={<GlobeIcon />}
+            isDisabled={isDetachingExternalIp || (!hasAttachedExternalIp && !canAttachExternalIp)}
+            isLoading={isDetachingExternalIp}
+            onClick={() => {
+              if (hasAttachedExternalIp && externalIpAttachment) {
+                setDetachExternalIpOpen(true);
+              } else if (canAttachExternalIp) {
+                setAttachExternalIpOpen(true);
+              }
+            }}
+          >
+            {t(hasAttachedExternalIp ? 'Detach external IP' : 'Attach external IP')}
+          </Button>
+          {isDetachingExternalIp ? <div>{t('Detaching...')}</div> : null}
+        </div>
         <Button
           variant="danger"
           icon={<DumpsterIcon />}

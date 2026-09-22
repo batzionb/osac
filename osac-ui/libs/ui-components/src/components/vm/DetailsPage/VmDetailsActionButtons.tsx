@@ -8,7 +8,7 @@ import StopIcon from '@patternfly/react-icons/dist/esm/icons/stop-icon';
 import SyncAltIcon from '@patternfly/react-icons/dist/esm/icons/sync-alt-icon';
 
 import type { ComputeInstance } from '@osac/types';
-import { ComputeInstanceState } from '@osac/types';
+import { ComputeInstanceState, ExternalIPAttachmentState } from '@osac/types';
 
 import AttachExternalIpModal from './AttachExternalIpModal';
 import DetachExternalIpModal from './DetachExternalIpModal';
@@ -44,6 +44,9 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
     state === ComputeInstanceState.RUNNING && !vm.status?.externalIpAddress;
   const externalIpAttachment = externalIpAttachments[0];
   const hasAttachedExternalIp = Boolean(vm.status?.externalIpAddress);
+  const isDetachingExternalIp =
+    externalIpAttachment?.status?.state ===
+    ExternalIPAttachmentState.EXTERNAL_IP_ATTACHMENT_STATE_DELETING;
 
   return (
     <>
@@ -112,7 +115,7 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
         <Button
           variant="secondary"
           icon={<GlobeIcon />}
-          isDisabled={!hasAttachedExternalIp && !canAttachExternalIp}
+          isDisabled={isDetachingExternalIp || (!hasAttachedExternalIp && !canAttachExternalIp)}
           onClick={() => {
             if (hasAttachedExternalIp && externalIpAttachment) {
               setDetachExternalIpOpen(true);
@@ -121,7 +124,13 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
             }
           }}
         >
-          {t(hasAttachedExternalIp ? 'Detach external IP' : 'Attach external IP')}
+          {t(
+            isDetachingExternalIp
+              ? 'Detaching external IP'
+              : hasAttachedExternalIp
+                ? 'Detach external IP'
+                : 'Attach external IP',
+          )}
         </Button>
         <Button
           variant="danger"

@@ -2,8 +2,8 @@ import type { TFunction } from 'i18next';
 
 import { ExternalIPState } from '@osac/types';
 
-import { useTranslation } from '../../hooks/useTranslation';
-import { ResourceStatusLabel, type StatusLabelProps } from '../Resource/ResourceStatusLabel';
+import { useTranslation } from '../../../hooks/useTranslation';
+import { ResourceStatusLabel, type StatusLabelProps } from '../../Resource/ResourceStatusLabel';
 
 interface ExternalIpStatusLabelProps {
   state?: ExternalIPState;

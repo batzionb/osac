@@ -20,7 +20,6 @@ import {
   computeInstanceAttachmentFilter,
   natGatewayExternalIpIdsFilter,
   poolIdsFilter,
-  uniqueSortedIds,
   useExternalIpsData,
 } from './external-ip-data';
 import { createMockConnectTransport } from '../../test-utils/createMockConnectTransport';
@@ -67,13 +66,6 @@ const makeNatGateway = (id: string, externalIpId: string, virtualNetworkId: stri
   });
 
 describe('external IP list join helpers', () => {
-  it('deduplicates and sorts ids', () => {
-    expect(uniqueSortedIds(['pool-b', undefined, 'pool-a', 'pool-b', ''])).toEqual([
-      'pool-a',
-      'pool-b',
-    ]);
-  });
-
   it('filters pools, attachments, and NAT gateways by the displayed ids', () => {
     expect(poolIdsFilter(['pool-2', 'pool-1'])).toBe('this.id in ["pool-2", "pool-1"]');
     expect(attachmentExternalIpIdsFilter(['eip-2', 'eip-1'])).toBe(
@@ -92,7 +84,6 @@ describe('external IP list join helpers', () => {
     expect(buildAttachedTargetsByExternalIpId([makeAttachment('eip-1', 'vm-1', 'web-1')])).toEqual({
       'eip-1': {
         kind: 'computeInstance',
-        id: 'vm-1',
         name: 'web-1',
         href: '/vms/vm-1',
       },
@@ -105,7 +96,6 @@ describe('external IP list join helpers', () => {
     ).toEqual({
       'eip-2': {
         kind: 'natGateway',
-        id: 'nat-1',
         name: 'edge-nat',
         href: '/networking/virtual-networks/vn-1',
       },
@@ -168,7 +158,6 @@ describe('useExternalIpsData', () => {
 
     expect(result.current.attachedTargetsByExternalIpId['eip-2']).toEqual({
       kind: 'natGateway',
-      id: 'nat-1',
       name: 'edge-nat',
       href: '/networking/virtual-networks/vn-1',
     });

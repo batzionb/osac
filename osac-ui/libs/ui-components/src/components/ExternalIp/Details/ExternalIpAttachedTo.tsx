@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 import { Content } from '@patternfly/react-core';
 
-import { attachedTargetKindLabel } from './utils';
-import type { ExternalIpAttachedTarget } from '../../api/v1/external-ip-data';
-import { useTranslation } from '../../hooks/useTranslation';
+import type { ExternalIpAttachedTarget } from '../../../api/v1/external-ip-data';
+import { useTranslation } from '../../../hooks/useTranslation';
+import { attachedTargetKindLabel } from '../utils';
 
 interface ExternalIpAttachedToProps {
   attached?: boolean;
@@ -22,10 +22,7 @@ const ExternalIpAttachedTo = ({ attached, target }: ExternalIpAttachedToProps) =
   return (
     <Content component="small">
       {kindLabel}{' '}
-      <Link
-        to={target.href}
-        aria-label={t('{{kind}}: {{name}}', { kind: kindLabel, name: target.name })}
-      >
+      <Link to={target.href} aria-label={`${kindLabel}: ${target.name}`}>
         {target.name}
       </Link>
     </Content>

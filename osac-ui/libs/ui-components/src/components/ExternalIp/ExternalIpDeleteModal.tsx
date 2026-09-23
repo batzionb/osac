@@ -1,7 +1,6 @@
 import { type ExternalIP, ExternalIPs } from '@osac/types';
 import DeleteResourceModal from '@osac/ui-components/components/Resource/DeleteResourceModal.tsx';
 
-import { canDeleteExternalIp, externalIpDisplayName } from './utils';
 import { useDeleteResource } from '../../api/use-resource';
 import { useTranslation } from '../../hooks/useTranslation';
 
@@ -17,16 +16,10 @@ const ExternalIpDeleteModal = ({ externalIp, onClose, onSuccess }: ExternalIpDel
 
   return (
     <DeleteResourceModal
-      resourceName={externalIpDisplayName(externalIp)}
-      label={
-        canDeleteExternalIp(externalIp)
-          ? t(
-              'This permanently releases the external IP back to its pool. This action cannot be undone.',
-            )
-          : t(
-              'This external IP is in use and cannot be deleted until it is detached from a workload.',
-            )
-      }
+      resourceName={externalIp.metadata?.name ?? ''}
+      label={t(
+        'This permanently releases the external IP back to its pool. This action cannot be undone.',
+      )}
       errorLabel={t('Failed to delete external IP')}
       onClose={onClose}
       onSuccess={onSuccess}

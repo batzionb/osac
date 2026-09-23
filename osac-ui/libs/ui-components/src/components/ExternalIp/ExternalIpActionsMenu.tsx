@@ -5,7 +5,7 @@ import { EllipsisVIcon } from '@patternfly/react-icons/dist/esm/icons/ellipsis-v
 import type { ExternalIP } from '@osac/types';
 
 import ExternalIpDeleteModal from './ExternalIpDeleteModal';
-import { canDeleteExternalIp, externalIpDisplayName } from './utils';
+import { deleteDisabledReason } from './utils';
 import { useTranslation } from '../../hooks/useTranslation';
 
 interface ExternalIpActionsMenuProps {
@@ -16,8 +16,8 @@ const ExternalIpActionsMenu = ({ externalIp }: ExternalIpActionsMenuProps) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const displayName = externalIpDisplayName(externalIp);
-  const canDelete = canDeleteExternalIp(externalIp);
+  const deleteDisabledReasonText = deleteDisabledReason(externalIp, t);
+  const canDelete = !deleteDisabledReasonText;
 
   return (
     <>
@@ -38,7 +38,7 @@ const ExternalIpActionsMenu = ({ externalIp }: ExternalIpActionsMenuProps) => {
             variant="plain"
             onClick={() => setOpen((wasOpen) => !wasOpen)}
             isExpanded={open}
-            aria-label={t('Actions for {{name}}', { name: displayName })}
+            aria-label={t('Actions for {{name}}', { name: externalIp.metadata?.name })}
           >
             <EllipsisVIcon />
           </MenuToggle>
@@ -47,10 +47,9 @@ const ExternalIpActionsMenu = ({ externalIp }: ExternalIpActionsMenuProps) => {
       >
         <DropdownList>
           <DropdownItem
-            value="delete"
-            isDanger
+            isDanger={canDelete}
             isDisabled={!canDelete}
-            description={canDelete ? undefined : t('Detach this external IP before deleting it.')}
+            description={deleteDisabledReasonText}
             onClick={() => {
               if (!canDelete) {
                 return;

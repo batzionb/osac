@@ -16,13 +16,13 @@ export type ExternalIpAttachedTargetKind =
 
 export interface ExternalIpAttachedTarget {
   kind: ExternalIpAttachedTargetKind;
-  id: string;
   name: string;
   href: string;
 }
 
-export const uniqueSortedIds = (values: Array<string | undefined>): string[] =>
-  [...new Set(values.filter((id): id is string => Boolean(id)))].sort();
+export const uniqueIds = (values: Array<string | undefined>): string[] => [
+  ...new Set(values.filter((id): id is string => Boolean(id))),
+];
 
 export const poolIdsFilter = (ids: readonly string[]) =>
   cel<ExternalIPPool>((filter) => filter.field('id').isIn(ids));
@@ -46,24 +46,21 @@ export const attachedTargetFromAttachment = (
   if (target?.case === 'computeInstance' && target.value.id) {
     return {
       kind: 'computeInstance',
-      id: target.value.id,
-      name: target.value.name.trim() || target.value.id,
+      name: target.value.name,
       href: `/vms/${encodeURIComponent(target.value.id)}`,
     };
   }
   if (target?.case === 'cluster' && target.value.id) {
     return {
       kind: 'cluster',
-      id: target.value.id,
-      name: target.value.name.trim() || target.value.id,
+      name: target.value.name,
       href: `/clusters/${encodeURIComponent(target.value.id)}`,
     };
   }
   if (target?.case === 'baremetalInstance' && target.value.id) {
     return {
       kind: 'baremetalInstance',
-      id: target.value.id,
-      name: target.value.name.trim() || target.value.id,
+      name: target.value.name,
       href: `/bare-metal/${encodeURIComponent(target.value.id)}`,
     };
   }
@@ -77,13 +74,9 @@ export const attachedTargetFromNatGateway = (
   if (!natGateway.id || !virtualNetworkId) {
     return undefined;
   }
-  const name =
-    natGateway.metadata?.name?.trim() ||
-    natGateway.spec?.virtualNetwork?.name?.trim() ||
-    natGateway.id;
+  const name = natGateway.metadata?.name || natGateway.spec?.virtualNetwork?.name || natGateway.id;
   return {
     kind: 'natGateway',
-    id: natGateway.id,
     name,
     href: `/networking/virtual-networks/${encodeURIComponent(virtualNetworkId)}`,
   };
@@ -115,9 +108,9 @@ export const buildPoolsById = (pools: readonly ExternalIPPool[]): Record<string,
   Object.fromEntries(pools.map((pool) => [pool.id, pool]));
 
 export const useExternalIpJoins = (externalIps: readonly ExternalIP[]) => {
-  const poolIds = useMemo(() => uniqueSortedIds(externalIps.map(externalIpPoolId)), [externalIps]);
+  const poolIds = useMemo(() => uniqueIds(externalIps.map(externalIpPoolId)), [externalIps]);
   const externalIpIds = useMemo(
-    () => uniqueSortedIds(externalIps.map((externalIp) => externalIp.id)),
+    () => externalIps.map((externalIp) => externalIp.id),
     [externalIps],
   );
 

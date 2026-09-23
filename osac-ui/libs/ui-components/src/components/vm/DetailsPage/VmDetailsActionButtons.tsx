@@ -33,10 +33,11 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
   const {
     data: externalIpAttachments = [],
     isLoading: isLoadingExternalIpAttachments,
+    isFetching: isFetchingExternalIpAttachments,
     error: externalIpAttachmentsError,
   } = useExternalIPAttachments(
     { filter: computeInstanceAttachmentFilter(vm.id) },
-    { enabled: Boolean(vm.status?.externalIpAddress) },
+    { enabled: true },
   );
 
   const state = vm.status?.state;
@@ -49,9 +50,18 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
     state === ComputeInstanceState.RUNNING && !vm.status?.externalIpAddress;
   const externalIpAttachment = externalIpAttachments[0];
   const hasAttachedExternalIp = Boolean(vm.status?.externalIpAddress);
+  const isAttachingExternalIp =
+    externalIpAttachment?.status?.state ===
+      ExternalIPAttachmentState.EXTERNAL_IP_ATTACHMENT_STATE_PENDING ||
+    (isFetchingExternalIpAttachments && !isLoadingExternalIpAttachments && !hasAttachedExternalIp);
   const isDetachingExternalIp =
     externalIpAttachment?.status?.state ===
     ExternalIPAttachmentState.EXTERNAL_IP_ATTACHMENT_STATE_DELETING;
+  const isExternalIpAttachmentFailed =
+    externalIpAttachment?.status?.state ===
+    ExternalIPAttachmentState.EXTERNAL_IP_ATTACHMENT_STATE_FAILED;
+  const showDetachExternalIp =
+    Boolean(externalIpAttachment) && (hasAttachedExternalIp || isExternalIpAttachmentFailed);
   const externalIpAttachmentMissing =
     hasAttachedExternalIp &&
     !isLoadingExternalIpAttachments &&
@@ -82,7 +92,7 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
         />
       )}
       <Stack hasGutter>
-        {externalIpAttachmentsError && hasAttachedExternalIp && (
+        {Boolean(externalIpAttachmentsError) && hasAttachedExternalIp && (
           <StackItem>
             <Alert variant="danger" isInline title={t('Failed to load external IP attachment')}>
               {getErrorMessage(externalIpAttachmentsError)}
@@ -95,6 +105,15 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
               {t(
                 'The virtual machine reports an external IP, but its attachment resource is missing.',
               )}
+            </Alert>
+          </StackItem>
+        )}
+        {isExternalIpAttachmentFailed && (
+          <StackItem>
+            <Alert variant="danger" isInline title={t('External IP attachment failed')}>
+              {typeof externalIpAttachment?.status?.message === 'string'
+                ? externalIpAttachment.status.message
+                : t('The external IP attachment could not be provisioned.')}
             </Alert>
           </StackItem>
         )}
@@ -140,33 +159,45 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
             >
               Restart
             </Button>
-            <Button
-              variant="secondary"
-              icon={<GlobeIcon />}
-              isDisabled={
-                isLoadingExternalIpAttachments ||
-                Boolean(externalIpAttachmentsError) ||
-                externalIpAttachmentMissing ||
-                isDetachingExternalIp ||
-                (!hasAttachedExternalIp && !canAttachExternalIp)
-              }
-              isLoading={isLoadingExternalIpAttachments || isDetachingExternalIp}
-              onClick={() => {
-                if (hasAttachedExternalIp && externalIpAttachment) {
-                  setDetachExternalIpOpen(true);
-                } else if (canAttachExternalIp) {
-                  setAttachExternalIpOpen(true);
+            {!showDetachExternalIp && (
+              <Button
+                variant="secondary"
+                icon={<GlobeIcon />}
+                isDisabled={
+                  isLoadingExternalIpAttachments ||
+                  Boolean(externalIpAttachmentsError) ||
+                  externalIpAttachmentMissing ||
+                  isAttachingExternalIp ||
+                  !canAttachExternalIp
                 }
-              }}
-            >
-              {t(
-                isDetachingExternalIp
-                  ? 'Detaching external IP'
-                  : hasAttachedExternalIp
-                    ? 'Detach external IP'
-                    : 'Attach external IP',
-              )}
-            </Button>
+                isLoading={isLoadingExternalIpAttachments || isAttachingExternalIp}
+                onClick={() => setAttachExternalIpOpen(true)}
+              >
+                {t(
+                  isLoadingExternalIpAttachments
+                    ? 'Loading external IP attachment...'
+                    : isAttachingExternalIp
+                      ? 'Attaching External IP...'
+                      : 'Attach external IP',
+                )}
+              </Button>
+            )}
+            {showDetachExternalIp && externalIpAttachment && (
+              <Button
+                variant="secondary"
+                icon={<GlobeIcon />}
+                isDisabled={
+                  isLoadingExternalIpAttachments ||
+                  Boolean(externalIpAttachmentsError) ||
+                  externalIpAttachmentMissing ||
+                  isDetachingExternalIp
+                }
+                isLoading={isLoadingExternalIpAttachments || isDetachingExternalIp}
+                onClick={() => setDetachExternalIpOpen(true)}
+              >
+                {t(isDetachingExternalIp ? 'Detaching external IP' : 'Detach external IP')}
+              </Button>
+            )}
             <Button
               variant="danger"
               icon={<DumpsterIcon />}

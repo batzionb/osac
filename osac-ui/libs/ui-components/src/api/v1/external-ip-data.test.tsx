@@ -85,9 +85,7 @@ describe('external IP list join helpers', () => {
   });
 
   it('filters VM attachments by the compute instance', () => {
-    expect(computeInstanceAttachmentFilter('vm-1')).toBe(
-      'this.spec.compute_instance.id == "vm-1"',
-    );
+    expect(computeInstanceAttachmentFilter('vm-1')).toBe('this.spec.compute_instance.id == "vm-1"');
   });
 
   it('maps an attachment to the target resource link', () => {

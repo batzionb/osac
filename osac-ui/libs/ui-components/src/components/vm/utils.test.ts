@@ -55,7 +55,7 @@ describe('formatInstanceTypeReviewLabelFromType', () => {
 
   it('includes sizing in review label', () => {
     expect(formatInstanceTypeReviewLabelFromType(makeInstanceType())).toBe(
-      'Standard 4 vCPU / 8 GiB — 4 vCPU, 8 GiB',
+      'Standard 4 vCPU / 8 GiB — 4 vCPUs, 8 GiB',
     );
   });
 

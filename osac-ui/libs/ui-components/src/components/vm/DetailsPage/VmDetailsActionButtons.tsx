@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Flex } from '@patternfly/react-core';
+import { Alert, Button, Flex, Stack, StackItem } from '@patternfly/react-core';
 import DumpsterIcon from '@patternfly/react-icons/dist/esm/icons/dumpster-icon';
 import GlobeIcon from '@patternfly/react-icons/dist/esm/icons/globe-icon';
 import PlayIcon from '@patternfly/react-icons/dist/esm/icons/play-icon';
@@ -16,6 +16,7 @@ import VmDeleteConfirmModal from './VmDeleteConfirmModal';
 import { useExternalIPAttachments } from '../../../api/v1/external-ip';
 import { computeInstanceAttachmentFilter } from '../../../api/v1/external-ip-data';
 import { useTranslation } from '../../../hooks/useTranslation';
+import { getErrorMessage } from '../../../utils/error';
 import { useVmPowerAction } from '../useVmPowerAction';
 
 interface VmDetailsActionButtonsProps {
@@ -29,11 +30,14 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
   const [attachExternalIpOpen, setAttachExternalIpOpen] = useState(false);
   const [detachExternalIpOpen, setDetachExternalIpOpen] = useState(false);
   const { runPowerAction } = useVmPowerAction();
-  const { data: externalIpAttachments = [], isLoading: isLoadingExternalIpAttachments } =
-    useExternalIPAttachments(
-      { filter: computeInstanceAttachmentFilter(vm.id) },
-      { enabled: Boolean(vm.status?.externalIpAddress) },
-    );
+  const {
+    data: externalIpAttachments = [],
+    isLoading: isLoadingExternalIpAttachments,
+    error: externalIpAttachmentsError,
+  } = useExternalIPAttachments(
+    { filter: computeInstanceAttachmentFilter(vm.id) },
+    { enabled: Boolean(vm.status?.externalIpAddress) },
+  );
 
   const state = vm.status?.state;
   const canStart = state === ComputeInstanceState.STOPPED;
@@ -48,6 +52,11 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
   const isDetachingExternalIp =
     externalIpAttachment?.status?.state ===
     ExternalIPAttachmentState.EXTERNAL_IP_ATTACHMENT_STATE_DELETING;
+  const externalIpAttachmentMissing =
+    hasAttachedExternalIp &&
+    !isLoadingExternalIpAttachments &&
+    !externalIpAttachmentsError &&
+    !externalIpAttachment;
 
   return (
     <>
@@ -72,85 +81,107 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
           onClose={() => setDetachExternalIpOpen(false)}
         />
       )}
-      <Flex
-        justifyContent={{ default: 'justifyContentFlexEnd' }}
-        spaceItems={{ default: 'spaceItemsSm' }}
-        flexWrap={{ default: 'wrap' }}
-      >
-        <Button
-          variant="primary"
-          icon={<PlayIcon />}
-          isDisabled={!canStart}
-          onClick={() => {
-            if (canStart) {
-              runPowerAction(vm.id, 'start');
-            }
-          }}
-        >
-          Start
-        </Button>
-        <Button
-          variant="secondary"
-          icon={<StopIcon />}
-          isDisabled={!canStop}
-          onClick={() => {
-            if (canStop) {
-              runPowerAction(vm.id, 'stop');
-            }
-          }}
-        >
-          Stop
-        </Button>
-        <Button
-          variant="secondary"
-          icon={<SyncAltIcon />}
-          isDisabled={!canRestart}
-          onClick={() => {
-            if (canRestart) {
-              runPowerAction(vm.id, 'restart');
-            }
-          }}
-        >
-          Restart
-        </Button>
-        <Button
-          variant="secondary"
-          icon={<GlobeIcon />}
-          isDisabled={
-            isLoadingExternalIpAttachments ||
-            isDetachingExternalIp ||
-            (!hasAttachedExternalIp && !canAttachExternalIp)
-          }
-          isLoading={isLoadingExternalIpAttachments || isDetachingExternalIp}
-          onClick={() => {
-            if (hasAttachedExternalIp && externalIpAttachment) {
-              setDetachExternalIpOpen(true);
-            } else if (canAttachExternalIp) {
-              setAttachExternalIpOpen(true);
-            }
-          }}
-        >
-          {t(
-            isDetachingExternalIp
-              ? 'Detaching external IP'
-              : hasAttachedExternalIp
-                ? 'Detach external IP'
-                : 'Attach external IP',
-          )}
-        </Button>
-        <Button
-          variant="danger"
-          icon={<DumpsterIcon />}
-          isDisabled={!canDelete}
-          onClick={() => {
-            if (canDelete) {
-              setDeleteOpen(true);
-            }
-          }}
-        >
-          Delete
-        </Button>
-      </Flex>
+      <Stack hasGutter>
+        {externalIpAttachmentsError && hasAttachedExternalIp && (
+          <StackItem>
+            <Alert variant="danger" isInline title={t('Failed to load external IP attachment')}>
+              {getErrorMessage(externalIpAttachmentsError)}
+            </Alert>
+          </StackItem>
+        )}
+        {externalIpAttachmentMissing && (
+          <StackItem>
+            <Alert variant="danger" isInline title={t('External IP attachment not found')}>
+              {t(
+                'The virtual machine reports an external IP, but its attachment resource is missing.',
+              )}
+            </Alert>
+          </StackItem>
+        )}
+        <StackItem>
+          <Flex
+            justifyContent={{ default: 'justifyContentFlexEnd' }}
+            spaceItems={{ default: 'spaceItemsSm' }}
+            flexWrap={{ default: 'wrap' }}
+          >
+            <Button
+              variant="primary"
+              icon={<PlayIcon />}
+              isDisabled={!canStart}
+              onClick={() => {
+                if (canStart) {
+                  runPowerAction(vm.id, 'start');
+                }
+              }}
+            >
+              Start
+            </Button>
+            <Button
+              variant="secondary"
+              icon={<StopIcon />}
+              isDisabled={!canStop}
+              onClick={() => {
+                if (canStop) {
+                  runPowerAction(vm.id, 'stop');
+                }
+              }}
+            >
+              Stop
+            </Button>
+            <Button
+              variant="secondary"
+              icon={<SyncAltIcon />}
+              isDisabled={!canRestart}
+              onClick={() => {
+                if (canRestart) {
+                  runPowerAction(vm.id, 'restart');
+                }
+              }}
+            >
+              Restart
+            </Button>
+            <Button
+              variant="secondary"
+              icon={<GlobeIcon />}
+              isDisabled={
+                isLoadingExternalIpAttachments ||
+                Boolean(externalIpAttachmentsError) ||
+                externalIpAttachmentMissing ||
+                isDetachingExternalIp ||
+                (!hasAttachedExternalIp && !canAttachExternalIp)
+              }
+              isLoading={isLoadingExternalIpAttachments || isDetachingExternalIp}
+              onClick={() => {
+                if (hasAttachedExternalIp && externalIpAttachment) {
+                  setDetachExternalIpOpen(true);
+                } else if (canAttachExternalIp) {
+                  setAttachExternalIpOpen(true);
+                }
+              }}
+            >
+              {t(
+                isDetachingExternalIp
+                  ? 'Detaching external IP'
+                  : hasAttachedExternalIp
+                    ? 'Detach external IP'
+                    : 'Attach external IP',
+              )}
+            </Button>
+            <Button
+              variant="danger"
+              icon={<DumpsterIcon />}
+              isDisabled={!canDelete}
+              onClick={() => {
+                if (canDelete) {
+                  setDeleteOpen(true);
+                }
+              }}
+            >
+              Delete
+            </Button>
+          </Flex>
+        </StackItem>
+      </Stack>
     </>
   );
 };

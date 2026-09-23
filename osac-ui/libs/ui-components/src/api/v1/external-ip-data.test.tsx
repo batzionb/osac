@@ -17,6 +17,7 @@ import {
 import {
   attachmentExternalIpIdsFilter,
   buildAttachedTargetsByExternalIpId,
+  computeInstanceAttachmentFilter,
   natGatewayExternalIpIdsFilter,
   poolIdsFilter,
   uniqueSortedIds,
@@ -80,6 +81,12 @@ describe('external IP list join helpers', () => {
     );
     expect(natGatewayExternalIpIdsFilter(['eip-2', 'eip-1'])).toBe(
       'this.spec.external_ip.id in ["eip-2", "eip-1"]',
+    );
+  });
+
+  it('filters VM attachments by the compute instance', () => {
+    expect(computeInstanceAttachmentFilter('vm-1')).toBe(
+      'this.spec.compute_instance.id == "vm-1"',
     );
   });
 

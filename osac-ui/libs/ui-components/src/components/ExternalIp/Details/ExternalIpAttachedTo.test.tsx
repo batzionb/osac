@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import ExternalIpAttachedTo from './ExternalIpAttachedTo';
-import { renderWithProviders } from '../../test-utils/TestProviders';
+import { renderWithProviders } from '../../../test-utils/TestProviders';
 
 describe('ExternalIpAttachedTo', () => {
   it('renders nothing when the IP is not attached', () => {
@@ -22,7 +22,6 @@ describe('ExternalIpAttachedTo', () => {
         attached
         target={{
           kind: 'baremetalInstance',
-          id: 'bm-1',
           name: 'aaa',
           href: '/bare-metal/bm-1',
         }}

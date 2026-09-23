@@ -48,7 +48,7 @@ const ExternalIpReviewStep = () => {
           <DescriptionListGroup>
             <DescriptionListTerm>{t('IP pool')}</DescriptionListTerm>
             <DescriptionListDescription>
-              {displayValue(values.pool.name || values.pool.id)}
+              {displayValue(values.pool.name)}
             </DescriptionListDescription>
           </DescriptionListGroup>
         </DescriptionList>

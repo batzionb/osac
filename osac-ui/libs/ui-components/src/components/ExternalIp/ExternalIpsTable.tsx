@@ -4,9 +4,9 @@ import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 import type { ExternalIP, ExternalIPPool } from '@osac/types';
 import type { ExternalIpAttachedTarget } from '@osac/ui-components/api/v1/external-ip-data';
 
+import ExternalIpAttachedTo from './Details/ExternalIpAttachedTo';
+import ExternalIpStatusLabel from './Details/ExternalIpStatusLabel';
 import ExternalIpActionsMenu from './ExternalIpActionsMenu';
-import ExternalIpAttachedTo from './ExternalIpAttachedTo';
-import ExternalIpStatusLabel from './ExternalIpStatusLabel';
 import { useTranslation } from '../../hooks/useTranslation';
 import { Timestamp } from '../Primitives/Timestamp';
 
@@ -22,16 +22,6 @@ const resolvePool = (
 ): ExternalIPPool | undefined => {
   const poolId = externalIp.spec?.pool?.id || externalIp.status?.pool;
   return poolId ? poolsById[poolId] : undefined;
-};
-
-const poolDisplayName = (
-  externalIp: ExternalIP,
-  poolsById: Record<string, ExternalIPPool>,
-): string => {
-  const poolId = externalIp.spec?.pool?.id || externalIp.status?.pool;
-  const poolName =
-    externalIp.spec?.pool?.name || resolvePool(externalIp, poolsById)?.metadata?.name || poolId;
-  return poolName?.trim() || '—';
 };
 
 const ExternalIpsTable = ({
@@ -56,8 +46,8 @@ const ExternalIpsTable = ({
       </Thead>
       <Tbody>
         {externalIps.map((externalIp) => {
-          const address = externalIp.status?.address?.trim() || '—';
-          const name = externalIp.metadata?.name?.trim() || '—';
+          const address = externalIp.status?.address || '—';
+          const name = externalIp.metadata?.name;
           const pool = resolvePool(externalIp, poolsById);
           const available = pool?.status?.available;
 
@@ -86,11 +76,11 @@ const ExternalIpsTable = ({
               <Td dataLabel={t('Address')}>{address}</Td>
               <Td dataLabel={t('IP pool')}>
                 <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsXs' }}>
-                  <FlexItem>{poolDisplayName(externalIp, poolsById)}</FlexItem>
+                  <FlexItem>{externalIp.spec?.pool?.name}</FlexItem>
                   {available !== undefined ? (
                     <FlexItem>
                       <Content component="small">
-                        {t('{{available}} available', { available: Number(available) })}
+                        {t('{{available}} available', { available: available.toString() })}
                       </Content>
                     </FlexItem>
                   ) : null}

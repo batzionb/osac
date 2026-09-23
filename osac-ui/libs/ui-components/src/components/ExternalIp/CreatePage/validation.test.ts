@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { getExternalIpSchema } from './validation';
-import { tIdentity as t } from '../../test-utils/i18n';
+import { tIdentity as t } from '../../../test-utils/i18n';
 
 describe('getExternalIpSchema', () => {
   it('allows an empty project the same way secrets do for Default', async () => {

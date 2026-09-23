@@ -129,7 +129,7 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
               isDisabled={!canStart}
               onClick={() => {
                 if (canStart) {
-                  runPowerAction(vm.id, 'start');
+                  runPowerAction(vm.id, vm.metadata?.name ?? vm.id, 'start');
                 }
               }}
             >
@@ -141,7 +141,7 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
               isDisabled={!canStop}
               onClick={() => {
                 if (canStop) {
-                  runPowerAction(vm.id, 'stop');
+                  runPowerAction(vm.id, vm.metadata?.name ?? vm.id, 'stop');
                 }
               }}
             >
@@ -153,7 +153,7 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
               isDisabled={!canRestart}
               onClick={() => {
                 if (canRestart) {
-                  runPowerAction(vm.id, 'restart');
+                  runPowerAction(vm.id, vm.metadata?.name ?? vm.id, 'restart');
                 }
               }}
             >

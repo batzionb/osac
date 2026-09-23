@@ -6,7 +6,7 @@ vi.mock('./ExternalIpListPage', () => ({
   default: () => <h1>External IPs</h1>,
 }));
 
-vi.mock('./ExternalIpWizardPage', () => ({
+vi.mock('./CreatePage/ExternalIpWizardPage', () => ({
   default: () => <h1>Create external IP</h1>,
 }));
 

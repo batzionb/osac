@@ -191,11 +191,11 @@ describe('ExternalIpListPage', () => {
       expect(screen.getByText('203.0.113.10')).toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole('button', { name: 'Actions for 203.0.113.10' }));
+    await user.click(screen.getByRole('button', { name: 'Actions for edge-ip' }));
     await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByText('Delete 203.0.113.10?')).toBeInTheDocument();
+    expect(screen.getByText('Delete edge-ip?')).toBeInTheDocument();
   });
 
   it('links a NAT-consumed IP to its virtual network', async () => {
@@ -230,7 +230,7 @@ describe('ExternalIpListPage', () => {
       expect(screen.getByText('203.0.113.11')).toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole('button', { name: 'Actions for 203.0.113.11' }));
+    await user.click(screen.getByRole('button', { name: 'Actions for nat-ip' }));
 
     expect(screen.getByRole('menuitem', { name: /Delete/ })).toBeDisabled();
   });

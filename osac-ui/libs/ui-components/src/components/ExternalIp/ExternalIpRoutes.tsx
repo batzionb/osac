@@ -1,7 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
 
+import ExternalIpWizardPage from './CreatePage/ExternalIpWizardPage';
 import ExternalIpListPage from './ExternalIpListPage';
-import ExternalIpWizardPage from './ExternalIpWizardPage';
 
 const ExternalIpRoutes = () => (
   <Routes>

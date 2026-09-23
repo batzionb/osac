@@ -1,6 +1,6 @@
 import type { ExternalIP } from '@osac/types';
 
-import { type ResourceSelectValue, emptyResourceSelectValue } from '../Form/ResourceSelectField';
+import { type ResourceSelectValue, emptyResourceSelectValue } from '../../Form/ResourceSelectField';
 
 export const EXTERNAL_IPS_LIST_PATH = '/networking/external-ips';
 

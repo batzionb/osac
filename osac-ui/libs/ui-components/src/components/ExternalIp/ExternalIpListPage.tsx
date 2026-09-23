@@ -13,8 +13,8 @@ import { SEARCH_PARAM, usePageFilter } from '@osac/ui-components/hooks/use-page-
 import { useProjectFilterQuery } from '@osac/ui-components/hooks/use-project-filter-query';
 import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 
+import { EXTERNAL_IPS_LIST_PATH } from './CreatePage/values';
 import ExternalIpsTable from './ExternalIpsTable';
-import { EXTERNAL_IPS_LIST_PATH } from './values';
 import ListPage from '../Page/ListPage';
 import ListPageBody from '../Page/ListPageBody';
 import ProjectFilter from '../Page/ProjectFilter';

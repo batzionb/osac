@@ -15,8 +15,8 @@ import {
 } from '@osac/types';
 
 import ExternalIpWizardPage from './ExternalIpWizardPage';
-import type { MockTransportOverrides } from '../../test-utils/createMockConnectTransport';
-import { renderWithProviders } from '../../test-utils/TestProviders';
+import type { MockTransportOverrides } from '../../../test-utils/createMockConnectTransport';
+import { renderWithProviders } from '../../../test-utils/TestProviders';
 
 const LIST_PATH = '/networking/external-ips';
 

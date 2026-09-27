@@ -37,7 +37,7 @@ export const natGatewayExternalIpIdsFilter = (ids: readonly string[]) =>
   cel<NATGateway>((filter) => filter.field('spec.externalIp.id').isIn(ids));
 
 export const externalIpPoolId = (externalIp: ExternalIP): string | undefined =>
-  externalIp.spec?.pool?.id || externalIp.status?.pool || undefined;
+  externalIp.spec?.pool?.id;
 
 export const attachedTargetFromAttachment = (
   attachment: ExternalIPAttachment,
@@ -71,10 +71,10 @@ export const attachedTargetFromNatGateway = (
   natGateway: NATGateway,
 ): ExternalIpAttachedTarget | undefined => {
   const virtualNetworkId = natGateway.spec?.virtualNetwork?.id;
-  if (!natGateway.id || !virtualNetworkId) {
+  const name = natGateway.metadata?.name;
+  if (!natGateway.id || !virtualNetworkId || !name) {
     return undefined;
   }
-  const name = natGateway.metadata?.name || natGateway.spec?.virtualNetwork?.name || natGateway.id;
   return {
     kind: 'natGateway',
     name,

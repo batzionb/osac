@@ -12,7 +12,7 @@ import type { ComputeInstance } from '@osac/types';
 
 import { useTranslation } from '../../../hooks/useTranslation';
 import { displayValue } from '../../../utils/detailFormatters';
-import { formatBootDiskSizeForReview } from '../../catalogProvision/wizard/catalogOverlay';
+import { formatBootDiskSizeForReview } from '../../ProvisioningWizard/catalogOverlay';
 import { Timestamp } from '../../Primitives/Timestamp';
 
 interface Props {

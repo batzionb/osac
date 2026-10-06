@@ -21,7 +21,7 @@ import { getErrorMessage } from '@osac/ui-components/utils/error';
 import { getCreateProjectPayload } from './payload';
 import { getProjectValidationSchema } from './validation';
 import { initialValues } from './values';
-import NameField from '../../catalogProvision/wizard/fields/NameField';
+import NameField from '../../ProvisioningWizard/NameField';
 import { InputField } from '../../Form/InputField';
 import LeaveFormConfirmation from '../../Form/LeaveFormConfirmation';
 import OsacForm from '../../Form/OsacForm';

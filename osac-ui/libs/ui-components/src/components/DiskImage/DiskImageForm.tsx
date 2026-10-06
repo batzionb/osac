@@ -24,7 +24,7 @@ import { useCreateDiskImage } from '../../api/v1/disk-image';
 import { useSession } from '../../hooks/use-session';
 import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
-import NameField from '../catalogProvision/wizard/fields/NameField';
+import NameField from '../ProvisioningWizard/NameField';
 import { InputField } from '../Form/InputField';
 import LeaveFormConfirmation from '../Form/LeaveFormConfirmation';
 import { MultiSelectField } from '../Form/MultiSelectField';

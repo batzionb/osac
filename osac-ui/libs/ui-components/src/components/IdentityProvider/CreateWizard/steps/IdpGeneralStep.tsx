@@ -1,6 +1,6 @@
 import { Stack, StackItem, Title } from '@patternfly/react-core';
 
-import NameField from '@osac/ui-components/components/catalogProvision/wizard/fields/NameField';
+import NameField from '@osac/ui-components/components/ProvisioningWizard/NameField';
 import { InputField } from '@osac/ui-components/components/Form/InputField';
 import OsacForm from '@osac/ui-components/components/Form/OsacForm';
 

@@ -32,7 +32,7 @@ import {
 import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 import { resourceNameSchema } from '../../validation/resource-name';
-import NameField from '../catalogProvision/wizard/fields/NameField';
+import NameField from '../ProvisioningWizard/NameField';
 import { InputField } from '../Form/InputField';
 import LeaveFormConfirmation from '../Form/LeaveFormConfirmation';
 import OsacForm from '../Form/OsacForm';

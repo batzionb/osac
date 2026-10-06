@@ -32,7 +32,7 @@ import {
 import { useSession } from '../../../hooks/use-session';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { getErrorMessage } from '../../../utils/error';
-import NameField from '../../catalogProvision/wizard/fields/NameField';
+import NameField from '../../ProvisioningWizard/NameField';
 import LeaveFormConfirmation from '../../Form/LeaveFormConfirmation';
 import { MultiSelectField } from '../../Form/MultiSelectField';
 import OsacForm from '../../Form/OsacForm';

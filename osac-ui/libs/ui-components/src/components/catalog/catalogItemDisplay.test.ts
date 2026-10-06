@@ -10,7 +10,7 @@ import { catalogItemDetailsPath, filterCatalogItemsBySearch } from './catalogIte
 import {
   catalogItemFieldDefinitions,
   readCatalogItemFieldDefinitions,
-} from '../catalogProvision/catalogFieldDefinition';
+} from '../ProvisioningWizard/catalogFieldDefinition';
 
 describe('readCatalogItemFieldDefinitions', () => {
   it('reads snake_case field_definitions from wire JSON', () => {

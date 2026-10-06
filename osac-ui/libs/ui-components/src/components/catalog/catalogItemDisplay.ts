@@ -17,7 +17,7 @@ import {
   isClusterCatalogItemResourceFieldPath,
   normalizeCatalogFieldPath,
   resolvedFieldDefault,
-} from '../catalogProvision/catalogFieldDefinition';
+} from '../ProvisioningWizard/catalogFieldDefinition';
 
 export const isCatalogItemKind = (value: string | undefined): value is CatalogItemKind =>
   value === 'vm' || value === 'cluster' || value === 'bm';

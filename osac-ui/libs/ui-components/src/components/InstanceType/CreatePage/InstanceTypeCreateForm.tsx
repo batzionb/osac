@@ -18,10 +18,10 @@ import { getInstanceTypeCreateSchema } from './validation';
 import { InstanceTypeCreateFormValues, instanceTypeCreateValues } from './values';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { getErrorMessage } from '../../../utils/error';
-import NameField from '../../ProvisioningWizard/NameField';
 import { InputField } from '../../Form/InputField';
 import LeaveFormConfirmation from '../../Form/LeaveFormConfirmation';
 import OsacForm from '../../Form/OsacForm';
+import NameField from '../../ProvisioningWizard/NameField';
 
 export const INSTANCE_TYPES_LIST_ROUTE = '/admin/infrastructure/instance-types';
 

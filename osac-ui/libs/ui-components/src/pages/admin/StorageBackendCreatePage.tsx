@@ -24,7 +24,6 @@ import {
   usePrivateStorageBackend,
   useUpdateStorageBackend,
 } from '@osac/ui-components/api/v1/private/storage-backends';
-import NameField from '@osac/ui-components/components/ProvisioningWizard/NameField';
 import { InputField } from '@osac/ui-components/components/Form/InputField';
 import LeaveFormConfirmation from '@osac/ui-components/components/Form/LeaveFormConfirmation';
 import OsacForm from '@osac/ui-components/components/Form/OsacForm';
@@ -32,6 +31,7 @@ import {
   SelectField,
   type SelectFieldOption,
 } from '@osac/ui-components/components/Form/SelectField';
+import NameField from '@osac/ui-components/components/ProvisioningWizard/NameField';
 import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 import { getErrorMessage } from '@osac/ui-components/utils/error';
 import { resourceNameSchema } from '@osac/ui-components/validation/resource-name';

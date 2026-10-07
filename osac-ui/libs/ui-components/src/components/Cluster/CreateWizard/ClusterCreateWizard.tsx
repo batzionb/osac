@@ -112,6 +112,7 @@ const ClusterWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onCl
     const item = catalogItems.find((entry) => entry.id === initialCatalogItemId);
     if (item && !selectedCatalogItem) {
       setSelectedCatalogItem(item);
+      void formik.setFieldValue('catalogItemId', item.id, false);
       void applyClusterCatalogConfigurationDefaults(item, formik, t);
       applyClusterCatalogGeneralDefaults(item, formik, t);
     }

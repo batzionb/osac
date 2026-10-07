@@ -1,10 +1,10 @@
 import { Stack, StackItem, Title } from '@patternfly/react-core';
 
 import { useTranslation } from '../../../../hooks/useTranslation';
-import NameField from '../../../ProvisioningWizard/NameField';
 import { InputField } from '../../../Form/InputField';
 import { KeyValueMapField } from '../../../Form/KeyValueMapField';
 import OsacForm from '../../../Form/OsacForm';
+import NameField from '../../../ProvisioningWizard/NameField';
 
 interface GeneralStepProps {
   isEdit: boolean;

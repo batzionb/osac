@@ -32,11 +32,11 @@ import {
 import { useSession } from '../../../hooks/use-session';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { getErrorMessage } from '../../../utils/error';
-import NameField from '../../ProvisioningWizard/NameField';
 import LeaveFormConfirmation from '../../Form/LeaveFormConfirmation';
 import { MultiSelectField } from '../../Form/MultiSelectField';
 import OsacForm from '../../Form/OsacForm';
 import { SelectField } from '../../Form/SelectField';
+import NameField from '../../ProvisioningWizard/NameField';
 
 const RoleBindingCreateForm = ({ isEdit }: { isEdit: boolean }) => {
   const { t } = useTranslation();

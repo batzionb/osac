@@ -118,6 +118,7 @@ const BareMetalInstanceWizardContent = ({
     const item = catalogItems.find((entry) => entry.id === initialCatalogItemId);
     if (item && !selectedCatalogItem) {
       setSelectedCatalogItem(item);
+      void formik.setFieldValue('catalogItemId', item.id, false);
       void applyBmCatalogDefaults(item, formik, t);
     }
   }, [catalogItems, formik, initialCatalogItemId, selectedCatalogItem, t]);

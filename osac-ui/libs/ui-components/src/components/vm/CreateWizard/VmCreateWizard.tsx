@@ -120,6 +120,7 @@ const VmWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onClosed 
     const item = catalogItems.find((entry) => entry.id === initialCatalogItemId);
     if (item && !selectedCatalogItem) {
       setSelectedCatalogItem(item);
+      void formik.setFieldValue('catalogItemId', item.id, false);
       void applyVmCatalogConfigurationDefaults(item, formik, t);
       applyVmCatalogGeneralDefaults(item, formik);
     }

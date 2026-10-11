@@ -2,19 +2,27 @@ import { InputField } from './InputField';
 import { useTranslation } from '../../hooks/useTranslation';
 
 interface ClusterPoolSizeFieldProps {
-  rowIndex: number;
+  name: string;
+  fieldId: string;
   isRequired?: boolean;
+  isDisabled?: boolean;
 }
 
-const ClusterPoolSizeField = ({ rowIndex, isRequired = false }: ClusterPoolSizeFieldProps) => {
+const ClusterPoolSizeField = ({
+  name,
+  fieldId,
+  isRequired = false,
+  isDisabled = false,
+}: ClusterPoolSizeFieldProps) => {
   const { t } = useTranslation();
 
   return (
     <InputField
-      name={`spec.nodeSetRows.${rowIndex}.size`}
+      name={name}
       label={t('Nodes')}
-      fieldId={`cluster-node-set-size-${rowIndex}`}
+      fieldId={fieldId}
       isRequired={isRequired}
+      isDisabled={isDisabled}
       type="number"
     />
   );

@@ -7,9 +7,10 @@ import { trimSshPublicKey } from '../ProvisioningWizard/credentialValidation';
 
 interface SshKeyFieldProps {
   name: string;
+  isDisabled?: boolean;
 }
 
-const SshKeyField = ({ name }: SshKeyFieldProps) => {
+const SshKeyField = ({ name, isDisabled = false }: SshKeyFieldProps) => {
   const { t } = useTranslation();
   const { setFieldValue } = useFormikContext();
   const [field] = useField<string>(name);
@@ -28,6 +29,7 @@ const SshKeyField = ({ name }: SshKeyFieldProps) => {
       multiline
       rows={CATALOG_PROVISION_MULTILINE_TEXTAREA.rows}
       resizeOrientation={CATALOG_PROVISION_MULTILINE_TEXTAREA.resizeOrientation}
+      isDisabled={isDisabled}
       helperText={t(
         'Paste a public SSH key for remote access. Supported types: ssh-rsa, ssh-ed25519, and ecdsa-sha2-nistp256/384/521.',
       )}

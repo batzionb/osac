@@ -12,10 +12,8 @@ import { CatalogStep } from '@osac/ui-components/components/ProvisioningWizard/C
 import { OSACWizardFooter } from '@osac/ui-components/components/Wizard/OSACWizardFooter';
 import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 
-import { applyVmCatalogConfigurationDefaults } from './applyCatalogDefaults';
-import { applyVmCatalogGeneralDefaults } from './applyCatalogGeneralDefaults';
 import type { ComputeInstanceWizardValues } from './fields';
-import { buildComputeInstanceCreatePayload, createEmptyComputeInstanceValues } from './payload';
+import { buildComputeInstanceCreatePayload, getComputeInstanceInitialValues } from './payload';
 import { buildComputeInstanceStepSchema } from './schemas';
 import { VmConfigurationStep } from './VmConfigurationStep';
 import VmGeneralStep from './VmGeneralStep';
@@ -95,7 +93,7 @@ const VmWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onClosed 
   );
 
   const formik = useFormik<ComputeInstanceWizardValues>({
-    initialValues: createEmptyComputeInstanceValues(),
+    initialValues: getComputeInstanceInitialValues(),
     validationSchema,
     onSubmit: handleSubmit,
     validateOnChange: false,
@@ -106,12 +104,10 @@ const VmWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onClosed 
       const computeItem = item as ComputeInstanceCatalogItem;
       setSelectedCatalogItem(computeItem);
       formik.resetForm({
-        values: { ...createEmptyComputeInstanceValues(), catalogItemId: item.id },
+        values: getComputeInstanceInitialValues(computeItem),
       });
-      applyVmCatalogConfigurationDefaults(computeItem, formik, t);
-      applyVmCatalogGeneralDefaults(computeItem, formik);
     },
-    [formik, t],
+    [formik],
   );
 
   const pending = formik.isSubmitting;
@@ -120,9 +116,7 @@ const VmWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onClosed 
     const item = catalogItems.find((entry) => entry.id === initialCatalogItemId);
     if (item && !selectedCatalogItem) {
       setSelectedCatalogItem(item);
-      void formik.setFieldValue('catalogItemId', item.id, false);
-      void applyVmCatalogConfigurationDefaults(item, formik, t);
-      applyVmCatalogGeneralDefaults(item, formik);
+      formik.resetForm({ values: getComputeInstanceInitialValues(item) });
     }
   }, [catalogItems, formik, initialCatalogItemId, selectedCatalogItem, t]);
 

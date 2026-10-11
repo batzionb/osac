@@ -12,14 +12,12 @@ import { CatalogStep } from '@osac/ui-components/components/ProvisioningWizard/C
 import { OSACWizardFooter } from '@osac/ui-components/components/Wizard/OSACWizardFooter';
 import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 
-import { applyClusterCatalogConfigurationDefaults } from './applyCatalogDefaults';
-import { applyClusterCatalogGeneralDefaults } from './applyCatalogGeneralDefaults';
 import ClusterConfigurationStep from './ClusterConfigurationStep';
 import ClusterGeneralStep from './ClusterGeneralStep';
 import { ClusterNetworkingStep } from './ClusterNetworkingStep';
 import { ClusterReviewStep } from './ClusterReviewStep';
 import type { ClusterWizardValues } from './fields';
-import { buildClusterCreatePayload, createEmptyClusterValues } from './payload';
+import { buildClusterCreatePayload, getClusterInitialValues } from './payload';
 import { buildClusterStepSchema } from './schemas';
 import type { CatalogItem } from '../../catalog/catalogItemDisplay';
 
@@ -89,7 +87,7 @@ const ClusterWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onCl
   );
 
   const formik = useFormik<ClusterWizardValues>({
-    initialValues: createEmptyClusterValues(),
+    initialValues: getClusterInitialValues(),
     validationSchema,
     onSubmit: handleSubmit,
     validateOnChange: false,
@@ -99,11 +97,9 @@ const ClusterWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onCl
     (item: CatalogItem) => {
       const computeItem = item as ClusterCatalogItem;
       setSelectedCatalogItem(computeItem);
-      formik.resetForm({ values: { ...createEmptyClusterValues(), catalogItemId: item.id } });
-      applyClusterCatalogConfigurationDefaults(computeItem, formik, t);
-      applyClusterCatalogGeneralDefaults(computeItem, formik, t);
+      formik.resetForm({ values: getClusterInitialValues(computeItem) });
     },
-    [formik, t],
+    [formik],
   );
 
   const pending = formik.isSubmitting;
@@ -112,9 +108,7 @@ const ClusterWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onCl
     const item = catalogItems.find((entry) => entry.id === initialCatalogItemId);
     if (item && !selectedCatalogItem) {
       setSelectedCatalogItem(item);
-      void formik.setFieldValue('catalogItemId', item.id, false);
-      void applyClusterCatalogConfigurationDefaults(item, formik, t);
-      applyClusterCatalogGeneralDefaults(item, formik, t);
+      formik.resetForm({ values: getClusterInitialValues(item) });
     }
   }, [catalogItems, formik, initialCatalogItemId, selectedCatalogItem, t]);
 

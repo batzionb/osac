@@ -31,6 +31,68 @@ export const createEmptyComputeInstanceValues = (): ComputeInstanceWizardValues 
   },
 });
 
+export const getComputeInstanceInitialValues = (
+  catalogItem?: ComputeInstanceCatalogItem,
+): ComputeInstanceWizardValues => {
+  const values = createEmptyComputeInstanceValues();
+  if (!catalogItem) {
+    return values;
+  }
+  const definitions = readCatalogFieldDefinitions(catalogItem);
+  const value = (path: string): unknown =>
+    getCatalogFieldOverlay(path, definitions, '').defaultValue;
+  const stringValue = (path: string): string => {
+    const raw = value(path);
+    return typeof raw === 'string' || typeof raw === 'number' ? String(raw) : '';
+  };
+  const storageTier = value('spec.boot_disk.storage_tier');
+  const tier =
+    typeof storageTier === 'string'
+      ? { id: '', name: storageTier }
+      : storageTier && typeof storageTier === 'object' && !Array.isArray(storageTier)
+        ? {
+            id:
+              typeof (storageTier as { id?: unknown }).id === 'string'
+                ? (storageTier as { id: string }).id
+                : '',
+            name:
+              typeof (storageTier as { name?: unknown }).name === 'string'
+                ? (storageTier as { name: string }).name
+                : '',
+          }
+        : values.spec.bootDisk.storageTier;
+  const additional = value('spec.additional_disks');
+  return {
+    ...values,
+    catalogItemId: catalogItem.id,
+    spec: {
+      ...values.spec,
+      userData: stringValue('spec.user_data'),
+      sshKey: {
+        name:
+          catalogItem.fields?.sshKey?.behavior?.case === 'locked'
+            ? catalogItem.fields.sshKey.behavior.value.name
+            : catalogItem.fields?.sshKey?.behavior?.case === 'editable'
+              ? (catalogItem.fields.sshKey.behavior.value.defaultValue?.name ?? '')
+              : '',
+      },
+      bootDisk: { sizeGib: stringValue('spec.boot_disk.size_gib'), storageTier: tier },
+      additionalDisks: Array.isArray(additional)
+        ? additional.map((entry) => ({
+            sizeGib:
+              entry &&
+              typeof entry === 'object' &&
+              (typeof (entry as Record<string, unknown>).size_gib === 'string' ||
+                typeof (entry as Record<string, unknown>).size_gib === 'number')
+                ? String((entry as Record<string, unknown>).size_gib)
+                : '',
+            storageTier: values.spec.bootDisk.storageTier,
+          }))
+        : [],
+    },
+  };
+};
+
 const tierField = (
   storageTier: ResourceSelectValue,
 ): { storageTier?: { id?: string; name?: string } } => {

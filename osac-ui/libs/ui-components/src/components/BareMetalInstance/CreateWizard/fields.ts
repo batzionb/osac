@@ -20,6 +20,7 @@ export const BM_USER_DATA_FORM_PATH = 'spec.userData';
 export const BM_USER_DATA_SOURCE_FORM_PATH = 'spec.userDataSource';
 export const BM_USER_DATA_SECRET_FORM_PATH = 'spec.userDataSecret.name';
 
+export const BM_INSTANCE_TYPE_WIRE_PATH = 'instance_type.name';
 export const BM_INSTANCE_TYPE_FORM_PATH = 'spec.instanceType.name';
 
 export const BM_NETWORK_ATTACHMENTS_WIRE_PATH = 'network_attachments';
@@ -108,6 +109,32 @@ export const getBareMetalInstanceTypeCatalogPolicy = (
   return {
     editable: policy?.behavior.case !== 'locked',
     ...(defaultName ? { defaultName } : {}),
+  };
+};
+
+export const getBareMetalInstanceInitialValues = (
+  catalogItem?: BareMetalInstanceCatalogItem,
+): BareMetalInstanceWizardValues => {
+  const values = createEmptyBareMetalInstanceValues();
+  if (!catalogItem) {
+    return values;
+  }
+  const definitions = readCatalogFieldDefinitions(catalogItem);
+  const defaultValue = (path: string): string => {
+    const overlay = getCatalogFieldOverlay(path, definitions, '');
+    return typeof overlay.defaultValue === 'string' || typeof overlay.defaultValue === 'number'
+      ? String(overlay.defaultValue)
+      : '';
+  };
+  return {
+    ...values,
+    catalogItemId: catalogItem.id,
+    spec: {
+      ...values.spec,
+      sshKey: defaultValue(BM_SSH_KEY_WIRE_PATH),
+      userData: defaultValue(BM_USER_DATA_WIRE_PATH),
+      instanceType: { name: defaultValue(BM_INSTANCE_TYPE_WIRE_PATH) },
+    },
   };
 };
 

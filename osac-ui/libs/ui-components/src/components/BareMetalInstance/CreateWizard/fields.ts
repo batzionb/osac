@@ -1,30 +1,13 @@
-import { FormikHelpers } from 'formik';
-import { TFunction } from 'i18next';
-
 import { BareMetalInstanceCatalogItem } from '@osac/types';
 
-import { bareMetalInstanceTypeReferenceFromPolicy } from '../../catalog/bareMetalCatalogItemResourceDisplay';
 import type { ResourceSelectValue } from '../../Form/resourceSelectValue';
 import { emptyResourceSelectValue } from '../../Form/resourceSelectValue';
-import {
-  getCatalogFieldOverlay,
-  overlayDefaultToFormValue,
-  readCatalogFieldDefinitions,
-} from '../../ProvisioningWizard/catalogOverlay';
 
-export const BM_SSH_KEY_WIRE_PATH = 'ssh_public_key';
 export const BM_SSH_KEY_FORM_PATH = 'spec.sshKey';
 
-export const BM_USER_DATA_WIRE_PATH = 'user_data';
 export const BM_USER_DATA_FORM_PATH = 'spec.userData';
-export const BM_USER_DATA_SOURCE_FORM_PATH = 'spec.userDataSource';
-export const BM_USER_DATA_SECRET_FORM_PATH = 'spec.userDataSecret.name';
 
-export const BM_INSTANCE_TYPE_WIRE_PATH = 'instance_type.name';
 export const BM_INSTANCE_TYPE_FORM_PATH = 'spec.instanceType.name';
-
-export const BM_NETWORK_ATTACHMENTS_WIRE_PATH = 'network_attachments';
-export const BM_AUTO_EXTERNAL_IP_WIRE_PATH = 'auto_external_ip_attachment';
 
 export interface BareMetalNetworkAttachmentRow {
   id: string;
@@ -47,11 +30,7 @@ export interface BareMetalInstanceWizardValues {
   };
   spec: {
     sshKey: string;
-    userDataSource: 'inline' | 'secret';
     userData: string;
-    userDataSecret: {
-      name: string;
-    };
     instanceType: {
       name: string;
     };
@@ -63,8 +42,7 @@ export interface BareMetalInstanceWizardValues {
 export const hasBareMetalAuthentication = (
   sshKey: string | undefined,
   userData: string | undefined,
-  userDataSecretName?: string,
-): boolean => Boolean(sshKey?.trim() || userData?.trim() || userDataSecretName?.trim());
+): boolean => Boolean(sshKey?.trim() || userData?.trim());
 
 let nextAttachmentId = 1;
 
@@ -90,9 +68,7 @@ export const createEmptyBareMetalInstanceValues = (): BareMetalInstanceWizardVal
   metadata: { name: '', project: '' },
   spec: {
     sshKey: '',
-    userDataSource: 'inline',
     userData: '',
-    userDataSecret: { name: '' },
     instanceType: {
       name: '',
     },
@@ -101,17 +77,6 @@ export const createEmptyBareMetalInstanceValues = (): BareMetalInstanceWizardVal
   },
 });
 
-export const getBareMetalInstanceTypeCatalogPolicy = (
-  catalogItem: BareMetalInstanceCatalogItem | null,
-): { editable: boolean; defaultName?: string } => {
-  const policy = catalogItem?.fields?.instanceType;
-  const defaultName = bareMetalInstanceTypeReferenceFromPolicy(policy)?.name;
-  return {
-    editable: policy?.behavior.case !== 'locked',
-    ...(defaultName ? { defaultName } : {}),
-  };
-};
-
 export const getBareMetalInstanceInitialValues = (
   catalogItem?: BareMetalInstanceCatalogItem,
 ): BareMetalInstanceWizardValues => {
@@ -119,56 +84,31 @@ export const getBareMetalInstanceInitialValues = (
   if (!catalogItem) {
     return values;
   }
-  const definitions = readCatalogFieldDefinitions(catalogItem);
-  const defaultValue = (path: string): string => {
-    const overlay = getCatalogFieldOverlay(path, definitions, '');
-    return typeof overlay.defaultValue === 'string' || typeof overlay.defaultValue === 'number'
-      ? String(overlay.defaultValue)
-      : '';
-  };
   return {
     ...values,
     catalogItemId: catalogItem.id,
     spec: {
       ...values.spec,
-      sshKey: defaultValue(BM_SSH_KEY_WIRE_PATH),
-      userData: defaultValue(BM_USER_DATA_WIRE_PATH),
-      instanceType: { name: defaultValue(BM_INSTANCE_TYPE_WIRE_PATH) },
+      sshKey:
+        catalogItem.fields?.sshPublicKey?.behavior.case === 'editable'
+          ? (catalogItem.fields.sshPublicKey.behavior.value.defaultValue ?? '')
+          : catalogItem.fields?.sshPublicKey?.behavior.case === 'locked'
+            ? catalogItem.fields.sshPublicKey.behavior.value
+            : '',
+      userData:
+        catalogItem.fields?.userData?.behavior.case === 'editable'
+          ? (catalogItem.fields.userData.behavior.value.defaultValue ?? '')
+          : catalogItem.fields?.userData?.behavior.case === 'locked'
+            ? catalogItem.fields.userData.behavior.value
+            : '',
+      instanceType: {
+        name:
+          catalogItem.fields?.instanceType?.behavior.case === 'editable'
+            ? (catalogItem.fields.instanceType.behavior.value.defaultValue?.name ?? '')
+            : catalogItem.fields?.instanceType?.behavior.case === 'locked'
+              ? catalogItem.fields.instanceType.behavior.value.name
+              : '',
+      },
     },
   };
-};
-
-export const applyBmCatalogDefaults = (
-  catalogItem: BareMetalInstanceCatalogItem,
-  helpers: FormikHelpers<BareMetalInstanceWizardValues>,
-  t: TFunction,
-): void => {
-  const definitions = readCatalogFieldDefinitions(catalogItem);
-
-  const sshKeyOverlay = getCatalogFieldOverlay(
-    BM_SSH_KEY_WIRE_PATH,
-    definitions,
-    t('SSH public key'),
-  );
-  const userDataOverlay = getCatalogFieldOverlay(
-    BM_USER_DATA_WIRE_PATH,
-    definitions,
-    t('User data'),
-  );
-
-  const instanceTypePolicy = getBareMetalInstanceTypeCatalogPolicy(catalogItem);
-
-  const sshDefault = overlayDefaultToFormValue(sshKeyOverlay);
-  if (sshDefault !== undefined) {
-    void helpers.setFieldValue(BM_SSH_KEY_FORM_PATH, sshDefault);
-  }
-
-  const userDataDefault = overlayDefaultToFormValue(userDataOverlay);
-  if (userDataDefault !== undefined) {
-    void helpers.setFieldValue(BM_USER_DATA_FORM_PATH, userDataDefault);
-  }
-
-  if (instanceTypePolicy.defaultName) {
-    void helpers.setFieldValue(BM_INSTANCE_TYPE_FORM_PATH, instanceTypePolicy.defaultName);
-  }
 };

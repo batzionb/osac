@@ -19,8 +19,8 @@ import OsacForm from '../../components/Form/OsacForm';
 import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 import { buildCidrSchema } from '../../validation/cidr-validation';
+import NameField from '../Form/NameField';
 import ProjectField from '../Form/ProjectField';
-import NameField from '../ProvisioningWizard/NameField';
 
 type VirtualNetworkCreateFormValues = {
   metadata: {

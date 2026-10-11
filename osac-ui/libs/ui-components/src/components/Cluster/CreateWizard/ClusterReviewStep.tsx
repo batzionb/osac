@@ -27,8 +27,8 @@ import { getErrorMessage } from '@osac/ui-components/utils/error';
 import { ClusterWizardValues } from './fields';
 import { findVersionByName, versionDisplayName } from './versionUtils';
 import { useTranslation } from '../../../hooks/useTranslation';
-import { formatReviewScalar } from '../../ProvisioningWizard/catalogOverlay';
 import { NetworkAttachmentReviewFields } from '../../ProvisioningWizard/NetworkAttachmentReviewFields';
+import { formatReviewScalar } from '../../ProvisioningWizard/reviewFormatters';
 
 const formatNodeSetsForReview = (
   nodeSetRows: ClusterWizardValues['spec']['nodeSetRows'],

@@ -13,8 +13,8 @@ import { CatalogItem } from '@osac/ui-components/components/catalog/catalogItemD
 
 import { type BareMetalInstanceWizardValues, hasBareMetalAuthentication } from './fields';
 import { useTranslation } from '../../../hooks/useTranslation';
-import { formatReviewScalar } from '../../ProvisioningWizard/catalogOverlay';
 import { NetworkAttachmentReviewFields } from '../../ProvisioningWizard/NetworkAttachmentReviewFields';
+import { formatReviewScalar } from '../../ProvisioningWizard/reviewFormatters';
 
 interface Props {
   catalogItem: CatalogItem | null;

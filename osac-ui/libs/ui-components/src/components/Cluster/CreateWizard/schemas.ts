@@ -1,26 +1,15 @@
 import type { TFunction } from 'i18next';
 import * as yup from 'yup';
 
-import type { ClusterCatalogItem } from '@osac/types';
 import { buildNetworkAttachmentSchemas } from '@osac/ui-components/validation/network-attachment';
 import { resourceNameSchema } from '@osac/ui-components/validation/resource-name';
 
 import type { ClusterNodeSetRow } from './fields';
-import {
-  CLUSTER_POD_CIDR_WIRE_PATH,
-  CLUSTER_SERVICE_CIDR_WIRE_PATH,
-  CLUSTER_SSH_KEY_WIRE_PATH,
-  CLUSTER_VERSION_WIRE_PATH,
-} from './fields';
+import {} from './fields';
 import { buildCidrSchema, cidrsOverlap, isValidCidr } from '../../../validation/cidr-validation';
-import {
-  getCatalogFieldOverlay,
-  hasCatalogFieldDefinition,
-  mergeCatalogValidation,
-  readCatalogFieldDefinitions,
-} from '../../ProvisioningWizard/catalogOverlay';
 import { isValidSshPublicKey } from '../../ProvisioningWizard/credentialValidation';
-import type { WizardStepId } from '../../ProvisioningWizard/stepIds';
+
+export type ClusterWizardStepId = 'catalog' | 'general' | 'configuration' | 'networking' | 'review';
 
 const nodeSetRowSchema = (t: TFunction) =>
   yup.object({
@@ -36,56 +25,22 @@ const nodeSetRowSchema = (t: TFunction) =>
       }),
   });
 
-const buildClusterFieldDefinitions = (catalogItem: unknown, t: TFunction) => {
-  const definitions = readCatalogFieldDefinitions(catalogItem);
-
-  const sshKeyOverlay = getCatalogFieldOverlay(
-    CLUSTER_SSH_KEY_WIRE_PATH,
-    definitions,
-    t('SSH public key'),
-  );
-  const versionOverlay = getCatalogFieldOverlay(
-    CLUSTER_VERSION_WIRE_PATH,
-    definitions,
-    t('Version'),
-  );
-  const podCidrOverlay = getCatalogFieldOverlay(
-    CLUSTER_POD_CIDR_WIRE_PATH,
-    definitions,
-    t('Pod CIDR'),
-  );
-  const serviceCidrOverlay = getCatalogFieldOverlay(
-    CLUSTER_SERVICE_CIDR_WIRE_PATH,
-    definitions,
-    t('Service CIDR'),
-  );
-
-  const sshKeyRequired = hasCatalogFieldDefinition(CLUSTER_SSH_KEY_WIRE_PATH, definitions);
+const buildClusterFieldDefinitions = (t: TFunction) => {
   const rowSchema = nodeSetRowSchema(t);
 
   return {
     catalogItemId: yup.string().required(t('Select a catalog item')),
     metadataName: resourceNameSchema(t),
-    specSshPublicKey: mergeCatalogValidation(
-      yup
-        .string()
-        .test(
-          'ssh-public-key',
-          t(
-            'SSH public key must be in the form "[TYPE] key [[EMAIL]]". Supported types are ssh-rsa, ssh-ed25519, and ecdsa-sha2-nistp256/384/521.',
-          ),
-          (value) => isValidSshPublicKey(value),
+    specSshPublicKey: yup
+      .string()
+      .test(
+        'ssh-public-key',
+        t(
+          'SSH public key must be in the form "[TYPE] key [[EMAIL]]". Supported types are ssh-rsa, ssh-ed25519, and ecdsa-sha2-nistp256/384/521.',
         ),
-      sshKeyOverlay,
-      sshKeyRequired,
-      t('This field is required'),
-    ),
-    specVersionName: mergeCatalogValidation(
-      yup.string().trim(),
-      versionOverlay,
-      true,
-      t('Version is required'),
-    ),
+        (value) => isValidSshPublicKey(value),
+      ),
+    specVersionName: yup.string().trim().required(t('Version is required')),
     specNodeSetRows: yup
       .array()
       .of(rowSchema)
@@ -108,31 +63,21 @@ const buildClusterFieldDefinitions = (catalogItem: unknown, t: TFunction) => {
         return true;
       }),
     specNetwork: yup.object({
-      podCidr: mergeCatalogValidation(
-        buildCidrSchema(t, 'ipv4'),
-        podCidrOverlay,
-        false,
-        t('This field is required'),
-      ),
-      serviceCidr: mergeCatalogValidation(
-        buildCidrSchema(t, 'ipv4').test(
-          'service-cidr-no-overlap',
-          t('Service CIDR must not overlap the pod CIDR.'),
-          function (value) {
-            const parent = this.parent as { podCidr?: string } | undefined;
-            const podCidr = parent?.podCidr ?? '';
-            if (!value?.trim() || !podCidr.trim()) {
-              return true;
-            }
-            if (!isValidCidr(value, 'ipv4') || !isValidCidr(podCidr, 'ipv4')) {
-              return true;
-            }
-            return !cidrsOverlap(podCidr, value, 'ipv4');
-          },
-        ),
-        serviceCidrOverlay,
-        false,
-        t('This field is required'),
+      podCidr: buildCidrSchema(t, 'ipv4'),
+      serviceCidr: buildCidrSchema(t, 'ipv4').test(
+        'service-cidr-no-overlap',
+        t('Service CIDR must not overlap the pod CIDR.'),
+        function (value) {
+          const parent = this.parent as { podCidr?: string } | undefined;
+          const podCidr = parent?.podCidr ?? '';
+          if (!value?.trim() || !podCidr.trim()) {
+            return true;
+          }
+          if (!isValidCidr(value, 'ipv4') || !isValidCidr(podCidr, 'ipv4')) {
+            return true;
+          }
+          return !cidrsOverlap(podCidr, value, 'ipv4');
+        },
       ),
     }),
     specUseDefaultNetwork: yup.boolean(),
@@ -141,15 +86,14 @@ const buildClusterFieldDefinitions = (catalogItem: unknown, t: TFunction) => {
 };
 
 export const buildClusterStepSchema = (
-  catalogItem: ClusterCatalogItem | null,
-  stepId: WizardStepId,
+  stepId: ClusterWizardStepId,
   t: TFunction,
 ): yup.AnyObjectSchema | undefined => {
   if (stepId === 'review') {
     return undefined;
   }
 
-  const fields = buildClusterFieldDefinitions(catalogItem, t);
+  const fields = buildClusterFieldDefinitions(t);
 
   switch (stepId) {
     case 'catalog':

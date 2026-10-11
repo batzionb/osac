@@ -7,7 +7,30 @@ import { userDataSchema } from '@osac/ui-components/validation/user-data';
 
 import { hasBareMetalAuthentication } from './fields';
 import { isValidSshPublicKey } from '../../ProvisioningWizard/credentialValidation';
-import type { WizardStepId } from '../../ProvisioningWizard/stepIds';
+
+export type BareMetalWizardStepId =
+  | 'catalog'
+  | 'general'
+  | 'configuration'
+  | 'networking'
+  | 'review';
+
+const buildBareMetalInstanceFieldDefinitions = (t: TFunction) => {
+  return {
+    catalogItemId: yup.string().required(t('catalogProvision.validation.catalogItemRequired')),
+    metadataName: resourceNameSchema(t),
+    specSshKey: yup
+      .string()
+      .test(
+        'ssh-public-key',
+        t(
+          'SSH public key must be in the form "[TYPE] key [[EMAIL]]". Supported types are ssh-rsa, ssh-ed25519, and ecdsa-sha2-nistp256/384/521.',
+        ),
+        (value) => isValidSshPublicKey(value),
+      ),
+    specUserData: userDataSchema(t),
+  };
+};
 
 /**
  * Builds a Yup schema for one wizard step only.
@@ -18,7 +41,7 @@ import type { WizardStepId } from '../../ProvisioningWizard/stepIds';
  * the current step.
  */
 export const buildBareMetalInstanceStepSchema = (
-  stepId: WizardStepId,
+  stepId: BareMetalWizardStepId,
   t: TFunction,
 ): yup.AnyObjectSchema | undefined => {
   if (stepId === 'review') {
@@ -26,23 +49,14 @@ export const buildBareMetalInstanceStepSchema = (
       .object({
         spec: yup.object({
           sshKey: yup.string(),
-          userDataSource: yup.string(),
           userData: yup.string(),
-          userDataSecret: yup.object({ name: yup.string() }),
         }),
       })
       .test(
         'authentication-method',
         t('Provide either an SSH public key or user data containing access credentials.'),
         function (values) {
-          const isSecretSource = values?.spec?.userDataSource === 'secret';
-          if (
-            hasBareMetalAuthentication(
-              values?.spec?.sshKey,
-              isSecretSource ? undefined : values?.spec?.userData,
-              isSecretSource ? values?.spec?.userDataSecret?.name : undefined,
-            )
-          ) {
+          if (hasBareMetalAuthentication(values?.spec?.sshKey, values?.spec?.userData)) {
             return true;
           }
           return this.createError({ path: 'spec.sshKey' });
@@ -50,36 +64,26 @@ export const buildBareMetalInstanceStepSchema = (
       );
   }
 
+  const fields = buildBareMetalInstanceFieldDefinitions(t);
+
   switch (stepId) {
     case 'catalog':
       return yup.object({
-        catalogItemId: yup.string().required(t('Select a catalog item')),
+        catalogItemId: fields.catalogItemId,
       });
     case 'general':
       return yup.object({
         metadata: yup.object({
-          name: resourceNameSchema(t),
+          name: fields.metadataName,
         }),
         spec: yup.object({
-          sshKey: yup
-            .string()
-            .test(
-              'ssh-public-key',
-              t(
-                'SSH public key must be in the form "[TYPE] key [[EMAIL]]". Supported types are ssh-rsa, ssh-ed25519, and ecdsa-sha2-nistp256/384/521.',
-              ),
-              (value) => isValidSshPublicKey(value),
-            ),
+          sshKey: fields.specSshKey,
         }),
       });
     case 'configuration':
       return yup.object({
         spec: yup.object({
-          userData: yup.string().when('userDataSource', {
-            is: 'inline',
-            then: () => userDataSchema(t),
-            otherwise: (schema) => schema.notRequired(),
-          }),
+          userData: fields.specUserData,
           instanceType: yup.object({
             name: yup.string(),
           }),

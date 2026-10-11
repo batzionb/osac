@@ -1,5 +1,5 @@
+import { InputField } from './InputField';
 import { useTranslation } from '../../hooks/useTranslation';
-import { InputField } from '../Form/InputField';
 
 interface NameFieldProps {
   isDisabled?: boolean;

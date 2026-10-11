@@ -32,10 +32,10 @@ import { getProjectMembershipValidationSchema } from './validation';
 import { getInitialValues } from './values';
 import LeaveFormConfirmation from '../../Form/LeaveFormConfirmation';
 import { MultiSelectField } from '../../Form/MultiSelectField';
+import NameField from '../../Form/NameField';
 import OsacForm from '../../Form/OsacForm';
 import { SelectField } from '../../Form/SelectField';
 import { getFullProjectPath, getProjectName } from '../../Project/utils';
-import NameField from '../../ProvisioningWizard/NameField';
 import { getRoleLabel } from '../utils';
 
 const ProjectMembershipCreatePage = () => {

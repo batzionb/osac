@@ -27,9 +27,9 @@ import { getErrorMessage } from '../../utils/error';
 import { InputField } from '../Form/InputField';
 import LeaveFormConfirmation from '../Form/LeaveFormConfirmation';
 import { MultiSelectField } from '../Form/MultiSelectField';
+import NameField from '../Form/NameField';
 import OsacForm from '../Form/OsacForm';
 import { SelectField } from '../Form/SelectField';
-import NameField from '../ProvisioningWizard/NameField';
 
 export const DISK_IMAGES_LIST_ROUTE = '/admin/infrastructure/disk-images';
 

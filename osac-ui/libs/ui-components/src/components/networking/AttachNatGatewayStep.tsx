@@ -8,9 +8,9 @@ import type {
 } from './AttachNatGatewayWizard.types';
 import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
+import NameField from '../Form/NameField';
 import OsacForm from '../Form/OsacForm';
 import { SelectField } from '../Form/SelectField';
-import NameField from '../ProvisioningWizard/NameField';
 
 export interface AttachNatGatewayStepProps {
   virtualNetwork: AttachNatGatewayVirtualNetwork;

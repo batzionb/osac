@@ -21,7 +21,10 @@ import { BareMetalReviewStep } from './BareMetalReviewStep';
 import type { BareMetalInstanceWizardValues } from './fields';
 import { getBareMetalInstanceInitialValues } from './fields';
 import { buildBareMetalInstanceCreatePayload } from './payload';
-import { buildBareMetalInstanceStepSchema } from './schemas';
+import {
+  type BareMetalWizardStepId,
+  buildBareMetalInstanceStepSchema,
+} from './schemas';
 import type { CatalogItem } from '../../catalog/catalogItemDisplay';
 
 export interface BareMetalInstanceCreateWizardCloseHandler {
@@ -66,7 +69,7 @@ const BareMetalInstanceWizardContent = ({
   const navigate = useNavigate();
   const provision = useCreateBareMetalInstance();
   const catalogQuery = useBareMetalInstanceCatalogItems();
-  const [activeStep, setActiveStep] = useState('catalog');
+  const [activeStep, setActiveStep] = useState<BareMetalWizardStepId>('catalog');
   const [validationAlert, setValidationAlert] = useState(false);
   const [selectedCatalogItem, setSelectedCatalogItem] =
     useState<BareMetalInstanceCatalogItem | null>(null);
@@ -88,8 +91,8 @@ const BareMetalInstanceWizardContent = ({
   );
 
   const validationSchema = useMemo(
-    () => buildBareMetalInstanceStepSchema(selectedCatalogItem, activeStep, t),
-    [activeStep, selectedCatalogItem, t],
+    () => buildBareMetalInstanceStepSchema(activeStep, t),
+    [activeStep, t],
   );
 
   const formik = useFormik<BareMetalInstanceWizardValues>({
@@ -130,10 +133,10 @@ const BareMetalInstanceWizardContent = ({
 
   const stepHasErrors = useCallback(
     (stepId: string, errors: Record<string, unknown>) => {
-      const schema = buildBareMetalInstanceStepSchema(selectedCatalogItem, stepId, t);
+      const schema = buildBareMetalInstanceStepSchema(stepId as BareMetalWizardStepId, t);
       return Boolean(schema && Object.keys(errors).length > 0);
     },
-    [selectedCatalogItem, t],
+    [t],
   );
 
   return (
@@ -144,7 +147,7 @@ const BareMetalInstanceWizardContent = ({
           <Wizard
             isVisitRequired
             onStepChange={(_, step) => {
-              setActiveStep(String(step.id));
+              setActiveStep(String(step.id) as BareMetalWizardStepId);
               setValidationAlert(false);
             }}
             footer={

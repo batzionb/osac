@@ -4,8 +4,8 @@ import PlusCircleIcon from '@patternfly/react-icons/dist/esm/icons/plus-circle-i
 import { FieldArray, useFormikContext } from 'formik';
 
 import { InputField } from '@osac/ui-components/components/Form/InputField';
+import NameField from '@osac/ui-components/components/Form/NameField';
 import OsacForm from '@osac/ui-components/components/Form/OsacForm';
-import NameField from '@osac/ui-components/components/ProvisioningWizard/NameField';
 import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 
 import type { ExternalIpPoolFormValues } from './values';

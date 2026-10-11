@@ -5,7 +5,6 @@ import { useField } from 'formik';
 import { type ClusterCatalogItem } from '@osac/types';
 
 import ClusterNodeSetsArrayField from './ClusterNodeSetsArrayField';
-import { CLUSTER_VERSION_WIRE_PATH } from './fields';
 import { findVersionByName, isDeprecatedVersion, versionDisplayName } from './versionUtils';
 import {
   CLUSTER_VERSION_ACTIVE_LIST_FILTER,
@@ -15,10 +14,6 @@ import { useTranslation } from '../../../hooks/useTranslation';
 import { getErrorMessage } from '../../../utils/error';
 import OsacForm from '../../Form/OsacForm';
 import { SelectField } from '../../Form/SelectField';
-import {
-  getCatalogFieldOverlay,
-  readCatalogFieldDefinitions,
-} from '../../ProvisioningWizard/catalogOverlay';
 
 interface Props {
   catalogItem: ClusterCatalogItem | null;
@@ -52,12 +47,6 @@ const ClusterConfigurationStep = ({ catalogItem }: Props) => {
     [versions, t],
   );
 
-  const definitions = useMemo(() => readCatalogFieldDefinitions(catalogItem), [catalogItem]);
-  const versionOverlay = useMemo(
-    () => getCatalogFieldOverlay(CLUSTER_VERSION_WIRE_PATH, definitions, t('Version')),
-    [definitions, t],
-  );
-
   if (!catalogItem) {
     return null;
   }
@@ -82,11 +71,10 @@ const ClusterConfigurationStep = ({ catalogItem }: Props) => {
         <OsacForm>
           <SelectField
             name="spec.versionName"
-            label={versionOverlay.label}
+            label={t('Version')}
             fieldId="cluster-version"
             isRequired
             isLoading={versionsLoading}
-            isDisabled={!versionOverlay.editable}
             placeholder={t('Select a version')}
             options={versionOptions}
           />

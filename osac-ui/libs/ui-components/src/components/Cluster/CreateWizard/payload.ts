@@ -5,10 +5,6 @@ import { type ClusterCatalogItem, ClusterSchema } from '@osac/types';
 import type { ClusterWizardValues } from './fields';
 import { createEmptyNodeSetRow } from './fields';
 import { emptyResourceSelectValue } from '../../Form/resourceSelectValue';
-import {
-  getCatalogFieldOverlay,
-  readCatalogFieldDefinitions,
-} from '../../ProvisioningWizard/catalogOverlay';
 
 export const createEmptyClusterValues = (): ClusterWizardValues => ({
   catalogItemId: '',
@@ -39,31 +35,49 @@ export const getClusterInitialValues = (catalogItem?: ClusterCatalogItem): Clust
   if (!catalogItem) {
     return values;
   }
-  const definitions = readCatalogFieldDefinitions(catalogItem);
-  const defaultValue = (path: string): unknown =>
-    getCatalogFieldOverlay(path, definitions, '').defaultValue;
-  const asString = (path: string): string => {
-    const value = defaultValue(path);
-    return typeof value === 'string' || typeof value === 'number' ? String(value) : '';
-  };
-  const version = defaultValue('spec.version');
+  const fields = catalogItem.fields;
+  const sshPublicKey =
+    fields?.sshPublicKey?.behavior.case === 'editable'
+      ? (fields.sshPublicKey.behavior.value.defaultValue ?? '')
+      : fields?.sshPublicKey?.behavior.case === 'locked'
+        ? fields.sshPublicKey.behavior.value
+        : '';
+  const pullSecret =
+    fields?.pullSecretSecret?.behavior.case === 'editable'
+      ? (fields.pullSecretSecret.behavior.value.defaultValue?.name ?? '')
+      : fields?.pullSecretSecret?.behavior.case === 'locked'
+        ? fields.pullSecretSecret.behavior.value.name
+        : '';
+  const version =
+    fields?.version?.behavior.case === 'editable'
+      ? (fields.version.behavior.value.defaultValue?.name ?? '')
+      : fields?.version?.behavior.case === 'locked'
+        ? fields.version.behavior.value.name
+        : '';
+  const podCidr =
+    fields?.network?.podCidr?.behavior.case === 'editable'
+      ? (fields.network.podCidr.behavior.value.defaultValue ?? '')
+      : fields?.network?.podCidr?.behavior.case === 'locked'
+        ? fields.network.podCidr.behavior.value
+        : '';
+  const serviceCidr =
+    fields?.network?.serviceCidr?.behavior.case === 'editable'
+      ? (fields.network.serviceCidr.behavior.value.defaultValue ?? '')
+      : fields?.network?.serviceCidr?.behavior.case === 'locked'
+        ? fields.network.serviceCidr.behavior.value
+        : '';
   return {
     ...values,
     catalogItemId: catalogItem.id,
     spec: {
       ...values.spec,
-      sshPublicKey: asString('ssh_public_key'),
-      pullSecretSecret: { name: asString('pull_secret_secret.name') },
-      versionName:
-        version && typeof version === 'object' && 'name' in version
-          ? typeof (version as { name?: unknown }).name === 'string'
-            ? (version as { name: string }).name
-            : ''
-          : asString('spec.version'),
+      sshPublicKey,
+      pullSecretSecret: { name: pullSecret },
+      versionName: version,
       network: {
         ...values.spec.network,
-        podCidr: asString('spec.network.pod_cidr'),
-        serviceCidr: asString('spec.network.service_cidr'),
+        podCidr,
+        serviceCidr,
       },
     },
   };

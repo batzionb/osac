@@ -19,8 +19,7 @@ import BareMetalGeneralStep from './BareMetalGeneralStep';
 import { BareMetalNetworkingStep } from './BareMetalNetworkingStep';
 import { BareMetalReviewStep } from './BareMetalReviewStep';
 import type { BareMetalInstanceWizardValues } from './fields';
-import { applyBmCatalogDefaults } from './fields';
-import { createEmptyBareMetalInstanceValues } from './fields';
+import { getBareMetalInstanceInitialValues } from './fields';
 import { buildBareMetalInstanceCreatePayload } from './payload';
 import { buildBareMetalInstanceStepSchema } from './schemas';
 import type { CatalogItem } from '../../catalog/catalogItemDisplay';
@@ -94,7 +93,7 @@ const BareMetalInstanceWizardContent = ({
   );
 
   const formik = useFormik<BareMetalInstanceWizardValues>({
-    initialValues: createEmptyBareMetalInstanceValues(),
+    initialValues: getBareMetalInstanceInitialValues(),
     validationSchema,
     onSubmit: handleSubmit,
     validateOnChange: false,
@@ -104,12 +103,9 @@ const BareMetalInstanceWizardContent = ({
     (item: CatalogItem) => {
       const computeItem = item as BareMetalInstanceCatalogItem;
       setSelectedCatalogItem(computeItem);
-      formik.resetForm({
-        values: { ...createEmptyBareMetalInstanceValues(), catalogItemId: item.id },
-      });
-      applyBmCatalogDefaults(computeItem, formik, t);
+      formik.resetForm({ values: getBareMetalInstanceInitialValues(computeItem) });
     },
-    [formik, t],
+    [formik],
   );
 
   const pending = formik.isSubmitting;
@@ -118,8 +114,7 @@ const BareMetalInstanceWizardContent = ({
     const item = catalogItems.find((entry) => entry.id === initialCatalogItemId);
     if (item && !selectedCatalogItem) {
       setSelectedCatalogItem(item);
-      void formik.setFieldValue('catalogItemId', item.id, false);
-      void applyBmCatalogDefaults(item, formik, t);
+      formik.resetForm({ values: getBareMetalInstanceInitialValues(item) });
     }
   }, [catalogItems, formik, initialCatalogItemId, selectedCatalogItem, t]);
 

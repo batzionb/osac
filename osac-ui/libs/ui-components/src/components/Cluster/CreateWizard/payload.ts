@@ -5,6 +5,10 @@ import { type ClusterCatalogItem, ClusterSchema } from '@osac/types';
 import type { ClusterWizardValues } from './fields';
 import { createEmptyNodeSetRow } from './fields';
 import { emptyResourceSelectValue } from '../../Form/resourceSelectValue';
+import {
+  getCatalogFieldOverlay,
+  readCatalogFieldDefinitions,
+} from '../../ProvisioningWizard/catalogOverlay';
 
 export const createEmptyClusterValues = (): ClusterWizardValues => ({
   catalogItemId: '',
@@ -29,6 +33,41 @@ export const createEmptyClusterValues = (): ClusterWizardValues => ({
     autoExternalIpAttachment: false,
   },
 });
+
+export const getClusterInitialValues = (catalogItem?: ClusterCatalogItem): ClusterWizardValues => {
+  const values = createEmptyClusterValues();
+  if (!catalogItem) {
+    return values;
+  }
+  const definitions = readCatalogFieldDefinitions(catalogItem);
+  const defaultValue = (path: string): unknown =>
+    getCatalogFieldOverlay(path, definitions, '').defaultValue;
+  const asString = (path: string): string => {
+    const value = defaultValue(path);
+    return typeof value === 'string' || typeof value === 'number' ? String(value) : '';
+  };
+  const version = defaultValue('spec.version');
+  return {
+    ...values,
+    catalogItemId: catalogItem.id,
+    spec: {
+      ...values.spec,
+      sshPublicKey: asString('ssh_public_key'),
+      pullSecretSecret: { name: asString('pull_secret_secret.name') },
+      versionName:
+        version && typeof version === 'object' && 'name' in version
+          ? typeof (version as { name?: unknown }).name === 'string'
+            ? (version as { name: string }).name
+            : ''
+          : asString('spec.version'),
+      network: {
+        ...values.spec.network,
+        podCidr: asString('spec.network.pod_cidr'),
+        serviceCidr: asString('spec.network.service_cidr'),
+      },
+    },
+  };
+};
 
 export const buildClusterCreatePayload = (
   values: ClusterWizardValues,

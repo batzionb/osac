@@ -3,9 +3,10 @@ import { FormSection, Stack, StackItem } from '@patternfly/react-core';
 import type { ClusterCatalogItem } from '@osac/types';
 
 import { useTranslation } from '../../../hooks/useTranslation';
-import { InputField } from '../../Form/InputField';
 import { NetworkAttachmentPickers } from '../../Form/NetworkAttachmentPickers';
 import OsacForm from '../../Form/OsacForm';
+import ClusterPodCidrField from '../../ProvisioningWizard/fields/ClusterPodCidrField';
+import ClusterServiceCidrField from '../../ProvisioningWizard/fields/ClusterServiceCidrField';
 
 interface Props {
   catalogItem: ClusterCatalogItem | null;
@@ -34,18 +35,8 @@ export const ClusterNetworkingStep = ({ catalogItem }: Props) => {
             />
           </FormSection>
           <FormSection title={t('Cluster Networking')} titleElement="h2">
-            <InputField
-              name="spec.network.podCidr"
-              label={t('Pod CIDR')}
-              fieldId="cluster-pod-cidr"
-              helperText={t('Use IPv4 CIDR notation (for example 10.128.0.0/14).')}
-            />
-            <InputField
-              name="spec.network.serviceCidr"
-              label={t('Service CIDR')}
-              fieldId="cluster-service-cidr"
-              helperText={t('Use IPv4 CIDR notation (for example 172.30.0.0/16).')}
-            />
+            <ClusterPodCidrField name="spec.network.podCidr" />
+            <ClusterServiceCidrField name="spec.network.serviceCidr" />
           </FormSection>
         </OsacForm>
       </StackItem>

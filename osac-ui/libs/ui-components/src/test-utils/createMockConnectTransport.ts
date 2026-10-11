@@ -85,6 +85,7 @@ import {
   NATGateways,
   ProjectMemberships,
   Projects,
+  type BareMetalInstanceType as PublicBareMetalInstanceType,
   BareMetalInstanceTypes as PublicBareMetalInstanceTypes,
   ExternalIPPools as PublicExternalIPPools,
   StorageTiers as PublicStorageTiers,
@@ -178,6 +179,7 @@ export type MockApiFixtures = {
   securityGroups?: SecurityGroup[];
   identityProviders?: IdentityProvider[];
   instanceTypes?: InstanceType[];
+  publicBaremetalInstanceTypes?: PublicBareMetalInstanceType[];
   diskImages?: DiskImage[];
   projects?: Project[];
   projectMemberships?: ProjectMembership[];
@@ -411,10 +413,16 @@ export type MockTransportOverrides = {
   onStorageTierDelete?: (
     req: StorageTiersDeleteRequest,
   ) => MessageInitShape<typeof StorageTiersDeleteResponseSchema>;
+  onPublicInstanceTypeList?: () => { items: InstanceType[] };
   onInstanceTypeList?: (req: InstanceTypesListRequest) => InstanceTypesListResponse;
   onInstanceTypeCreate?: (req: InstanceTypesCreateRequest) => InstanceTypesCreateResponse;
   onInstanceTypeUpdate?: (req: InstanceTypesUpdateRequest) => InstanceTypesUpdateResponse;
   onInstanceTypeDelete?: (req: InstanceTypesDeleteRequest) => InstanceTypesDeleteResponse;
+  onPublicBaremetalInstanceTypeList?: () => {
+    items: PublicBareMetalInstanceType[];
+    size: number;
+    total: number;
+  };
   onBaremetalInstanceTypeList?: (
     req: BareMetalInstanceTypesListRequest,
   ) => MessageInitShape<typeof BareMetalInstanceTypesListResponseSchema>;
@@ -491,6 +499,7 @@ export const createMockConnectTransport = (
   const subnets = fixtures.subnets ?? [];
   const securityGroups = fixtures.securityGroups ?? [];
   const instanceTypes = fixtures.instanceTypes ?? [];
+  const publicBaremetalInstanceTypes = fixtures.publicBaremetalInstanceTypes ?? [];
   const diskImages = fixtures.diskImages ?? [];
   const privateInstanceTypes = fixtures.privateInstanceTypes ?? [];
   const privateBaremetalInstanceTypes = fixtures.privateBaremetalInstanceTypes ?? [];
@@ -600,11 +609,16 @@ export const createMockConnectTransport = (
       });
 
       router.service(InstanceTypes, {
-        list: (req) => ({
-          items: instanceTypes.filter((item) =>
-            matchesInstanceTypeActiveFilter(req.filter, item.spec?.state),
-          ),
-        }),
+        list: (req) => {
+          if (overrides.onPublicInstanceTypeList) {
+            return overrides.onPublicInstanceTypeList();
+          }
+          return {
+            items: instanceTypes.filter((item) =>
+              matchesInstanceTypeActiveFilter(req.filter, item.spec?.state),
+            ),
+          };
+        },
         get: (req) => ({
           object: instanceTypes.find((i) => i.id === req.id),
         }),
@@ -875,8 +889,17 @@ export const createMockConnectTransport = (
       });
 
       router.service(PublicBareMetalInstanceTypes, {
-        list: () => ({ items: [], size: 0, total: 0 }),
-        get: () => ({}),
+        list: () => {
+          if (overrides.onPublicBaremetalInstanceTypeList) {
+            return overrides.onPublicBaremetalInstanceTypeList();
+          }
+          return {
+            items: bareMetalInstanceTypes,
+            size: bareMetalInstanceTypes.length,
+            total: bareMetalInstanceTypes.length,
+          };
+        },
+        get: (req) => ({ object: bareMetalInstanceTypes.find((item) => item.id === req.id) }),
       });
 
       router.service(PrivateBareMetalInstanceTypes, {

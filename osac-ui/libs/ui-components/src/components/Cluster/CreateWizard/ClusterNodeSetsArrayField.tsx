@@ -1,12 +1,4 @@
-import {
-  ActionGroup,
-  Alert,
-  Button,
-  FormFieldGroup,
-  FormFieldGroupHeader,
-  Stack,
-  StackItem,
-} from '@patternfly/react-core';
+import { ActionGroup, Alert, Button, Stack, StackItem } from '@patternfly/react-core';
 import MinusCircleIcon from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
 import PlusCircleIcon from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { useFormikContext } from 'formik';
@@ -19,6 +11,7 @@ import { getErrorMessage } from '../../../utils/error';
 import ClusterPoolSizeField from '../../Form/ClusterPoolSizeField';
 import NameField from '../../Form/NameField';
 import { SelectField } from '../../Form/SelectField';
+import ProvisioningFieldGroup from '../../ProvisioningWizard/fields/ProvisioningFieldGroup';
 import type { ClusterWizardValues } from './fields';
 import { createEmptyNodeSetRow } from './fields';
 
@@ -65,24 +58,18 @@ const ClusterNodeSetsArrayField = () => {
       ) : null}
       {values.spec.nodeSetRows.map((row, rowIndex) => (
         <StackItem key={row.rowId}>
-          <FormFieldGroup
-            header={
-              <FormFieldGroupHeader
-                titleText={{
-                  text: t('Node set {{number}}', { number: rowIndex + 1 }),
-                  id: `cluster-node-set-group-${row.rowId}`,
-                }}
-                actions={
-                  rowIndex > 0 ? (
-                    <Button
-                      variant="plain"
-                      aria-label={t('Remove node set')}
-                      onClick={() => removeRow(rowIndex)}
-                      icon={<MinusCircleIcon />}
-                    />
-                  ) : undefined
-                }
-              />
+          <ProvisioningFieldGroup
+            title={t('Node set {{number}}', { number: rowIndex + 1 })}
+            titleId={`cluster-node-set-group-${row.rowId}`}
+            actions={
+              rowIndex > 0 ? (
+                <Button
+                  variant="plain"
+                  aria-label={t('Remove node set')}
+                  onClick={() => removeRow(rowIndex)}
+                  icon={<MinusCircleIcon />}
+                />
+              ) : undefined
             }
           >
             <NameField
@@ -98,8 +85,12 @@ const ClusterNodeSetsArrayField = () => {
               isLoading={hostTypesLoading}
               placeholder={t('Select host type')}
             />
-            <ClusterPoolSizeField rowIndex={rowIndex} isRequired />
-          </FormFieldGroup>
+            <ClusterPoolSizeField
+              name={`spec.nodeSetRows.${rowIndex}.size`}
+              fieldId={`cluster-node-set-size-${rowIndex}`}
+              isRequired
+            />
+          </ProvisioningFieldGroup>
         </StackItem>
       ))}
       <StackItem>

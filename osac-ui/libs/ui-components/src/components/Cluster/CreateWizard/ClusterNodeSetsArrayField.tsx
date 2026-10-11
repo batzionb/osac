@@ -16,9 +16,9 @@ import { useListResource } from '@osac/ui-components/api/use-resource';
 
 import { useTranslation } from '../../../hooks/useTranslation';
 import { getErrorMessage } from '../../../utils/error';
+import ClusterPoolSizeField from '../../Form/ClusterPoolSizeField';
+import NameField from '../../Form/NameField';
 import { SelectField } from '../../Form/SelectField';
-import ClusterPoolSizeField from '../../ProvisioningWizard/ClusterPoolSizeField';
-import NameField from '../../ProvisioningWizard/NameField';
 import type { ClusterWizardValues } from './fields';
 import { createEmptyNodeSetRow } from './fields';
 

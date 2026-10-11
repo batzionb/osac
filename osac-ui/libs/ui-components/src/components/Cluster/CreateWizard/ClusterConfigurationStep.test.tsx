@@ -189,7 +189,7 @@ describe('ClusterConfigurationStep', () => {
               ],
             },
           }}
-          validationSchema={buildClusterStepSchema(clusterCatalogItem, 'configuration', tIdentity)}
+          validationSchema={buildClusterStepSchema('configuration', tIdentity)}
           validateOnBlur
           onSubmit={() => undefined}
         >
@@ -229,7 +229,7 @@ describe('ClusterConfigurationStep', () => {
               ],
             },
           }}
-          validationSchema={buildClusterStepSchema(clusterCatalogItem, 'configuration', tIdentity)}
+          validationSchema={buildClusterStepSchema('configuration', tIdentity)}
           validateOnMount
           onSubmit={() => undefined}
         >

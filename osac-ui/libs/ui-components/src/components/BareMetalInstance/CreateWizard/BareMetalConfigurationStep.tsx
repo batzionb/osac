@@ -23,16 +23,10 @@ import { ResourceSelectField } from '@osac/ui-components/components/Form/Resourc
 import { SelectField } from '@osac/ui-components/components/Form/SelectField';
 import { getErrorMessage } from '@osac/ui-components/utils/error';
 
-import {
-  BM_USER_DATA_FORM_PATH,
-  BM_USER_DATA_SECRET_FORM_PATH,
-  BM_USER_DATA_SOURCE_FORM_PATH,
-  BareMetalInstanceWizardValues,
-  getBareMetalInstanceTypeCatalogPolicy,
-} from './fields';
+import { BM_USER_DATA_FORM_PATH, BareMetalInstanceWizardValues } from './fields';
 import { useTranslation } from '../../../hooks/useTranslation';
 import OsacForm from '../../Form/OsacForm';
-import UserDataField from '../../ProvisioningWizard/UserDataField';
+import UserDataField from '../../Form/UserDataField';
 
 const InstanceTypeDescription = ({ instanceType }: { instanceType: BareMetalInstanceType }) => {
   const { t } = useTranslation();
@@ -115,13 +109,11 @@ interface Props {
   catalogItem: BareMetalInstanceCatalogItem | null;
 }
 
-const BareMetalConfigurationStep = ({ catalogItem }: Props) => {
+const BareMetalConfigurationStep = (_props: Props) => {
   const { t } = useTranslation();
   const { values } = useFormikContext<BareMetalInstanceWizardValues>();
 
   const { data, isLoading, error, refetch } = useListResource(BareMetalInstanceTypes);
-
-  const instanceTypePolicy = getBareMetalInstanceTypeCatalogPolicy(catalogItem);
 
   const currentInstanceType = data?.items.find(
     (i) => i.metadata?.name === values.spec.instanceType.name,
@@ -150,7 +142,7 @@ const BareMetalConfigurationStep = ({ catalogItem }: Props) => {
             label={t('Instance type')}
             fieldId="instance-type"
             isLoading={isLoading}
-            isDisabled={!instanceTypePolicy.editable || !!error}
+            isDisabled={!!error}
             placeholder={t('Select an instance type')}
             options={(data?.items || []).map((instanceType) => ({
               label: `${instanceType.metadata?.name || ''}`,
@@ -179,13 +171,7 @@ const BareMetalConfigurationStep = ({ catalogItem }: Props) => {
             emptyTitle={t('No disk images available')}
             emptyDescription={t('Contact your administrator to have a disk image provisioned.')}
           />
-          <UserDataField
-            sourceName={BM_USER_DATA_SOURCE_FORM_PATH}
-            secretRefName={BM_USER_DATA_SECRET_FORM_PATH}
-            currentSource={values.spec.userDataSource}
-            inlineName={BM_USER_DATA_FORM_PATH}
-            projectName={values.metadata.project}
-          />
+          <UserDataField name={BM_USER_DATA_FORM_PATH} />
         </OsacForm>
       </StackItem>
     </Stack>

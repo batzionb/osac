@@ -11,8 +11,8 @@ import {
   VM_USER_DATA_SECRET_FORM_PATH,
 } from './fields';
 import { useTranslation } from '../../../hooks/useTranslation';
+import NameField from '../../Form/NameField';
 import OsacForm from '../../Form/OsacForm';
-import NameField from '../../ProvisioningWizard/NameField';
 
 interface VmGeneralStepProps {
   catalogItem: ComputeInstanceCatalogItem | null;

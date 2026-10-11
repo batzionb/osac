@@ -2,8 +2,14 @@ import type { TFunction } from 'i18next';
 
 import type { ComputeInstanceDisk, StorageTierReference } from '@osac/types';
 
-import { formatBootDiskSizeForReview } from './catalogOverlay';
 import { displayValue } from '../../utils/detailFormatters';
+
+const formatDiskSize = (value: unknown): string => {
+  if (value === undefined || value === null || value === '') {
+    return '—';
+  }
+  return `${typeof value === 'object' ? (JSON.stringify(value) ?? '—') : String(value as string | number | boolean)} GB`;
+};
 
 type StorageDisk = {
   sizeGib?: ComputeInstanceDisk['sizeGib'] | string;
@@ -24,12 +30,12 @@ export const getVmStorageRows = (
   return [
     {
       name: t('Boot disk'),
-      size: formatBootDiskSizeForReview(bootDisk?.sizeGib),
+      size: formatDiskSize(bootDisk?.sizeGib),
       storageTier: displayValue(bootDisk?.storageTier?.name || bootDisk?.storageTier?.id),
     },
     ...(additionalDisks ?? []).map((disk, index) => ({
       name: t('Additional disk {{number}}', { number: index + 1 }),
-      size: formatBootDiskSizeForReview(disk.sizeGib),
+      size: formatDiskSize(disk.sizeGib),
       storageTier: displayValue(disk.storageTier?.name || disk.storageTier?.id),
     })),
   ];

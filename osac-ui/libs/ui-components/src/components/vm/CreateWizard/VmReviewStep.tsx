@@ -24,8 +24,8 @@ import { getErrorMessage } from '@osac/ui-components/utils/error';
 
 import { ComputeInstanceWizardValues } from './fields';
 import { useTranslation } from '../../../hooks/useTranslation';
-import { formatReviewScalar } from '../../ProvisioningWizard/catalogOverlay';
 import { NetworkAttachmentReviewFields } from '../../ProvisioningWizard/NetworkAttachmentReviewFields';
+import { formatReviewScalar } from '../../ProvisioningWizard/reviewFormatters';
 import { getVmStorageRows } from '../../ProvisioningWizard/storageRows';
 
 interface Props {

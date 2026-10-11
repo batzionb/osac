@@ -5,10 +5,6 @@ import { ComputeInstanceRunStrategy } from '@osac/types';
 
 import type { ComputeInstanceWizardValues } from './fields';
 import { type ResourceSelectValue, emptyResourceSelectValue } from '../../Form/resourceSelectValue';
-import {
-  getCatalogFieldOverlay,
-  readCatalogFieldDefinitions,
-} from '../../ProvisioningWizard/catalogOverlay';
 
 export const createEmptyComputeInstanceValues = (): ComputeInstanceWizardValues => ({
   catalogItemId: '',
@@ -38,14 +34,21 @@ export const getComputeInstanceInitialValues = (
   if (!catalogItem) {
     return values;
   }
-  const definitions = readCatalogFieldDefinitions(catalogItem);
-  const value = (path: string): unknown =>
-    getCatalogFieldOverlay(path, definitions, '').defaultValue;
-  const stringValue = (path: string): string => {
-    const raw = value(path);
-    return typeof raw === 'string' || typeof raw === 'number' ? String(raw) : '';
-  };
-  const storageTier = value('spec.boot_disk.storage_tier');
+  const fields = catalogItem.fields;
+  const stringValue = (value: string | number | undefined): string =>
+    value === undefined ? '' : String(value);
+  const value =
+    fields?.bootDisk?.sizeGib?.behavior.case === 'editable'
+      ? fields.bootDisk.sizeGib.behavior.value.defaultValue
+      : fields?.bootDisk?.sizeGib?.behavior.case === 'locked'
+        ? fields.bootDisk.sizeGib.behavior.value
+        : undefined;
+  const storageTier =
+    fields?.bootDisk?.storageTier?.behavior.case === 'editable'
+      ? fields.bootDisk.storageTier.behavior.value.defaultValue
+      : fields?.bootDisk?.storageTier?.behavior.case === 'locked'
+        ? fields.bootDisk.storageTier.behavior.value
+        : undefined;
   const tier =
     typeof storageTier === 'string'
       ? { id: '', name: storageTier }
@@ -61,13 +64,23 @@ export const getComputeInstanceInitialValues = (
                 : '',
           }
         : values.spec.bootDisk.storageTier;
-  const additional = value('spec.additional_disks');
+  const additional =
+    fields?.additionalDisks?.behavior.case === 'editable'
+      ? fields.additionalDisks.behavior.value.defaultValue
+      : fields?.additionalDisks?.behavior.case === 'locked'
+        ? fields.additionalDisks.behavior.value
+        : undefined;
   return {
     ...values,
     catalogItemId: catalogItem.id,
     spec: {
       ...values.spec,
-      userData: stringValue('spec.user_data'),
+      userData:
+        fields?.userData?.behavior.case === 'editable'
+          ? (fields.userData.behavior.value.defaultValue ?? '')
+          : fields?.userData?.behavior.case === 'locked'
+            ? fields.userData.behavior.value
+            : '',
       sshKey: {
         name:
           catalogItem.fields?.sshKey?.behavior?.case === 'locked'
@@ -76,19 +89,14 @@ export const getComputeInstanceInitialValues = (
               ? (catalogItem.fields.sshKey.behavior.value.defaultValue?.name ?? '')
               : '',
       },
-      bootDisk: { sizeGib: stringValue('spec.boot_disk.size_gib'), storageTier: tier },
-      additionalDisks: Array.isArray(additional)
-        ? additional.map((entry) => ({
-            sizeGib:
-              entry &&
-              typeof entry === 'object' &&
-              (typeof (entry as Record<string, unknown>).size_gib === 'string' ||
-                typeof (entry as Record<string, unknown>).size_gib === 'number')
-                ? String((entry as Record<string, unknown>).size_gib)
-                : '',
-            storageTier: values.spec.bootDisk.storageTier,
-          }))
-        : [],
+      bootDisk: { sizeGib: stringValue(value), storageTier: tier },
+      additionalDisks:
+        additional?.items.map((entry) => ({
+          sizeGib: String(entry.sizeGib ?? ''),
+          storageTier: entry.storageTier
+            ? { id: entry.storageTier.id, name: entry.storageTier.name }
+            : values.spec.bootDisk.storageTier,
+        })) ?? [],
     },
   };
 };
@@ -170,8 +178,7 @@ export const buildComputeInstanceCreatePayload = (
     .filter((disk) => disk.sizeGib.trim())
     .map((disk) => ({ sizeGib: Number(disk.sizeGib.trim()), ...tierField(disk.storageTier) }));
   const hasAdditionalDisksDefault =
-    getCatalogFieldOverlay('spec.additional_disks', readCatalogFieldDefinitions(catalogItem), '')
-      .defaultValue !== undefined;
+    catalogItem.fields?.additionalDisks?.behavior.case !== undefined;
   if (additionalDisks.length > 0 || hasAdditionalDisksDefault) {
     spec.additionalDisks = additionalDisks;
   }

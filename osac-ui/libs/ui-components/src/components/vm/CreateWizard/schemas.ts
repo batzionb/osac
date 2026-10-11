@@ -5,12 +5,14 @@ import { buildNetworkAttachmentSchemas } from '@osac/ui-components/validation/ne
 import { resourceNameSchema } from '@osac/ui-components/validation/resource-name';
 import { userDataSchema } from '@osac/ui-components/validation/user-data';
 
-import {
-  getCatalogFieldOverlay,
-  mergeCatalogValidation,
-  readCatalogFieldDefinitions,
-} from '../../ProvisioningWizard/catalogOverlay';
-import type { WizardStepId } from '../../ProvisioningWizard/stepIds';
+
+export type VmWizardStepId =
+  | 'catalog'
+  | 'general'
+  | 'configuration'
+  | 'storage'
+  | 'networking'
+  | 'review';
 
 const storageTierSchema = (t: TFunction) =>
   yup
@@ -24,29 +26,21 @@ const storageTierSchema = (t: TFunction) =>
       return Boolean(id || name);
     });
 
-const buildComputeInstanceFieldDefinitions = (catalogItem: unknown, t: TFunction) => {
-  const definitions = readCatalogFieldDefinitions(catalogItem);
-
-  const bootDiskOverlay = getCatalogFieldOverlay(
-    'spec.boot_disk.size_gib',
-    definitions,
-    t('catalogProvision.vm.fields.bootDisk'),
-  );
-
+const buildComputeInstanceFieldDefinitions = (t: TFunction) => {
   return {
+    catalogItemId: yup.string().required(t('catalogProvision.validation.catalogItemRequired')),
+    metadataName: resourceNameSchema(t),
+    specInstanceType: yup.string().required(t('catalogProvision.validation.instanceTypeRequired')),
+    specUserData: userDataSchema(t),
     specBootDisk: yup.object({
-      sizeGib: mergeCatalogValidation(
-        yup
-          .string()
-          .test(
-            'boot-disk-number',
-            t('catalogProvision.validation.bootDiskNumber'),
-            (value) => !value?.trim() || !Number.isNaN(Number(value)),
-          ),
-        bootDiskOverlay,
-        true,
-        t('catalogProvision.validation.required'),
-      ),
+      sizeGib: yup
+        .string()
+        .test(
+          'boot-disk-number',
+          t('catalogProvision.validation.bootDiskNumber'),
+          (value) => !value?.trim() || !Number.isNaN(Number(value)),
+        )
+        .required(t('catalogProvision.validation.required')),
       storageTier: storageTierSchema(t),
     }),
     specAdditionalDisks: yup.array(
@@ -90,8 +84,7 @@ const buildComputeInstanceFieldDefinitions = (catalogItem: unknown, t: TFunction
  * only the active step's fields keeps validation scoped to the current step.
  */
 export const buildComputeInstanceStepSchema = (
-  catalogItem: unknown,
-  stepId: WizardStepId,
+  stepId: VmWizardStepId,
   t: TFunction,
 ): yup.AnyObjectSchema | undefined => {
   // Review has no editable fields; Create provisions without Formik validation.
@@ -99,17 +92,17 @@ export const buildComputeInstanceStepSchema = (
     return undefined;
   }
 
-  const fields = buildComputeInstanceFieldDefinitions(catalogItem, t);
+  const fields = buildComputeInstanceFieldDefinitions(t);
 
   switch (stepId) {
     case 'catalog':
       return yup.object({
-        catalogItemId: yup.string().required(t('Select a catalog item')),
+        catalogItemId: fields.catalogItemId,
       });
     case 'general':
       return yup.object({
         metadata: yup.object({
-          name: resourceNameSchema(t),
+          name: fields.metadataName,
         }),
         spec: yup.object({
           sshKey: yup.object({ name: yup.string() }),
@@ -118,12 +111,8 @@ export const buildComputeInstanceStepSchema = (
     case 'configuration':
       return yup.object({
         spec: yup.object({
-          instanceType: yup.string().required(t('Instance type is required')),
-          userData: yup.string().when('userDataSource', {
-            is: 'inline',
-            then: () => userDataSchema(t),
-            otherwise: (schema) => schema.notRequired(),
-          }),
+          instanceType: fields.specInstanceType,
+          userData: fields.specUserData,
         }),
       });
     case 'storage':

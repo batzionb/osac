@@ -18,7 +18,7 @@ import { ClusterNetworkingStep } from './ClusterNetworkingStep';
 import { ClusterReviewStep } from './ClusterReviewStep';
 import type { ClusterWizardValues } from './fields';
 import { buildClusterCreatePayload, getClusterInitialValues } from './payload';
-import { buildClusterStepSchema } from './schemas';
+import { type ClusterWizardStepId, buildClusterStepSchema } from './schemas';
 import type { CatalogItem } from '../../catalog/catalogItemDisplay';
 
 export interface ClusterCreateWizardCloseHandler {
@@ -59,7 +59,7 @@ const ClusterWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onCl
   const navigate = useNavigate();
   const provision = useProvisionCluster();
   const catalogQuery = useClusterCatalogItems();
-  const [activeStep, setActiveStep] = useState('catalog');
+  const [activeStep, setActiveStep] = useState<ClusterWizardStepId>('catalog');
   const [validationAlert, setValidationAlert] = useState(false);
   const [selectedCatalogItem, setSelectedCatalogItem] = useState<ClusterCatalogItem | null>(null);
   const catalogItems = useMemo(() => catalogQuery.data ?? [], [catalogQuery.data]);
@@ -81,10 +81,7 @@ const ClusterWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onCl
     [navigate, provision, selectedCatalogItem, t],
   );
 
-  const validationSchema = useMemo(
-    () => buildClusterStepSchema(selectedCatalogItem, activeStep, t),
-    [activeStep, selectedCatalogItem, t],
-  );
+  const validationSchema = useMemo(() => buildClusterStepSchema(activeStep, t), [activeStep, t]);
 
   const formik = useFormik<ClusterWizardValues>({
     initialValues: getClusterInitialValues(),
@@ -124,10 +121,10 @@ const ClusterWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onCl
 
   const stepHasErrors = useCallback(
     (stepId: string, errors: Record<string, unknown>) => {
-      const schema = buildClusterStepSchema(selectedCatalogItem, stepId, t);
+      const schema = buildClusterStepSchema(stepId as ClusterWizardStepId, t);
       return Boolean(schema && Object.keys(errors).length > 0);
     },
-    [selectedCatalogItem, t],
+    [t],
   );
 
   return (
@@ -138,7 +135,7 @@ const ClusterWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onCl
           <Wizard
             isVisitRequired
             onStepChange={(_, step) => {
-              setActiveStep(String(step.id));
+              setActiveStep(String(step.id) as ClusterWizardStepId);
               setValidationAlert(false);
             }}
             footer={

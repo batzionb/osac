@@ -14,7 +14,7 @@ import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 
 import type { ComputeInstanceWizardValues } from './fields';
 import { buildComputeInstanceCreatePayload, getComputeInstanceInitialValues } from './payload';
-import { buildComputeInstanceStepSchema } from './schemas';
+import { type VmWizardStepId, buildComputeInstanceStepSchema } from './schemas';
 import { VmConfigurationStep } from './VmConfigurationStep';
 import VmGeneralStep from './VmGeneralStep';
 import { VmNetworkingStep } from './VmNetworkingStep';
@@ -50,7 +50,7 @@ const VmWizardBody = ({
     return <VmConfigurationStep catalogItem={catalogItem} />;
   }
   if (stepId === 'storage') {
-    return <VmStorageStep catalogItem={catalogItem} />;
+    return <VmStorageStep />;
   }
   if (stepId === 'networking') {
     return <VmNetworkingStep catalogItem={catalogItem} />;
@@ -63,7 +63,7 @@ const VmWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onClosed 
   const navigate = useNavigate();
   const provision = useProvisionComputeInstance();
   const catalogQuery = useComputeInstanceCatalogItems();
-  const [activeStep, setActiveStep] = useState('catalog');
+  const [activeStep, setActiveStep] = useState<VmWizardStepId>('catalog');
   const [validationAlert, setValidationAlert] = useState(false);
   const [selectedCatalogItem, setSelectedCatalogItem] = useState<ComputeInstanceCatalogItem | null>(
     null,
@@ -88,8 +88,8 @@ const VmWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onClosed 
   );
 
   const validationSchema = useMemo(
-    () => buildComputeInstanceStepSchema(selectedCatalogItem, activeStep, t),
-    [activeStep, selectedCatalogItem, t],
+    () => buildComputeInstanceStepSchema(activeStep, t),
+    [activeStep, t],
   );
 
   const formik = useFormik<ComputeInstanceWizardValues>({
@@ -132,10 +132,10 @@ const VmWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onClosed 
 
   const stepHasErrors = useCallback(
     (stepId: string, errors: Record<string, unknown>) => {
-      const schema = buildComputeInstanceStepSchema(selectedCatalogItem, stepId, t);
+      const schema = buildComputeInstanceStepSchema(stepId as VmWizardStepId, t);
       return Boolean(schema && Object.keys(errors).length > 0);
     },
-    [selectedCatalogItem, t],
+    [t],
   );
 
   return (
@@ -146,7 +146,7 @@ const VmWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onClosed 
           <Wizard
             isVisitRequired
             onStepChange={(_, step) => {
-              setActiveStep(String(step.id));
+              setActiveStep(String(step.id) as VmWizardStepId);
               setValidationAlert(false);
             }}
             footer={

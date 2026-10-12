@@ -9,6 +9,7 @@ import { DiskImageLifecycle, DiskImageSchema, SecretSchema, SecretType } from '@
 import BareMetalConfigurationStep from './BareMetalConfigurationStep';
 import { createEmptyBareMetalInstanceValues } from './fields';
 import { renderWithProviders } from '../../../test-utils/TestProviders';
+import { provisioningFieldValue } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 
 const diskImages = [
   create(DiskImageSchema, {
@@ -78,8 +79,8 @@ describe('BareMetalConfigurationStep', () => {
 
   it('lets the user switch between inline user data and a USER_DATA Secret', async () => {
     const values = createEmptyBareMetalInstanceValues();
-    values.spec.userData = 'inline data';
-    values.spec.userDataSecret = { name: 'stale-secret' };
+    values.spec.userData = provisioningFieldValue('inline data');
+    values.spec.userDataSecret = provisioningFieldValue('stale-secret');
 
     const { user } = renderWithProviders(
       <Formik initialValues={values} onSubmit={() => undefined}>
@@ -90,7 +91,7 @@ describe('BareMetalConfigurationStep', () => {
           secrets: [
             create(SecretSchema, {
               id: 'user-data-secret-id',
-              metadata: { name: 'user-data-secret' },
+              metadata: { name: 'user-data-secret', project: '' },
               data: {},
               type: SecretType.USER_DATA,
             }),

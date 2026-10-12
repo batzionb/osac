@@ -27,7 +27,7 @@ export const boolFieldFromPolicy = (
     policy?.behavior?.case === 'editable'
       ? Boolean(
           (policy.behavior.value as { defaultValue?: boolean } | undefined)?.defaultValue ??
-            fallback,
+          fallback,
         )
       : policy?.behavior?.case === 'locked'
         ? Boolean(policy.behavior.value)

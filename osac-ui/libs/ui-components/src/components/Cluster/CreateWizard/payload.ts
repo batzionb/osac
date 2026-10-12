@@ -1,9 +1,14 @@
 import { type MessageInitShape } from '@bufbuild/protobuf';
 
-import { type ClusterCatalogItem, ClusterSchema } from '@osac/types';
+import {
+  type ClusterCatalogItem,
+  type ClusterNodeSetMapPolicy,
+  ClusterSchema,
+} from '@osac/types';
 
-import type { ClusterWizardValues } from './fields';
-import { createEmptyNodeSetRow } from './fields';
+import type { ClusterNodeSetRow, ClusterWizardValues } from './fields';
+import { createEmptyNodeSetRow, createNodeSetRowId } from './fields';
+import { clusterNodeSetItemsFromPolicy } from '../../catalog/clusterCatalogItemResourceDisplay';
 import { emptyResourceSelectValue } from '../../Form/resourceSelectValue';
 import {
   boolFieldFromPolicy,
@@ -35,6 +40,17 @@ export const createEmptyClusterValues = (): ClusterWizardValues => ({
     autoExternalIpAttachment: provisioningFieldValue(false),
   },
 });
+
+const nodeSetRowsFromPolicy = (policy: ClusterNodeSetMapPolicy | undefined): ClusterNodeSetRow[] => {
+  const items = clusterNodeSetItemsFromPolicy(policy);
+  const rows = Object.entries(items ?? {}).map(([name, nodeSet]) => ({
+    rowId: createNodeSetRowId(),
+    name,
+    hostType: nodeSet.hostType?.id?.trim() || nodeSet.hostType?.name?.trim() || '',
+    size: nodeSet.size ? String(nodeSet.size) : '',
+  }));
+  return rows.length > 0 ? rows : [createEmptyNodeSetRow()];
+};
 
 export const getClusterInitialValues = (catalogItem?: ClusterCatalogItem): ClusterWizardValues => {
   const values = createEmptyClusterValues();
@@ -80,7 +96,10 @@ export const getClusterInitialValues = (catalogItem?: ClusterCatalogItem): Clust
       sshPublicKey: provisioningFieldFromPolicy(sshPublicKey, fields?.sshPublicKey),
       pullSecretSecret: provisioningFieldFromPolicy(pullSecret, fields?.pullSecretSecret),
       versionName: provisioningFieldFromPolicy(version, fields?.version),
-      nodeSetRows: provisioningFieldFromPolicy(values.spec.nodeSetRows.value, fields?.nodeSets),
+      nodeSetRows: provisioningFieldFromPolicy(
+        nodeSetRowsFromPolicy(fields?.nodeSets),
+        fields?.nodeSets,
+      ),
       network: {
         podCidr: provisioningFieldFromPolicy(podCidr, fields?.network?.podCidr),
         serviceCidr: provisioningFieldFromPolicy(serviceCidr, fields?.network?.serviceCidr),
@@ -118,39 +137,46 @@ export const buildClusterCreatePayload = (
     catalogItem: {
       id: catalogItem.id,
     },
-    pullSecretSecret: {
-      name: values.spec.pullSecretSecret.value,
-    },
   };
 
+  if (!values.spec.pullSecretSecret.locked) {
+    spec.pullSecretSecret = {
+      name: values.spec.pullSecretSecret.value,
+    };
+  }
+
   const sshPublicKey = values.spec.sshPublicKey.value.trim();
-  if (sshPublicKey) {
+  if (!values.spec.sshPublicKey.locked && sshPublicKey) {
     spec.sshPublicKey = sshPublicKey;
   }
 
-  if (values.spec.versionName.value) {
+  if (!values.spec.versionName.locked && values.spec.versionName.value) {
     spec.version = { name: values.spec.versionName.value };
   }
 
-  const nodeSets = Object.create(null) as Record<
-    string,
-    { hostType: { id: string }; size: number }
-  >;
-  for (const row of values.spec.nodeSetRows.value) {
-    const nodeSetId = row.name.trim();
-    const hostTypeId = row.hostType;
-    const size = Number(row.size);
-    if (!nodeSetId || !hostTypeId || !Number.isFinite(size) || size <= 0) {
-      continue;
+  if (!values.spec.nodeSetRows.locked) {
+    const nodeSets = Object.create(null) as Record<
+      string,
+      { hostType: { id: string }; size: number }
+    >;
+    for (const row of values.spec.nodeSetRows.value) {
+      const nodeSetId = row.name.trim();
+      const hostTypeId = row.hostType;
+      const size = Number(row.size);
+      if (!nodeSetId || !hostTypeId || !Number.isFinite(size) || size <= 0) {
+        continue;
+      }
+      nodeSets[nodeSetId] = { hostType: { id: hostTypeId }, size };
     }
-    nodeSets[nodeSetId] = { hostType: { id: hostTypeId }, size };
-  }
-  if (Object.keys(nodeSets).length > 0) {
-    spec.nodeSets = nodeSets;
+    if (Object.keys(nodeSets).length > 0) {
+      spec.nodeSets = nodeSets;
+    }
   }
 
-  const podCidr = values.spec.network.podCidr.value.trim();
-  const serviceCidr = values.spec.network.serviceCidr.value.trim();
+  const podCidr = values.spec.network.podCidr.locked ? '' : values.spec.network.podCidr.value.trim();
+  const serviceCidr = values.spec.network.serviceCidr.locked
+    ? ''
+    : values.spec.network.serviceCidr.value.trim();
   if (podCidr || serviceCidr) {
     spec.network = {
       ...(podCidr ? { podCidr } : {}),
@@ -158,7 +184,7 @@ export const buildClusterCreatePayload = (
     };
   }
 
-  if (!values.spec.useDefaultNetwork.value) {
+  if (!values.spec.useDefaultNetwork.locked && !values.spec.useDefaultNetwork.value) {
     const subnetId = values.spec.networkAttachment.subnet.value.id.trim();
     if (subnetId) {
       spec.networkAttachment = {
@@ -170,7 +196,7 @@ export const buildClusterCreatePayload = (
     }
   }
 
-  if (values.spec.autoExternalIpAttachment.value) {
+  if (!values.spec.autoExternalIpAttachment.locked && values.spec.autoExternalIpAttachment.value) {
     spec.autoExternalIpAttachment = true;
   }
 

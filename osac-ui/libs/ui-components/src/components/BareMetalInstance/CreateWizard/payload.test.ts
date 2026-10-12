@@ -4,6 +4,7 @@ import { BareMetalInstanceRunStrategy } from '@osac/types';
 
 import { createEmptyBareMetalInstanceValues } from './fields';
 import { buildBareMetalInstanceCreatePayload } from './payload';
+import { provisioningFieldValue } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 
 const buildValues = (project: string) => ({
   ...createEmptyBareMetalInstanceValues(),
@@ -57,9 +58,9 @@ describe('buildBareMetalInstanceCreatePayload', () => {
 
   it('sends inline user data when the inline source is selected', () => {
     const values = buildValues('');
-    values.spec.userDataSource = 'inline';
-    values.spec.userData = '  #cloud-config\nusers: []  ';
-    values.spec.userDataSecret = { name: 'stale-secret' };
+    values.spec.userDataSource = provisioningFieldValue('inline');
+    values.spec.userData = provisioningFieldValue('  #cloud-config\nusers: []  ');
+    values.spec.userDataSecret = provisioningFieldValue('stale-secret');
 
     const payload = buildBareMetalInstanceCreatePayload(values);
 
@@ -69,9 +70,9 @@ describe('buildBareMetalInstanceCreatePayload', () => {
 
   it('sends a Secret reference when the Secret source is selected', () => {
     const values = buildValues('');
-    values.spec.userDataSource = 'secret';
-    values.spec.userData = 'stale inline data';
-    values.spec.userDataSecret = { name: '  cloud-init  ' };
+    values.spec.userDataSource = provisioningFieldValue('secret');
+    values.spec.userData = provisioningFieldValue('stale inline data');
+    values.spec.userDataSecret = provisioningFieldValue('  cloud-init  ');
 
     const payload = buildBareMetalInstanceCreatePayload(values);
 
@@ -81,9 +82,9 @@ describe('buildBareMetalInstanceCreatePayload', () => {
 
   it('omits user data when the selected source is empty', () => {
     const values = buildValues('');
-    values.spec.userDataSource = 'secret';
-    values.spec.userData = 'stale inline data';
-    values.spec.userDataSecret = { name: '   ' };
+    values.spec.userDataSource = provisioningFieldValue('secret');
+    values.spec.userData = provisioningFieldValue('stale inline data');
+    values.spec.userDataSecret = provisioningFieldValue('   ');
 
     const payload = buildBareMetalInstanceCreatePayload(values);
 

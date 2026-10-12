@@ -47,14 +47,7 @@ export const StorageTierSelectField = ({
             : STORAGE_TIER_ACTIVE_LIST_FILTER,
       }}
       isRequired={isRequired}
-      isDisabled={isDisabled}
-      labelInfo={
-        isDisabled ? (
-          <Label color="grey" icon={<LockIcon aria-hidden />}>
-            {t('Locked by catalog')}
-          </Label>
-        ) : undefined
-      }
+      isDisabled={isDisabled}      
       placeholder={t('Select a storage tier')}
       loadingPlaceholder={t('Loading...')}
       loadErrorTitle={t('Failed to load storage tiers')}

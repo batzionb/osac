@@ -2,7 +2,10 @@ import { useFormikContext } from 'formik';
 
 import { VirtualNetworks } from '@osac/types';
 
-import type { ProvisioningFieldControlProps, ProvisioningFieldValue } from './provisioningFieldValue';
+import type {
+  ProvisioningFieldControlProps,
+  ProvisioningFieldValue,
+} from './provisioningFieldValue';
 import { provisioningFieldValue } from './provisioningFieldValue';
 import { VIRTUAL_NETWORK_READY_LIST_FILTER } from '../../../api/v1/networking';
 import { useTranslation } from '../../../hooks/useTranslation';

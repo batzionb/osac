@@ -26,9 +26,7 @@ const ClusterGeneralStep = (_props: ClusterGeneralStepProps) => {
       <ProjectField onSelect={() => setFieldValue(`${CLUSTER_PULL_SECRET_FORM_PATH}.value`, '')} />
       <NameField />
       <ProvisioningField name={CLUSTER_SSH_KEY_FORM_PATH}>
-        {({ valueName, isDisabled }) => (
-          <SshKeyField name={valueName} isDisabled={isDisabled} />
-        )}
+        {({ valueName, isDisabled }) => <SshKeyField name={valueName} isDisabled={isDisabled} />}
       </ProvisioningField>
       <ProvisioningField name={CLUSTER_PULL_SECRET_FORM_PATH}>
         {({ valueName, isDisabled }) => (

@@ -55,6 +55,14 @@ describe('ComputeInstanceTypeField', () => {
     expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
   });
 
+  it('resolves a catalog instance type name to the matching option id', async () => {
+    renderField('small', { apiFixtures: { instanceTypes } });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/instance type/i)).toHaveTextContent('small — 2 vCPUs, 8 GiB');
+    });
+  });
+
   it('disables the control when requested', async () => {
     renderWithProviders(
       <Formik initialValues={{ spec: { instanceType: 'it-small' } }} onSubmit={() => undefined}>

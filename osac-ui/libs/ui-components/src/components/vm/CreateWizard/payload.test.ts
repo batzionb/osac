@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import { type ComputeInstanceCatalogItem, ComputeInstanceRunStrategy } from '@osac/types';
 
-import { buildComputeInstanceCreatePayload, createEmptyComputeInstanceValues } from './payload';
+import {
+  buildComputeInstanceCreatePayload,
+  createEmptyComputeInstanceValues,
+  getComputeInstanceInitialValues,
+} from './payload';
 import { emptyResourceSelectValue } from '../../Form/resourceSelectValue';
 import { provisioningFieldValue } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 
@@ -104,9 +108,9 @@ describe('buildComputeInstanceCreatePayload', () => {
 
   it('sends inline user data when the inline source is selected', () => {
     const values = baseValues();
-    values.spec.userDataSource = 'inline';
-    values.spec.userData = '  #cloud-config\nusers: []  ';
-    values.spec.userDataSecret = { name: 'stale-secret' };
+    values.spec.userDataSource = provisioningFieldValue('inline');
+    values.spec.userData = provisioningFieldValue('  #cloud-config\nusers: []  ');
+    values.spec.userDataSecret = provisioningFieldValue('stale-secret');
 
     const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
 
@@ -116,9 +120,9 @@ describe('buildComputeInstanceCreatePayload', () => {
 
   it('sends a Secret reference when the Secret source is selected', () => {
     const values = baseValues();
-    values.spec.userDataSource = 'secret';
-    values.spec.userData = 'stale inline data';
-    values.spec.userDataSecret = { name: '  cloud-init  ' };
+    values.spec.userDataSource = provisioningFieldValue('secret');
+    values.spec.userData = provisioningFieldValue('stale inline data');
+    values.spec.userDataSecret = provisioningFieldValue('  cloud-init  ');
 
     const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
 
@@ -128,9 +132,9 @@ describe('buildComputeInstanceCreatePayload', () => {
 
   it('omits user data when the selected source is empty', () => {
     const values = baseValues();
-    values.spec.userDataSource = 'secret';
-    values.spec.userData = 'stale inline data';
-    values.spec.userDataSecret = { name: '   ' };
+    values.spec.userDataSource = provisioningFieldValue('secret');
+    values.spec.userData = provisioningFieldValue('stale inline data');
+    values.spec.userDataSecret = provisioningFieldValue('   ');
 
     const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
 
@@ -283,6 +287,40 @@ describe('buildComputeInstanceCreatePayload — useDefaultNetwork', () => {
         securityGroups: [{ id: 'sg-1' }, { id: 'sg-2' }],
       },
     ]);
+  });
+});
+
+describe('getComputeInstanceInitialValues — instance type', () => {
+  it('preselects the catalog instance type id when the policy provides one', () => {
+    const values = getComputeInstanceInitialValues({
+      ...vmCatalogItem,
+      fields: {
+        instanceType: {
+          behavior: {
+            case: 'editable',
+            value: { defaultValue: { id: 'it-small', name: 'u1-small', shared: true } },
+          },
+        },
+      },
+    } as ComputeInstanceCatalogItem);
+
+    expect(values.spec.instanceType).toEqual({ value: 'it-small', locked: false });
+  });
+
+  it('falls back to the catalog instance type name when no id is present', () => {
+    const values = getComputeInstanceInitialValues({
+      ...vmCatalogItem,
+      fields: {
+        instanceType: {
+          behavior: {
+            case: 'editable',
+            value: { defaultValue: { name: 'u1-small', shared: true } },
+          },
+        },
+      },
+    } as ComputeInstanceCatalogItem);
+
+    expect(values.spec.instanceType).toEqual({ value: 'u1-small', locked: false });
   });
 });
 

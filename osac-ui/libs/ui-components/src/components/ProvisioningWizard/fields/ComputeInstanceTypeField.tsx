@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Alert, Button, Stack, StackItem } from '@patternfly/react-core';
+import { useField, useFormikContext } from 'formik';
 
 import { formatInstanceTypeOptionLabel } from '@osac/ui-components/components/vm/utils';
 
@@ -18,6 +19,8 @@ const ComputeInstanceTypeField = ({
   isDisabled = false,
 }: ComputeInstanceTypeFieldProps) => {
   const { t } = useTranslation();
+  const { setFieldValue } = useFormikContext();
+  const [field] = useField<string>(name);
   const {
     data: instanceTypes = [],
     isPending: instanceTypesLoading,
@@ -36,6 +39,23 @@ const ComputeInstanceTypeField = ({
       })),
     [instanceTypes, t],
   );
+
+  useEffect(() => {
+    const currentValue = field.value?.trim() ?? '';
+    if (instanceTypesLoading || !currentValue) {
+      return;
+    }
+    if (instanceTypeOptions.some((option) => option.value === currentValue)) {
+      return;
+    }
+    const resolved = instanceTypes.find(
+      (instanceType) =>
+        instanceType.id === currentValue || instanceType.metadata?.name === currentValue,
+    );
+    if (resolved && resolved.id !== currentValue) {
+      void setFieldValue(name, resolved.id, false);
+    }
+  }, [field.value, instanceTypeOptions, instanceTypes, instanceTypesLoading, name, setFieldValue]);
 
   return (
     <Stack hasGutter>

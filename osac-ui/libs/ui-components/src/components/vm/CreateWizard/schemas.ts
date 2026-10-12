@@ -38,7 +38,11 @@ const buildComputeInstanceFieldDefinitions = (t: TFunction) => {
     specInstanceType: lockedField(
       yup.string().required(t('catalogProvision.validation.instanceTypeRequired')),
     ),
-    specUserData: lockedField(userDataSchema(t)),
+    specUserData: lockedField(yup.string()).when('userDataSource', {
+      is: (source: { value?: string }) => source?.value !== 'secret',
+      then: () => lockedField(userDataSchema(t)),
+      otherwise: () => lockedField(yup.string()),
+    }),
     specBootDisk: yup.object({
       sizeGib: lockedField(
         yup
@@ -121,7 +125,9 @@ export const buildComputeInstanceStepSchema = (
       return yup.object({
         spec: yup.object({
           instanceType: fields.specInstanceType,
+          userDataSource: lockedField(yup.string()),
           userData: fields.specUserData,
+          userDataSecret: lockedField(yup.string()),
         }),
       });
     case 'storage':

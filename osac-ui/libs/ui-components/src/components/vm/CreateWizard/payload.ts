@@ -4,6 +4,7 @@ import { type ComputeInstanceCatalogItem, ComputeInstanceSchema } from '@osac/ty
 import { ComputeInstanceRunStrategy } from '@osac/types';
 
 import type { ComputeInstanceWizardValues } from './fields';
+import { computeInstanceTypeReferenceFromPolicy } from '../../catalog/computeCatalogItemResourceDisplay';
 import { type ResourceSelectValue, emptyResourceSelectValue } from '../../Form/resourceSelectValue';
 import {
   boolFieldFromPolicy,
@@ -93,6 +94,8 @@ export const getComputeInstanceInitialValues = (
       : fields?.userData?.behavior.case === 'locked'
         ? fields.userData.behavior.value
         : '';
+  const instanceTypeRef = computeInstanceTypeReferenceFromPolicy(fields?.instanceType);
+  const instanceTypeValue = instanceTypeRef?.id?.trim() || instanceTypeRef?.name?.trim() || '';
   return {
     ...values,
     catalogItemId: catalogItem.id,
@@ -100,7 +103,7 @@ export const getComputeInstanceInitialValues = (
       ...values.spec,
       userData: provisioningFieldFromPolicy(userData, fields?.userData),
       sshKey: provisioningFieldFromPolicy(sshKeyName, catalogItem.fields?.sshKey),
-      instanceType: provisioningFieldFromPolicy('', fields?.instanceType),
+      instanceType: provisioningFieldFromPolicy(instanceTypeValue, fields?.instanceType),
       bootDisk: {
         sizeGib: provisioningFieldFromPolicy(stringValue(sizeGib), fields?.bootDisk?.sizeGib),
         storageTier: provisioningFieldFromPolicy(tier, fields?.bootDisk?.storageTier),

@@ -275,8 +275,20 @@ describe('buildClusterStepSchema', () => {
         pullSecretSecret: provisioningFieldValue('foo'),
         versionName: provisioningFieldValue('4-17-0'),
         nodeSetRows: provisioningFieldValue([
-          { ...row, rowId: 'row-1', name: 'production', hostType: 'acme_1tb', size: '3' },
-          { ...row, rowId: 'row-2', name: 'production', hostType: 'acme_1tb', size: '2' },
+          {
+            ...row,
+            rowId: 'row-1',
+            name: 'production',
+            hostType: 'acme_1tb',
+            size: '3',
+          },
+          {
+            ...row,
+            rowId: 'row-2',
+            name: 'production',
+            hostType: 'acme_1tb',
+            size: '2',
+          },
         ]),
       },
     });

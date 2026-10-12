@@ -67,9 +67,9 @@ describe('VmReviewStep — Storage section', () => {
 describe('VmReviewStep — user data source', () => {
   it('shows the selected Secret reference instead of inline user data', async () => {
     renderReviewStep({
-      userDataSource: 'secret',
-      userData: 'stale inline data',
-      userDataSecret: { name: 'user-data-secret' },
+      userDataSource: provisioningFieldValue('secret'),
+      userData: provisioningFieldValue('stale inline data'),
+      userDataSecret: provisioningFieldValue('user-data-secret'),
     });
 
     expect(await screen.findByText('user-data-secret')).toBeInTheDocument();

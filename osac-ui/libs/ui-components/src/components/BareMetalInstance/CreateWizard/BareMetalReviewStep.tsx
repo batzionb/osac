@@ -31,7 +31,6 @@ export const BareMetalReviewStep = ({ catalogItem }: Props) => {
     values.spec.sshKey.value,
     isSecretSource ? undefined : values.spec.userData.value,
     isSecretSource ? values.spec.userDataSecret.value : undefined,
-
   );
 
   const networking = values.spec.networking;

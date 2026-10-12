@@ -36,7 +36,11 @@ const buildBareMetalInstanceFieldDefinitions = (t: TFunction) => {
           (value) => isValidSshPublicKey(value),
         ),
     ),
-    specUserData: lockedField(userDataSchema(t)),
+    specUserData: lockedField(yup.string()).when('userDataSource', {
+      is: (source: { value?: string }) => source?.value !== 'secret',
+      then: () => lockedField(userDataSchema(t)),
+      otherwise: () => lockedField(yup.string()),
+    }),
   };
 };
 
@@ -57,7 +61,9 @@ export const buildBareMetalInstanceStepSchema = (
       .object({
         spec: yup.object({
           sshKey: lockedField(yup.string()),
+          userDataSource: lockedField(yup.string()),
           userData: lockedField(yup.string()),
+          userDataSecret: lockedField(yup.string()),
         }),
       })
       .test(
@@ -65,9 +71,21 @@ export const buildBareMetalInstanceStepSchema = (
         t('Provide either an SSH public key or user data containing access credentials.'),
         function (values) {
           const spec = values?.spec as
-            | { sshKey?: { value?: string }; userData?: { value?: string } }
+            | {
+                sshKey?: { value?: string };
+                userDataSource?: { value?: string };
+                userData?: { value?: string };
+                userDataSecret?: { value?: string };
+              }
             | undefined;
-          if (hasBareMetalAuthentication(spec?.sshKey?.value, spec?.userData?.value)) {
+          const isSecretSource = spec?.userDataSource?.value === 'secret';
+          if (
+            hasBareMetalAuthentication(
+              spec?.sshKey?.value,
+              isSecretSource ? undefined : spec?.userData?.value,
+              isSecretSource ? spec?.userDataSecret?.value : undefined,
+            )
+          ) {
             return true;
           }
           return this.createError({ path: 'spec.sshKey.value' });
@@ -94,7 +112,9 @@ export const buildBareMetalInstanceStepSchema = (
     case 'configuration':
       return yup.object({
         spec: yup.object({
+          userDataSource: lockedField(yup.string()),
           userData: fields.specUserData,
+          userDataSecret: lockedField(yup.string()),
           instanceType: lockedField(yup.string()),
           diskImage: lockedField(
             yup.object({

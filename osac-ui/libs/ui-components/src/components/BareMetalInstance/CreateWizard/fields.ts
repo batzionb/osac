@@ -2,11 +2,11 @@ import { BareMetalInstanceCatalogItem } from '@osac/types';
 
 import type { ResourceSelectValue } from '../../Form/resourceSelectValue';
 import { emptyResourceSelectValue } from '../../Form/resourceSelectValue';
-import type { ProvisioningFieldValue } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 import {
   boolFieldFromPolicy,
   networkAttachmentFieldsFromPolicy,
 } from '../../ProvisioningWizard/fields/networkAttachmentPolicy';
+import type { ProvisioningFieldValue } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 import {
   provisioningFieldFromPolicy,
   provisioningFieldValue,

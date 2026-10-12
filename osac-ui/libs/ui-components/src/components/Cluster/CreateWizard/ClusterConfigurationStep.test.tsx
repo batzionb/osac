@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   type ClusterCatalogItem,
+  HostTypeSchema,
   type ClusterVersion,
   ClusterVersionSchema,
   ClusterVersionState,
@@ -14,7 +15,7 @@ import { tIdentity } from '@osac/ui-components/test-utils/i18n';
 
 import ClusterConfigurationStep from './ClusterConfigurationStep';
 import { createEmptyNodeSetRow } from './fields';
-import { createEmptyClusterValues } from './payload';
+import { createEmptyClusterValues, getClusterInitialValues } from './payload';
 import { buildClusterStepSchema } from './schemas';
 import { renderWithProviders } from '../../../test-utils/TestProviders';
 import { FieldValidationProvider } from '../../Form/FieldValidationContext';
@@ -254,5 +255,54 @@ describe('ClusterConfigurationStep', () => {
       expect(screen.getByText('Node set names must be unique')).toBeInTheDocument();
     });
     expect(screen.getAllByLabelText(/^Name/)[1]).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('prepopulates locked catalog node sets and disables editing', async () => {
+    const catalogItem: ClusterCatalogItem = {
+      ...clusterCatalogItem,
+      fields: {
+        nodeSets: {
+          behavior: {
+            case: 'locked',
+            value: {
+              items: {
+                workers: {
+                  size: 2,
+                  hostType: { id: 'bmit-worker', name: 'worker' },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as ClusterCatalogItem;
+
+    renderWithProviders(
+      <Formik
+        initialValues={getClusterInitialValues(catalogItem)}
+        onSubmit={() => undefined}
+      >
+        <ClusterConfigurationStep catalogItem={catalogItem} />
+      </Formik>,
+      {
+        apiFixtures: {
+          clusterVersions,
+          hostTypes: [
+            create(HostTypeSchema, {
+              id: 'bmit-worker',
+              metadata: { name: 'worker' },
+            }),
+          ],
+        },
+      },
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/^Name/)).toHaveValue('workers');
+    });
+    expect(screen.getByRole('spinbutton', { name: /^Nodes/ })).toHaveValue(2);
+    expect(screen.getByLabelText(/^Name/)).toBeDisabled();
+    expect(screen.getByRole('spinbutton', { name: /^Nodes/ })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Add node set' })).not.toBeInTheDocument();
   });
 });

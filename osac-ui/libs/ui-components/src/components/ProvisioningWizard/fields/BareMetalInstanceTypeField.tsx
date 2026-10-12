@@ -50,6 +50,7 @@ const BareMetalInstanceTypeField = ({
           fieldId={fieldId}
           isLoading={isLoading}
           isDisabled={isDisabled || !!error}
+          autoSelectSingleOption
           placeholder={t('Select an instance type')}
           options={(data?.items || []).map((instanceType) => ({
             label: `${instanceType.metadata?.name || ''}`,

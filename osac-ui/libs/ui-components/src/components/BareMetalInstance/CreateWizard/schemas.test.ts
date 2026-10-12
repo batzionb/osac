@@ -60,6 +60,13 @@ describe('Bare Metal review validation', () => {
   it('rejects whitespace-only authentication values', async () => {
     await expect(validateReview(valuesWithAuth(' \n ', '\t'))).resolves.toBe(authenticationError);
   });
+
+  it('accepts a USER_DATA Secret as the authentication method', async () => {
+    const values = createEmptyBareMetalInstanceValues();
+    values.spec.userDataSource = { value: 'secret', locked: false };
+    values.spec.userDataSecret = { value: 'user-data-secret', locked: false };
+    await expect(validateReview(values)).resolves.toBeUndefined();
+  });
 });
 
 const validateNetworking = async (values: BareMetalInstanceWizardValues) => {

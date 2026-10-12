@@ -14,10 +14,7 @@ import {
 } from '@patternfly/react-core';
 
 import { useTranslation } from '../../../hooks/useTranslation.ts';
-import {
-  type CatalogItem,
-  catalogItemMetadataLabelEntries,
-} from '../catalogItemDisplay.ts';
+import { type CatalogItem, catalogItemMetadataLabelEntries } from '../catalogItemDisplay.ts';
 
 interface CatalogItemDetailContentProps {
   item: CatalogItem;
@@ -71,7 +68,6 @@ export const CatalogItemDetailContent = ({ item }: CatalogItemDetailContentProps
           </CardBody>
         </Card>
       </StackItem>
-
     </Stack>
   );
 };

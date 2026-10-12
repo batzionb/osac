@@ -7,14 +7,12 @@ import { useTranslation } from '../../../hooks/useTranslation';
 
 interface SshPublicKeySecretFieldProps extends ProvisioningFieldControlProps {
   project: string;
-  allowEmptySelection?: boolean;
 }
 
 const SshPublicKeySecretField = ({
   name = '',
   project,
   isDisabled = false,
-  allowEmptySelection,
 }: SshPublicKeySecretFieldProps) => {
   const { t } = useTranslation();
 
@@ -30,7 +28,6 @@ const SshPublicKeySecretField = ({
       name={name}
       fieldId={name.replace(/\./g, '-')}
       isDisabled={isDisabled}
-      allowEmptySelection={allowEmptySelection ?? !isDisabled}
     />
   );
 };

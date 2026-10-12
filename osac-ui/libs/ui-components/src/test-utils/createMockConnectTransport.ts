@@ -893,13 +893,20 @@ export const createMockConnectTransport = (
           if (overrides.onPublicBaremetalInstanceTypeList) {
             return overrides.onPublicBaremetalInstanceTypeList();
           }
+          const items = publicBaremetalInstanceTypes.length
+            ? publicBaremetalInstanceTypes
+            : bareMetalInstanceTypes;
           return {
-            items: bareMetalInstanceTypes,
-            size: bareMetalInstanceTypes.length,
-            total: bareMetalInstanceTypes.length,
+            items,
+            size: items.length,
+            total: items.length,
           };
         },
-        get: (req) => ({ object: bareMetalInstanceTypes.find((item) => item.id === req.id) }),
+        get: (req) => ({
+          object:
+            bareMetalInstanceTypes.find((item) => item.id === req.id) ??
+            publicBaremetalInstanceTypes.find((item) => item.id === req.id),
+        }),
       });
 
       router.service(PrivateBareMetalInstanceTypes, {

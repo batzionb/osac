@@ -98,7 +98,9 @@ const validateStep = async (
 describe('buildComputeInstanceStepSchema', () => {
   it('requires catalog item on catalog step', async () => {
     const errors = await validateStep('catalog', emptyValues);
-    expect(errors).toEqual({ catalogItemId: 'Select a catalog item' });
+    expect(errors).toEqual({
+      catalogItemId: 'catalogProvision.validation.catalogItemRequired',
+    });
   });
 
   it('requires name on general step without validating configuration fields', async () => {
@@ -212,58 +214,46 @@ describe('buildComputeInstanceStepSchema', () => {
   });
 
   it('validates inline user data with the shared 64 KB limit', async () => {
-    const errors = await validateStep(
-      'configuration',
-      {
+    const errors = await validateStep('configuration', {
+      ...emptyValues,
+      catalogItemId: vmCatalogItem.id,
+      metadata: { name: 'web-01', project: '' },
+      spec: {
+        ...emptyValues.spec,
+        instanceType: provisioningFieldValue('standard-4-8'),
+        userData: provisioningFieldValue('a'.repeat(65537)),
+      },
+    });
+    expect(errors).toEqual({
+      spec: { userData: { value: 'User data must not exceed 64 KB.' } },
+    });
+
+    await expect(
+      validateStep('configuration', {
         ...emptyValues,
         catalogItemId: vmCatalogItem.id,
         metadata: { name: 'web-01', project: '' },
         spec: {
           ...emptyValues.spec,
-          instanceType: 'standard-4-8',
-          userData: 'a'.repeat(65537),
+          instanceType: provisioningFieldValue('standard-4-8'),
+          userData: provisioningFieldValue('a'.repeat(65536)),
         },
-      },
-      vmCatalogItem,
-    );
-    expect(errors).toEqual({
-      spec: { userData: 'User data must not exceed 64 KB.' },
-    });
-
-    await expect(
-      validateStep(
-        'configuration',
-        {
-          ...emptyValues,
-          catalogItemId: vmCatalogItem.id,
-          metadata: { name: 'web-01', project: '' },
-          spec: {
-            ...emptyValues.spec,
-            instanceType: 'standard-4-8',
-            userData: 'a'.repeat(65536),
-          },
-        },
-        vmCatalogItem,
-      ),
+      }),
     ).resolves.toEqual({});
 
     await expect(
-      validateStep(
-        'configuration',
-        {
-          ...emptyValues,
-          catalogItemId: vmCatalogItem.id,
-          metadata: { name: 'web-01', project: '' },
-          spec: {
-            ...emptyValues.spec,
-            instanceType: 'standard-4-8',
-            userDataSource: 'secret',
-            userData: 'a'.repeat(65537),
-            userDataSecret: { name: 'user-data-secret' },
-          },
+      validateStep('configuration', {
+        ...emptyValues,
+        catalogItemId: vmCatalogItem.id,
+        metadata: { name: 'web-01', project: '' },
+        spec: {
+          ...emptyValues.spec,
+          instanceType: provisioningFieldValue('standard-4-8'),
+          userDataSource: provisioningFieldValue('secret'),
+          userData: provisioningFieldValue('a'.repeat(65537)),
+          userDataSecret: provisioningFieldValue('user-data-secret'),
         },
-        vmCatalogItem,
-      ),
+      }),
     ).resolves.toEqual({});
   });
 

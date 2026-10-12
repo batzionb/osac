@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import ProvisioningField from './ProvisioningField';
 import { provisioningFieldValue } from './provisioningFieldValue';
 import { renderWithProviders } from '../../../test-utils/TestProviders';
-import UserDataField from '../../Form/UserDataField';
+import { InputField } from '../../Form/InputField';
 
 describe('ProvisioningField', () => {
   it('binds the child to the nested value path and disables it when locked', () => {
@@ -16,7 +16,12 @@ describe('ProvisioningField', () => {
       >
         <ProvisioningField name="spec.userData">
           {({ valueName, isDisabled }) => (
-            <UserDataField name={valueName} isDisabled={isDisabled} />
+            <InputField
+              name={valueName}
+              label="User data"
+              fieldId="user-data"
+              isDisabled={isDisabled}
+            />
           )}
         </ProvisioningField>
       </Formik>,
@@ -35,7 +40,12 @@ describe('ProvisioningField', () => {
       >
         <ProvisioningField name="spec.userData">
           {({ valueName, isDisabled }) => (
-            <UserDataField name={valueName} isDisabled={isDisabled} />
+            <InputField
+              name={valueName}
+              label="User data"
+              fieldId="user-data"
+              isDisabled={isDisabled}
+            />
           )}
         </ProvisioningField>
       </Formik>,

@@ -21,10 +21,7 @@ import { BareMetalReviewStep } from './BareMetalReviewStep';
 import type { BareMetalInstanceWizardValues } from './fields';
 import { getBareMetalInstanceInitialValues } from './fields';
 import { buildBareMetalInstanceCreatePayload } from './payload';
-import {
-  type BareMetalWizardStepId,
-  buildBareMetalInstanceStepSchema,
-} from './schemas';
+import { type BareMetalWizardStepId, buildBareMetalInstanceStepSchema } from './schemas';
 import type { CatalogItem } from '../../catalog/catalogItemDisplay';
 
 export interface BareMetalInstanceCreateWizardCloseHandler {

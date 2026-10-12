@@ -35,8 +35,8 @@ const valuesWithAuth = (sshKey: string, userData: string): BareMetalInstanceWiza
   ...createEmptyBareMetalInstanceValues(),
   spec: {
     ...createEmptyBareMetalInstanceValues().spec,
-    sshKey,
-    userData,
+    sshKey: { value: sshKey, locked: false },
+    userData: { value: userData, locked: false },
   },
 });
 
@@ -98,7 +98,7 @@ const validateNetworking = async (values: BareMetalInstanceWizardValues) => {
 describe('Bare Metal networking validation', () => {
   it('does not require attachments when useDefaults is true', async () => {
     const values = createEmptyBareMetalInstanceValues();
-    values.spec.networking.useDefaults = true;
+    values.spec.networking.useDefaults.value = true;
 
     const errors = await validateNetworking(values);
     expect(errors).toEqual({});
@@ -106,12 +106,12 @@ describe('Bare Metal networking validation', () => {
 
   it('requires virtual network and subnet when useDefaults is false', async () => {
     const values = createEmptyBareMetalInstanceValues();
-    values.spec.networking.useDefaults = false;
+    values.spec.networking.useDefaults.value = false;
     values.spec.networking.attachments = [
       {
         ...createEmptyNetworkAttachmentRow(),
-        virtualNetwork: emptyResourceSelectValue(),
-        subnet: emptyResourceSelectValue(),
+        virtualNetwork: { value: emptyResourceSelectValue(), locked: false },
+        subnet: { value: emptyResourceSelectValue(), locked: false },
       },
     ];
 
@@ -120,8 +120,8 @@ describe('Bare Metal networking validation', () => {
       spec: {
         networking: {
           'attachments[0]': {
-            virtualNetwork: { id: 'Virtual network is required' },
-            subnet: { id: 'Subnet is required' },
+            virtualNetwork: { value: { id: 'Virtual network is required' } },
+            subnet: { value: { id: 'Subnet is required' } },
           },
         },
       },
@@ -130,12 +130,12 @@ describe('Bare Metal networking validation', () => {
 
   it('accepts valid custom networking when useDefaults is false', async () => {
     const values = createEmptyBareMetalInstanceValues();
-    values.spec.networking.useDefaults = false;
+    values.spec.networking.useDefaults.value = false;
     values.spec.networking.attachments = [
       {
         ...createEmptyNetworkAttachmentRow(),
-        virtualNetwork: { id: 'vn-1', name: 'vn-1' },
-        subnet: { id: 'subnet-1', name: 'subnet-1' },
+        virtualNetwork: { value: { id: 'vn-1', name: 'vn-1' }, locked: false },
+        subnet: { value: { id: 'subnet-1', name: 'subnet-1' }, locked: false },
       },
     ];
 

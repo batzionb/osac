@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { ComputeInstanceCatalogItem } from '@osac/types';
 
 import { buildComputeInstanceCreatePayload, createEmptyComputeInstanceValues } from './payload';
+import { provisioningFieldValue } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 
 describe('buildComputeInstanceCreatePayload SSH key', () => {
   const buildValues = (sshKeyName: string) => ({
@@ -11,13 +12,13 @@ describe('buildComputeInstanceCreatePayload SSH key', () => {
     metadata: { name: 'web-01', project: 'project-a' },
     spec: {
       ...createEmptyComputeInstanceValues().spec,
-      sshKey: { name: sshKeyName },
+      sshKey: { value: sshKeyName, locked: false },
       networking: {
-        useDefaultNetwork: false,
-        virtualNetwork: { id: 'vn-1', name: 'vn-1' },
-        subnet: { id: 'subnet-1', name: 'subnet-1' },
-        securityGroups: [{ id: 'sg-1', name: 'sg-1' }],
-        autoExternalIpAttachment: false,
+        useDefaultNetwork: provisioningFieldValue(false),
+        virtualNetwork: provisioningFieldValue({ id: 'vn-1', name: 'vn-1' }),
+        subnet: provisioningFieldValue({ id: 'subnet-1', name: 'subnet-1' }),
+        securityGroups: provisioningFieldValue([{ id: 'sg-1', name: 'sg-1' }]),
+        autoExternalIpAttachment: provisioningFieldValue(false),
       },
     },
   });

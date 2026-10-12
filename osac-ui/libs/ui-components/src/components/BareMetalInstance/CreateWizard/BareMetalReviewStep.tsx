@@ -23,16 +23,19 @@ interface Props {
 export const BareMetalReviewStep = ({ catalogItem }: Props) => {
   const { t } = useTranslation();
   const { values } = useFormikContext<BareMetalInstanceWizardValues>();
-  const isSecretSource = values.spec.userDataSource === 'secret';
-  const selectedUserData = isSecretSource ? values.spec.userDataSecret.name : values.spec.userData;
+  const isSecretSource = values.spec.userDataSource.value === 'secret';
+  const selectedUserData = isSecretSource
+    ? values.spec.userDataSecret.value
+    : values.spec.userData.value;
   const hasAuthentication = hasBareMetalAuthentication(
-    values.spec.sshKey,
-    isSecretSource ? undefined : values.spec.userData,
-    isSecretSource ? values.spec.userDataSecret.name : undefined,
+    values.spec.sshKey.value,
+    isSecretSource ? undefined : values.spec.userData.value,
+    isSecretSource ? values.spec.userDataSecret.value : undefined,
+
   );
 
   const networking = values.spec.networking;
-  const isCustomNetwork = !networking.useDefaults;
+  const isCustomNetwork = !networking.useDefaults.value;
 
   return (
     <Stack hasGutter>
@@ -75,19 +78,19 @@ export const BareMetalReviewStep = ({ catalogItem }: Props) => {
           <DescriptionListGroup>
             <DescriptionListTerm>{t('SSH public key')}</DescriptionListTerm>
             <DescriptionListDescription>
-              {formatReviewScalar(values.spec.sshKey)}
+              {formatReviewScalar(values.spec.sshKey.value)}
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
             <DescriptionListTerm>{t('Disk image')}</DescriptionListTerm>
             <DescriptionListDescription>
-              {values.spec.diskImage.name || values.spec.diskImage.id || '—'}
+              {values.spec.diskImage.value.name || values.spec.diskImage.value.id || '—'}
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
             <DescriptionListTerm>{t('Instance type')}</DescriptionListTerm>
             <DescriptionListDescription>
-              {values.spec.instanceType.name || '—'}
+              {values.spec.instanceType.value || '—'}
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
@@ -105,16 +108,16 @@ export const BareMetalReviewStep = ({ catalogItem }: Props) => {
 
           {isCustomNetwork && networking.attachments.length > 0 && (
             <NetworkAttachmentReviewFields
-              virtualNetwork={networking.attachments[0].virtualNetwork}
-              subnet={networking.attachments[0].subnet}
-              securityGroups={networking.attachments[0].securityGroups}
+              virtualNetwork={networking.attachments[0].virtualNetwork.value}
+              subnet={networking.attachments[0].subnet.value}
+              securityGroups={networking.attachments[0].securityGroups.value}
             />
           )}
 
           <DescriptionListGroup>
             <DescriptionListTerm>{t('External access')}</DescriptionListTerm>
             <DescriptionListDescription>
-              {networking.attachExternalIp ? t('Enabled') : t('Disabled')}
+              {networking.attachExternalIp.value ? t('Enabled') : t('Disabled')}
             </DescriptionListDescription>
           </DescriptionListGroup>
         </DescriptionList>

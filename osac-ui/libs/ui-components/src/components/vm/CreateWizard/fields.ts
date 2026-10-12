@@ -1,17 +1,20 @@
 import type { ResourceSelectValue } from '../../Form/resourceSelectValue';
+import type { ProvisioningFieldValue } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 
 export interface ComputeInstanceNetworkingValues {
-  useDefaultNetwork: boolean;
-  virtualNetwork: ResourceSelectValue;
-  subnet: ResourceSelectValue;
-  securityGroups: ResourceSelectValue[];
-  autoExternalIpAttachment: boolean;
+  useDefaultNetwork: ProvisioningFieldValue<boolean>;
+  virtualNetwork: ProvisioningFieldValue<ResourceSelectValue>;
+  subnet: ProvisioningFieldValue<ResourceSelectValue>;
+  securityGroups: ProvisioningFieldValue<ResourceSelectValue[]>;
+  autoExternalIpAttachment: ProvisioningFieldValue<boolean>;
 }
 
 export interface ComputeInstanceDiskValues {
   sizeGib: string;
   storageTier: ResourceSelectValue;
 }
+
+export type UserDataSource = 'inline' | 'secret';
 
 export interface ComputeInstanceWizardValues {
   catalogItemId: string;
@@ -20,25 +23,24 @@ export interface ComputeInstanceWizardValues {
     project: string;
   };
   spec: {
-    sshKey: {
-      name: string;
+    sshKey: ProvisioningFieldValue<string>;
+    instanceType: ProvisioningFieldValue<string>;
+    userDataSource: ProvisioningFieldValue<UserDataSource>;
+    userData: ProvisioningFieldValue<string>;
+    userDataSecret: ProvisioningFieldValue<string>;
+    bootDisk: {
+      sizeGib: ProvisioningFieldValue<string>;
+      storageTier: ProvisioningFieldValue<ResourceSelectValue>;
     };
-    instanceType: string;
-    userDataSource: 'inline' | 'secret';
-    userData: string;
-    userDataSecret: {
-      name: string;
-    };
-    bootDisk: ComputeInstanceDiskValues;
-    additionalDisks: ComputeInstanceDiskValues[];
+    additionalDisks: ProvisioningFieldValue<ComputeInstanceDiskValues[]>;
     networking: ComputeInstanceNetworkingValues;
   };
 }
 
-export const VM_SSH_KEY_FORM_PATH = 'spec.sshKey.name';
+export const VM_SSH_KEY_FORM_PATH = 'spec.sshKey';
 export const VM_USER_DATA_SOURCE_FORM_PATH = 'spec.userDataSource';
 export const VM_USER_DATA_FORM_PATH = 'spec.userData';
-export const VM_USER_DATA_SECRET_FORM_PATH = 'spec.userDataSecret.name';
+export const VM_USER_DATA_SECRET_FORM_PATH = 'spec.userDataSecret';
 
 export const CONFIGURATION_CATALOG_PATHS = [
   'spec.user_data',

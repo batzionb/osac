@@ -6,6 +6,7 @@ import ClusterNodeSetsArrayField from './ClusterNodeSetsArrayField';
 import { useTranslation } from '../../../hooks/useTranslation';
 import OsacForm from '../../Form/OsacForm';
 import ClusterVersionField from '../../ProvisioningWizard/fields/ClusterVersionField';
+import ProvisioningField from '../../ProvisioningWizard/fields/ProvisioningField';
 
 interface Props {
   catalogItem: ClusterCatalogItem | null;
@@ -22,9 +23,17 @@ const ClusterConfigurationStep = ({ catalogItem }: Props) => {
     <Stack hasGutter>
       <StackItem>
         <OsacForm>
-          <ClusterVersionField name="spec.versionName" />
+          <ProvisioningField name="spec.versionName">
+            {({ valueName, isDisabled }) => (
+              <ClusterVersionField name={valueName} isDisabled={isDisabled} />
+            )}
+          </ProvisioningField>
           <FormSection title={t('Node Sets')} titleElement="h2">
-            <ClusterNodeSetsArrayField />
+            <ProvisioningField name="spec.nodeSetRows">
+              {({ valueName, isDisabled }) => (
+                <ClusterNodeSetsArrayField name={valueName} isDisabled={isDisabled} />
+              )}
+            </ProvisioningField>
           </FormSection>
         </OsacForm>
       </StackItem>

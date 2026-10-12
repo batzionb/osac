@@ -15,20 +15,28 @@ export type BareMetalWizardStepId =
   | 'networking'
   | 'review';
 
+const lockedField = (valueSchema: yup.AnySchema) =>
+  yup.object({
+    value: valueSchema,
+    locked: yup.boolean(),
+  });
+
 const buildBareMetalInstanceFieldDefinitions = (t: TFunction) => {
   return {
     catalogItemId: yup.string().required(t('catalogProvision.validation.catalogItemRequired')),
     metadataName: resourceNameSchema(t),
-    specSshKey: yup
-      .string()
-      .test(
-        'ssh-public-key',
-        t(
-          'SSH public key must be in the form "[TYPE] key [[EMAIL]]". Supported types are ssh-rsa, ssh-ed25519, and ecdsa-sha2-nistp256/384/521.',
+    specSshKey: lockedField(
+      yup
+        .string()
+        .test(
+          'ssh-public-key',
+          t(
+            'SSH public key must be in the form "[TYPE] key [[EMAIL]]". Supported types are ssh-rsa, ssh-ed25519, and ecdsa-sha2-nistp256/384/521.',
+          ),
+          (value) => isValidSshPublicKey(value),
         ),
-        (value) => isValidSshPublicKey(value),
-      ),
-    specUserData: userDataSchema(t),
+    ),
+    specUserData: lockedField(userDataSchema(t)),
   };
 };
 
@@ -48,18 +56,21 @@ export const buildBareMetalInstanceStepSchema = (
     return yup
       .object({
         spec: yup.object({
-          sshKey: yup.string(),
-          userData: yup.string(),
+          sshKey: lockedField(yup.string()),
+          userData: lockedField(yup.string()),
         }),
       })
       .test(
         'authentication-method',
         t('Provide either an SSH public key or user data containing access credentials.'),
         function (values) {
-          if (hasBareMetalAuthentication(values?.spec?.sshKey, values?.spec?.userData)) {
+          const spec = values?.spec as
+            | { sshKey?: { value?: string }; userData?: { value?: string } }
+            | undefined;
+          if (hasBareMetalAuthentication(spec?.sshKey?.value, spec?.userData?.value)) {
             return true;
           }
-          return this.createError({ path: 'spec.sshKey' });
+          return this.createError({ path: 'spec.sshKey.value' });
         },
       );
   }
@@ -84,12 +95,12 @@ export const buildBareMetalInstanceStepSchema = (
       return yup.object({
         spec: yup.object({
           userData: fields.specUserData,
-          instanceType: yup.object({
-            name: yup.string(),
-          }),
-          diskImage: yup.object({
-            id: yup.string().required(t('Disk image is required')),
-          }),
+          instanceType: lockedField(yup.string()),
+          diskImage: lockedField(
+            yup.object({
+              id: yup.string().required(t('Disk image is required')),
+            }),
+          ),
         }),
       });
     case 'networking':
@@ -103,9 +114,9 @@ const buildAttachmentRowSchema = (t: TFunction) => {
   const na = buildNetworkAttachmentSchemas(t);
   return yup.object({
     id: yup.string().required(),
-    virtualNetwork: na.requiredVirtualNetwork,
-    subnet: na.requiredSubnet,
-    securityGroups: na.securityGroupsSchema,
+    virtualNetwork: lockedField(na.requiredVirtualNetwork),
+    subnet: lockedField(na.requiredSubnet),
+    securityGroups: lockedField(na.securityGroupsSchema),
   });
 };
 
@@ -120,13 +131,13 @@ const buildNetworkingSchema = (t: TFunction) =>
   yup.object({
     spec: yup.object({
       networking: yup.object({
-        useDefaults: yup.boolean().required(),
+        useDefaults: lockedField(yup.boolean().required()),
         attachments: yup.array().when('useDefaults', {
-          is: false,
+          is: (field: { value?: boolean }) => field?.value === false,
           then: () => buildCustomAttachmentsSchema(t),
           otherwise: () => yup.array(),
         }),
-        attachExternalIp: yup.boolean().required(),
+        attachExternalIp: lockedField(yup.boolean().required()),
       }),
     }),
   });

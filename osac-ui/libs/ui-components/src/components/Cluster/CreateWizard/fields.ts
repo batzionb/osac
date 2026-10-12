@@ -1,4 +1,5 @@
 import type { ResourceSelectValue } from '../../Form/resourceSelectValue';
+import type { ProvisioningFieldValue } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 
 export interface ClusterNodeSetRow {
   rowId: string;
@@ -14,31 +15,29 @@ export interface ClusterWizardValues {
     project: string;
   };
   spec: {
-    sshPublicKey: string;
-    pullSecretSecret: {
-      name: string;
-    };
+    sshPublicKey: ProvisioningFieldValue<string>;
+    pullSecretSecret: ProvisioningFieldValue<string>;
     /** Selected ClusterVersion metadata.name (e.g. "4-17-0"); wrapped into spec.version at payload build. */
-    versionName: string;
-    nodeSetRows: ClusterNodeSetRow[];
+    versionName: ProvisioningFieldValue<string>;
+    nodeSetRows: ProvisioningFieldValue<ClusterNodeSetRow[]>;
     network: {
-      podCidr: string;
-      serviceCidr: string;
+      podCidr: ProvisioningFieldValue<string>;
+      serviceCidr: ProvisioningFieldValue<string>;
     };
-    useDefaultNetwork: boolean;
+    useDefaultNetwork: ProvisioningFieldValue<boolean>;
     networkAttachment: {
-      virtualNetwork: ResourceSelectValue;
-      subnet: ResourceSelectValue;
-      securityGroups: ResourceSelectValue[];
+      virtualNetwork: ProvisioningFieldValue<ResourceSelectValue>;
+      subnet: ProvisioningFieldValue<ResourceSelectValue>;
+      securityGroups: ProvisioningFieldValue<ResourceSelectValue[]>;
     };
-    autoExternalIpAttachment: boolean;
+    autoExternalIpAttachment: ProvisioningFieldValue<boolean>;
   };
 }
 
 export const CLUSTER_SSH_KEY_WIRE_PATH = 'ssh_public_key';
 export const CLUSTER_SSH_KEY_FORM_PATH = 'spec.sshPublicKey';
 export const CLUSTER_PULL_SECRET_WIRE_PATH = 'pull_secret_secret.name';
-export const CLUSTER_PULL_SECRET_FORM_PATH = 'spec.pullSecretSecret.name';
+export const CLUSTER_PULL_SECRET_FORM_PATH = 'spec.pullSecretSecret';
 export const CLUSTER_VERSION_WIRE_PATH = 'version';
 export const CLUSTER_POD_CIDR_WIRE_PATH = 'network.pod_cidr';
 export const CLUSTER_SERVICE_CIDR_WIRE_PATH = 'network.service_cidr';

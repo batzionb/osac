@@ -5,11 +5,16 @@ import { buildNetworkAttachmentSchemas } from '@osac/ui-components/validation/ne
 import { resourceNameSchema } from '@osac/ui-components/validation/resource-name';
 
 import type { ClusterNodeSetRow } from './fields';
-import {} from './fields';
 import { buildCidrSchema, cidrsOverlap, isValidCidr } from '../../../validation/cidr-validation';
 import { isValidSshPublicKey } from '../../ProvisioningWizard/credentialValidation';
 
 export type ClusterWizardStepId = 'catalog' | 'general' | 'configuration' | 'networking' | 'review';
+
+const lockedField = (valueSchema: yup.AnySchema) =>
+  yup.object({
+    value: valueSchema,
+    locked: yup.boolean(),
+  });
 
 const nodeSetRowSchema = (t: TFunction) =>
   yup.object({
@@ -31,55 +36,70 @@ const buildClusterFieldDefinitions = (t: TFunction) => {
   return {
     catalogItemId: yup.string().required(t('Select a catalog item')),
     metadataName: resourceNameSchema(t),
-    specSshPublicKey: yup
-      .string()
-      .test(
-        'ssh-public-key',
-        t(
-          'SSH public key must be in the form "[TYPE] key [[EMAIL]]". Supported types are ssh-rsa, ssh-ed25519, and ecdsa-sha2-nistp256/384/521.',
+    specSshPublicKey: lockedField(
+      yup
+        .string()
+        .test(
+          'ssh-public-key',
+          t(
+            'SSH public key must be in the form "[TYPE] key [[EMAIL]]". Supported types are ssh-rsa, ssh-ed25519, and ecdsa-sha2-nistp256/384/521.',
+          ),
+          (value) => isValidSshPublicKey(value),
         ),
-        (value) => isValidSshPublicKey(value),
-      ),
-    specVersionName: yup.string().trim().required(t('Version is required')),
-    specNodeSetRows: yup
-      .array()
-      .of(rowSchema)
-      .min(1, t('At least one node set is required'))
-      .test('unique-node-set-names', function (rows) {
-        const seenNames = new Set<string>();
-        for (const [rowIndex, row] of (rows ?? []).entries()) {
-          const name = row?.name?.trim() ?? '';
-          if (!name) {
-            continue;
+    ),
+    specVersionName: lockedField(yup.string().trim().required(t('Version is required'))),
+    specNodeSetRows: lockedField(
+      yup
+        .array()
+        .of(rowSchema)
+        .min(1, t('At least one node set is required'))
+        .test('unique-node-set-names', function (rows) {
+          const seenNames = new Set<string>();
+          for (const [rowIndex, row] of (rows ?? []).entries()) {
+            const name = row?.name?.trim() ?? '';
+            if (!name) {
+              continue;
+            }
+            if (seenNames.has(name)) {
+              return this.createError({
+                path: `${this.path}[${rowIndex}].name`,
+                message: t('Node set names must be unique'),
+              });
+            }
+            seenNames.add(name);
           }
-          if (seenNames.has(name)) {
-            return this.createError({
-              path: `${this.path}[${rowIndex}].name`,
-              message: t('Node set names must be unique'),
-            });
-          }
-          seenNames.add(name);
-        }
-        return true;
-      }),
-    specNetwork: yup.object({
-      podCidr: buildCidrSchema(t, 'ipv4'),
-      serviceCidr: buildCidrSchema(t, 'ipv4').test(
+          return true;
+        }),
+    ),
+    specNetwork: yup
+      .object({
+        podCidr: lockedField(buildCidrSchema(t, 'ipv4')),
+        serviceCidr: lockedField(buildCidrSchema(t, 'ipv4')),
+      })
+      .test(
         'service-cidr-no-overlap',
         t('Service CIDR must not overlap the pod CIDR.'),
-        function (value) {
-          const parent = this.parent as { podCidr?: string } | undefined;
-          const podCidr = parent?.podCidr ?? '';
-          if (!value?.trim() || !podCidr.trim()) {
+        function (network) {
+          const cidrs = network as
+            | { podCidr?: { value?: string }; serviceCidr?: { value?: string } }
+            | undefined;
+          const podCidr = cidrs?.podCidr?.value ?? '';
+          const serviceCidr = cidrs?.serviceCidr?.value ?? '';
+          if (!serviceCidr.trim() || !podCidr.trim()) {
             return true;
           }
-          if (!isValidCidr(value, 'ipv4') || !isValidCidr(podCidr, 'ipv4')) {
+          if (!isValidCidr(serviceCidr, 'ipv4') || !isValidCidr(podCidr, 'ipv4')) {
             return true;
           }
-          return !cidrsOverlap(podCidr, value, 'ipv4');
+          if (!cidrsOverlap(podCidr, serviceCidr, 'ipv4')) {
+            return true;
+          }
+          return this.createError({
+            path: `${this.path}.serviceCidr.value`,
+            message: t('Service CIDR must not overlap the pod CIDR.'),
+          });
         },
       ),
-    }),
     specUseDefaultNetwork: yup.boolean(),
     specAutoExternalIpAttachment: yup.boolean(),
   };
@@ -107,9 +127,7 @@ export const buildClusterStepSchema = (
         }),
         spec: yup.object({
           sshPublicKey: fields.specSshPublicKey,
-          pullSecretSecret: yup.object({
-            name: yup.string().required(t('Pull secret is required')),
-          }),
+          pullSecretSecret: lockedField(yup.string().required(t('Pull secret is required'))),
         }),
       });
     case 'configuration':
@@ -124,23 +142,23 @@ export const buildClusterStepSchema = (
       return yup.object({
         spec: yup.object({
           network: fields.specNetwork,
-          useDefaultNetwork: fields.specUseDefaultNetwork,
+          useDefaultNetwork: lockedField(fields.specUseDefaultNetwork),
           networkAttachment: yup.object().when('useDefaultNetwork', {
-            is: false,
+            is: (field: { value?: boolean }) => field?.value === false,
             then: () =>
               yup.object({
-                virtualNetwork: na.requiredVirtualNetwork,
-                subnet: na.requiredSubnet,
-                securityGroups: na.securityGroupsSchema,
+                virtualNetwork: lockedField(na.requiredVirtualNetwork),
+                subnet: lockedField(na.requiredSubnet),
+                securityGroups: lockedField(na.securityGroupsSchema),
               }),
             otherwise: () =>
               yup.object({
-                virtualNetwork: na.optionalResourceSelect,
-                subnet: na.optionalResourceSelect,
-                securityGroups: na.securityGroupsSchema,
+                virtualNetwork: lockedField(na.optionalResourceSelect),
+                subnet: lockedField(na.optionalResourceSelect),
+                securityGroups: lockedField(na.securityGroupsSchema),
               }),
           }),
-          autoExternalIpAttachment: fields.specAutoExternalIpAttachment,
+          autoExternalIpAttachment: lockedField(fields.specAutoExternalIpAttachment),
         }),
       });
     }

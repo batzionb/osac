@@ -4,6 +4,7 @@ import { type ComputeInstanceCatalogItem, ComputeInstanceRunStrategy } from '@os
 
 import { buildComputeInstanceCreatePayload, createEmptyComputeInstanceValues } from './payload';
 import { emptyResourceSelectValue } from '../../Form/resourceSelectValue';
+import { provisioningFieldValue } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 
 const vmCatalogItem: ComputeInstanceCatalogItem = {
   $typeName: 'osac.public.v1.ComputeInstanceCatalogItem',
@@ -39,13 +40,13 @@ const buildValues = (project: string) => ({
   metadata: { name: 'my-vm', project },
   spec: {
     ...createEmptyComputeInstanceValues().spec,
-    instanceType: 'standard-4-8',
+    instanceType: provisioningFieldValue('standard-4-8'),
     networking: {
-      useDefaultNetwork: false,
-      virtualNetwork: { id: 'vnet-1', name: 'vnet-1' },
-      subnet: { id: 'subnet-1', name: 'subnet-1' },
-      securityGroups: [{ id: 'sg-1', name: 'sg-1' }],
-      autoExternalIpAttachment: false,
+      useDefaultNetwork: provisioningFieldValue(false),
+      virtualNetwork: provisioningFieldValue({ id: 'vnet-1', name: 'vnet-1' }),
+      subnet: provisioningFieldValue({ id: 'subnet-1', name: 'subnet-1' }),
+      securityGroups: provisioningFieldValue([{ id: 'sg-1', name: 'sg-1' }]),
+      autoExternalIpAttachment: provisioningFieldValue(false),
     },
   },
 });
@@ -58,13 +59,13 @@ const baseValues = () => {
     metadata: { name: 'web-01', project: '' },
     spec: {
       ...values.spec,
-      instanceType: 'standard-4-8',
+      instanceType: provisioningFieldValue('standard-4-8'),
       networking: {
-        useDefaultNetwork: false,
-        virtualNetwork: { id: 'vnet', name: 'vnet' },
-        subnet: { id: 'subnet-1', name: 'subnet-1' },
-        securityGroups: [{ id: 'sg-1', name: 'sg-1' }],
-        autoExternalIpAttachment: false,
+        useDefaultNetwork: provisioningFieldValue(false),
+        virtualNetwork: provisioningFieldValue({ id: 'vnet', name: 'vnet' }),
+        subnet: provisioningFieldValue({ id: 'subnet-1', name: 'subnet-1' }),
+        securityGroups: provisioningFieldValue([{ id: 'sg-1', name: 'sg-1' }]),
+        autoExternalIpAttachment: provisioningFieldValue(false),
       },
     },
   };
@@ -141,7 +142,10 @@ describe('buildComputeInstanceCreatePayload', () => {
 describe('buildComputeInstanceCreatePayload — disk storage tiers', () => {
   it('sends the boot disk tier id and name', () => {
     const values = baseValues();
-    values.spec.bootDisk = { sizeGib: '20', storageTier: { id: 'id-balanced', name: 'balanced' } };
+    values.spec.bootDisk = {
+      sizeGib: provisioningFieldValue('20'),
+      storageTier: provisioningFieldValue({ id: 'id-balanced', name: 'balanced' }),
+    };
 
     const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
 
@@ -153,7 +157,10 @@ describe('buildComputeInstanceCreatePayload — disk storage tiers', () => {
 
   it('omits storage_tier from the boot disk when no tier is selected', () => {
     const values = baseValues();
-    values.spec.bootDisk = { sizeGib: '20', storageTier: emptyResourceSelectValue() };
+    values.spec.bootDisk = {
+      sizeGib: provisioningFieldValue('20'),
+      storageTier: provisioningFieldValue(emptyResourceSelectValue()),
+    };
 
     const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
 
@@ -163,10 +170,13 @@ describe('buildComputeInstanceCreatePayload — disk storage tiers', () => {
 
   it('carries both the boot disk tier and each additional disk tier', () => {
     const values = baseValues();
-    values.spec.bootDisk = { sizeGib: '20', storageTier: { id: 'id-fast', name: 'fast' } };
-    values.spec.additionalDisks = [
+    values.spec.bootDisk = {
+      sizeGib: provisioningFieldValue('20'),
+      storageTier: provisioningFieldValue({ id: 'id-fast', name: 'fast' }),
+    };
+    values.spec.additionalDisks = provisioningFieldValue([
       { sizeGib: '100', storageTier: { id: 'id-bulk', name: 'bulk' } },
-    ];
+    ]);
 
     const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
 
@@ -181,11 +191,14 @@ describe('buildComputeInstanceCreatePayload — disk storage tiers', () => {
 
   it('drops additional disk rows that have no size', () => {
     const values = baseValues();
-    values.spec.bootDisk = { sizeGib: '20', storageTier: emptyResourceSelectValue() };
-    values.spec.additionalDisks = [
+    values.spec.bootDisk = {
+      sizeGib: provisioningFieldValue('20'),
+      storageTier: provisioningFieldValue(emptyResourceSelectValue()),
+    };
+    values.spec.additionalDisks = provisioningFieldValue([
       { sizeGib: '100', storageTier: { id: 'id-bulk', name: 'bulk' } },
       { sizeGib: '', storageTier: { id: 'id-fast', name: 'fast' } },
-    ];
+    ]);
 
     const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
 
@@ -196,7 +209,9 @@ describe('buildComputeInstanceCreatePayload — disk storage tiers', () => {
 
   it('omits additional_disks entirely when no rows have a size', () => {
     const values = baseValues();
-    values.spec.additionalDisks = [{ sizeGib: '', storageTier: { id: 'id-fast', name: 'fast' } }];
+    values.spec.additionalDisks = provisioningFieldValue([
+      { sizeGib: '', storageTier: { id: 'id-fast', name: 'fast' } },
+    ]);
 
     const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
 
@@ -205,14 +220,11 @@ describe('buildComputeInstanceCreatePayload — disk storage tiers', () => {
 
   it('still sends non-empty additional disks as usual', () => {
     const values = baseValues();
-    values.spec.additionalDisks = [
+    values.spec.additionalDisks = provisioningFieldValue([
       { sizeGib: '100', storageTier: { id: 'id-bulk', name: 'bulk' } },
-    ];
+    ]);
 
-    const payload = buildComputeInstanceCreatePayload(
-      values,
-      vmCatalogItem,
-    );
+    const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
 
     expect(payload.spec?.additionalDisks).toEqual([
       { sizeGib: 100, storageTier: { id: 'id-bulk', name: 'bulk' } },
@@ -223,7 +235,7 @@ describe('buildComputeInstanceCreatePayload — disk storage tiers', () => {
 describe('buildComputeInstanceCreatePayload — useDefaultNetwork', () => {
   it('omits networkAttachments when useDefaultNetwork is true', () => {
     const values = baseValues();
-    values.spec.networking.useDefaultNetwork = true;
+    values.spec.networking.useDefaultNetwork.value = true;
 
     const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
 
@@ -232,7 +244,7 @@ describe('buildComputeInstanceCreatePayload — useDefaultNetwork', () => {
 
   it('includes networkAttachments when useDefaultNetwork is false and subnet is set', () => {
     const values = baseValues();
-    values.spec.networking.useDefaultNetwork = false;
+    values.spec.networking.useDefaultNetwork.value = false;
 
     const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
 
@@ -246,8 +258,8 @@ describe('buildComputeInstanceCreatePayload — useDefaultNetwork', () => {
 
   it('omits networkAttachments when useDefaultNetwork is false but subnet is empty', () => {
     const values = baseValues();
-    values.spec.networking.useDefaultNetwork = false;
-    values.spec.networking.subnet = emptyResourceSelectValue();
+    values.spec.networking.useDefaultNetwork.value = false;
+    values.spec.networking.subnet.value = emptyResourceSelectValue();
 
     const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
 
@@ -256,8 +268,8 @@ describe('buildComputeInstanceCreatePayload — useDefaultNetwork', () => {
 
   it('filters out security groups with empty IDs', () => {
     const values = baseValues();
-    values.spec.networking.useDefaultNetwork = false;
-    values.spec.networking.securityGroups = [
+    values.spec.networking.useDefaultNetwork.value = false;
+    values.spec.networking.securityGroups.value = [
       { id: 'sg-1', name: 'sg-1' },
       { id: '', name: '' },
       { id: 'sg-2', name: 'sg-2' },
@@ -277,7 +289,7 @@ describe('buildComputeInstanceCreatePayload — useDefaultNetwork', () => {
 describe('buildComputeInstanceCreatePayload — autoExternalIpAttachment', () => {
   it('omits autoExternalIpAttachment when disabled', () => {
     const values = baseValues();
-    values.spec.networking.autoExternalIpAttachment = false;
+    values.spec.networking.autoExternalIpAttachment.value = false;
 
     const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
 
@@ -286,7 +298,7 @@ describe('buildComputeInstanceCreatePayload — autoExternalIpAttachment', () =>
 
   it('sets autoExternalIpAttachment when enabled', () => {
     const values = baseValues();
-    values.spec.networking.autoExternalIpAttachment = true;
+    values.spec.networking.autoExternalIpAttachment.value = true;
 
     const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
 

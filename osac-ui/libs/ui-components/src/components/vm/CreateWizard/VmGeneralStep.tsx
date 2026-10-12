@@ -10,30 +10,34 @@ import {
 } from './fields';
 import NameField from '../../Form/NameField';
 import OsacForm from '../../Form/OsacForm';
+import ProvisioningField from '../../ProvisioningWizard/fields/ProvisioningField';
 import SshPublicKeySecretField from '../../ProvisioningWizard/fields/SshPublicKeySecretField';
 
 interface VmGeneralStepProps {
   catalogItem: ComputeInstanceCatalogItem | null;
 }
 
-const VmGeneralStep = ({ catalogItem }: VmGeneralStepProps) => {
-  const isSshKeyLocked = catalogItem?.fields?.sshKey?.behavior.case === 'locked';
+const VmGeneralStep = (_props: VmGeneralStepProps) => {
   const { values, setFieldValue } = useFormikContext<ComputeInstanceWizardValues>();
 
   return (
     <OsacForm>
       <ProjectField
         onSelect={() => {
-          void setFieldValue(VM_SSH_KEY_FORM_PATH, '');
-          void setFieldValue(VM_USER_DATA_SECRET_FORM_PATH, '');
+          void setFieldValue(`${VM_SSH_KEY_FORM_PATH}.value`, '');
+          void setFieldValue(`${VM_USER_DATA_SECRET_FORM_PATH}.value`, '');
         }}
       />
       <NameField />
-      <SshPublicKeySecretField
-        name={VM_SSH_KEY_FORM_PATH}
-        project={values.metadata.project}
-        isDisabled={isSshKeyLocked}
-      />
+      <ProvisioningField name={VM_SSH_KEY_FORM_PATH}>
+        {({ valueName, isDisabled }) => (
+          <SshPublicKeySecretField
+            name={valueName}
+            project={values.metadata.project}
+            isDisabled={isDisabled}
+          />
+        )}
+      </ProvisioningField>
     </OsacForm>
   );
 };

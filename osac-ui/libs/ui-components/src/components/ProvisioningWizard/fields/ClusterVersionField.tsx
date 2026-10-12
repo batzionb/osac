@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Alert, Button, Stack, StackItem } from '@patternfly/react-core';
 import { useField } from 'formik';
 
+import type { ProvisioningFieldControlProps } from './provisioningFieldValue';
 import {
   CLUSTER_VERSION_ACTIVE_LIST_FILTER,
   useClusterVersions,
@@ -15,14 +16,12 @@ import {
 } from '../../Cluster/CreateWizard/versionUtils';
 import { SelectField } from '../../Form/SelectField';
 
-interface ClusterVersionFieldProps {
-  name: string;
+interface ClusterVersionFieldProps extends ProvisioningFieldControlProps {
   fieldId?: string;
-  isDisabled?: boolean;
 }
 
 const ClusterVersionField = ({
-  name,
+  name = '',
   fieldId = 'cluster-version',
   isDisabled = false,
 }: ClusterVersionFieldProps) => {

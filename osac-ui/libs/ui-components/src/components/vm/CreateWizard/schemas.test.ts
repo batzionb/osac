@@ -9,6 +9,7 @@ import { tIdentity } from '@osac/ui-components/test-utils/i18n';
 import type { ComputeInstanceWizardValues } from './fields';
 import { buildComputeInstanceStepSchema } from './schemas';
 import { emptyResourceSelectValue } from '../../Form/resourceSelectValue';
+import { provisioningFieldValue } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 
 const vmCatalogItem: ComputeInstanceCatalogItem = {
   $typeName: 'osac.public.v1.ComputeInstanceCatalogItem',
@@ -39,19 +40,22 @@ const emptyValues: ComputeInstanceWizardValues = {
   catalogItemId: '',
   metadata: { name: '', project: '' },
   spec: {
-    sshKey: { name: '' },
-    instanceType: '',
-    userDataSource: 'inline',
-    userData: '',
-    userDataSecret: { name: '' },
-    bootDisk: { sizeGib: '', storageTier: emptyResourceSelectValue() },
-    additionalDisks: [],
+    sshKey: provisioningFieldValue(''),
+    instanceType: provisioningFieldValue(''),
+    userDataSource: provisioningFieldValue('inline'),
+    userData: provisioningFieldValue(''),
+    userDataSecret: provisioningFieldValue(''),
+    bootDisk: {
+      sizeGib: provisioningFieldValue(''),
+      storageTier: provisioningFieldValue(emptyResourceSelectValue()),
+    },
+    additionalDisks: provisioningFieldValue([]),
     networking: {
-      useDefaultNetwork: true,
-      virtualNetwork: emptyResourceSelectValue(),
-      subnet: emptyResourceSelectValue(),
-      securityGroups: [],
-      autoExternalIpAttachment: false,
+      useDefaultNetwork: provisioningFieldValue(true),
+      virtualNetwork: provisioningFieldValue(emptyResourceSelectValue()),
+      subnet: provisioningFieldValue(emptyResourceSelectValue()),
+      securityGroups: provisioningFieldValue([]),
+      autoExternalIpAttachment: provisioningFieldValue(false),
     },
   },
 };
@@ -135,11 +139,14 @@ describe('buildComputeInstanceStepSchema', () => {
       metadata: { name: 'web-01', project: '' },
       spec: {
         ...emptyValues.spec,
-        bootDisk: { sizeGib: 'not-a-number', storageTier: { id: 'id-fast', name: 'fast' } },
+        bootDisk: {
+          sizeGib: provisioningFieldValue('not-a-number'),
+          storageTier: provisioningFieldValue({ id: 'id-fast', name: 'fast' }),
+        },
       },
     });
     expect(errors).toEqual({
-      spec: { bootDisk: { sizeGib: 'catalogProvision.validation.bootDiskNumber' } },
+      spec: { bootDisk: { sizeGib: { value: 'catalogProvision.validation.bootDiskNumber' } } },
     });
   });
 
@@ -150,8 +157,11 @@ describe('buildComputeInstanceStepSchema', () => {
       metadata: { name: 'web-01', project: '' },
       spec: {
         ...emptyValues.spec,
-        instanceType: 'standard-4-8',
-        bootDisk: { sizeGib: 'not-a-number', storageTier: emptyResourceSelectValue() },
+        instanceType: provisioningFieldValue('standard-4-8'),
+        bootDisk: {
+          sizeGib: provisioningFieldValue('not-a-number'),
+          storageTier: provisioningFieldValue(emptyResourceSelectValue()),
+        },
       },
     });
     expect(errors).toEqual({});
@@ -164,7 +174,10 @@ describe('buildComputeInstanceStepSchema', () => {
       metadata: { name: 'web-01', project: '' },
       spec: {
         ...emptyValues.spec,
-        bootDisk: { sizeGib: '30', storageTier: { id: 'id-fast', name: 'fast' } },
+        bootDisk: {
+          sizeGib: provisioningFieldValue('30'),
+          storageTier: provisioningFieldValue({ id: 'id-fast', name: 'fast' }),
+        },
       },
     });
     expect(errors).toEqual({});
@@ -193,7 +206,7 @@ describe('buildComputeInstanceStepSchema', () => {
     });
     expect(errors).toEqual({
       spec: {
-        instanceType: 'Instance type is required',
+        instanceType: { value: 'catalogProvision.validation.instanceTypeRequired' },
       },
     });
   });
@@ -263,8 +276,8 @@ describe('buildComputeInstanceStepSchema', () => {
     expect(errors).toEqual({
       spec: {
         bootDisk: {
-          sizeGib: 'catalogProvision.validation.required',
-          storageTier: 'Storage tier is required',
+          sizeGib: { value: 'catalogProvision.validation.required' },
+          storageTier: { value: 'Storage tier is required' },
         },
       },
     });
@@ -277,14 +290,21 @@ describe('buildComputeInstanceStepSchema', () => {
       metadata: { name: 'web-01', project: '' },
       spec: {
         ...emptyValues.spec,
-        bootDisk: { sizeGib: '30', storageTier: { id: 'id-fast', name: 'fast' } },
-        additionalDisks: [{ sizeGib: '100', storageTier: emptyResourceSelectValue() }],
+        bootDisk: {
+          sizeGib: provisioningFieldValue('30'),
+          storageTier: provisioningFieldValue({ id: 'id-fast', name: 'fast' }),
+        },
+        additionalDisks: provisioningFieldValue([
+          { sizeGib: '100', storageTier: emptyResourceSelectValue() },
+        ]),
       },
     });
     expect(errors).toEqual({
       spec: {
-        'additionalDisks[0]': {
-          storageTier: 'Storage tier is required',
+        additionalDisks: {
+          'value[0]': {
+            storageTier: 'Storage tier is required',
+          },
         },
       },
     });
@@ -297,12 +317,15 @@ describe('buildComputeInstanceStepSchema', () => {
       metadata: { name: 'web-01', project: '' },
       spec: {
         ...emptyValues.spec,
-        bootDisk: { sizeGib: '30', storageTier: emptyResourceSelectValue() },
+        bootDisk: {
+          sizeGib: provisioningFieldValue('30'),
+          storageTier: provisioningFieldValue(emptyResourceSelectValue()),
+        },
       },
     });
     expect(errors).toEqual({
       spec: {
-        bootDisk: { storageTier: 'Storage tier is required' },
+        bootDisk: { storageTier: { value: 'Storage tier is required' } },
       },
     });
   });
@@ -314,8 +337,13 @@ describe('buildComputeInstanceStepSchema', () => {
       metadata: { name: 'web-01', project: '' },
       spec: {
         ...emptyValues.spec,
-        bootDisk: { sizeGib: '30', storageTier: { id: '', name: 'fast' } },
-        additionalDisks: [{ sizeGib: '100', storageTier: { id: '', name: 'fast' } }],
+        bootDisk: {
+          sizeGib: provisioningFieldValue('30'),
+          storageTier: provisioningFieldValue({ id: '', name: 'fast' }),
+        },
+        additionalDisks: provisioningFieldValue([
+          { sizeGib: '100', storageTier: { id: '', name: 'fast' } },
+        ]),
       },
     });
     expect(errors).toEqual({});
@@ -335,14 +363,21 @@ describe('buildComputeInstanceStepSchema', () => {
       metadata: { name: 'web-01', project: '' },
       spec: {
         ...emptyValues.spec,
-        bootDisk: { sizeGib: '30', storageTier: { id: 'id-fast', name: 'fast' } },
-        additionalDisks: [{ sizeGib, storageTier: { id: 'id-fast', name: 'fast' } }],
+        bootDisk: {
+          sizeGib: provisioningFieldValue('30'),
+          storageTier: provisioningFieldValue({ id: 'id-fast', name: 'fast' }),
+        },
+        additionalDisks: provisioningFieldValue([
+          { sizeGib, storageTier: { id: 'id-fast', name: 'fast' } },
+        ]),
       },
     });
     expect(errors).toEqual({
       spec: {
-        'additionalDisks[0]': {
-          sizeGib: 'Additional disk size must be a number',
+        additionalDisks: {
+          'value[0]': {
+            sizeGib: 'Additional disk size must be a number',
+          },
         },
       },
     });
@@ -361,8 +396,13 @@ describe('buildComputeInstanceStepSchema', () => {
         metadata: { name: 'web-01', project: '' },
         spec: {
           ...emptyValues.spec,
-          bootDisk: { sizeGib: '30', storageTier: { id: 'id-fast', name: 'fast' } },
-          additionalDisks: [{ sizeGib, storageTier: { id: 'id-fast', name: 'fast' } }],
+          bootDisk: {
+            sizeGib: provisioningFieldValue('30'),
+            storageTier: provisioningFieldValue({ id: 'id-fast', name: 'fast' }),
+          },
+          additionalDisks: provisioningFieldValue([
+            { sizeGib, storageTier: { id: 'id-fast', name: 'fast' } },
+          ]),
         },
       });
       expect(errors).toEqual({});
@@ -376,8 +416,10 @@ describe('buildComputeInstanceStepSchema', () => {
       metadata: { name: 'web-01', project: '' },
       spec: {
         ...emptyValues.spec,
-        instanceType: 'standard-4-8',
-        additionalDisks: [{ sizeGib: '100', storageTier: emptyResourceSelectValue() }],
+        instanceType: provisioningFieldValue('standard-4-8'),
+        additionalDisks: provisioningFieldValue([
+          { sizeGib: '100', storageTier: emptyResourceSelectValue() },
+        ]),
       },
     });
     expect(errors).toEqual({});
@@ -391,11 +433,11 @@ describe('buildComputeInstanceStepSchema', () => {
       spec: {
         ...emptyValues.spec,
         networking: {
-          useDefaultNetwork: true,
-          virtualNetwork: emptyResourceSelectValue(),
-          subnet: emptyResourceSelectValue(),
-          securityGroups: [],
-          autoExternalIpAttachment: false,
+          useDefaultNetwork: provisioningFieldValue(true),
+          virtualNetwork: provisioningFieldValue(emptyResourceSelectValue()),
+          subnet: provisioningFieldValue(emptyResourceSelectValue()),
+          securityGroups: provisioningFieldValue([]),
+          autoExternalIpAttachment: provisioningFieldValue(false),
         },
       },
     });
@@ -410,19 +452,19 @@ describe('buildComputeInstanceStepSchema', () => {
       spec: {
         ...emptyValues.spec,
         networking: {
-          useDefaultNetwork: false,
-          virtualNetwork: emptyResourceSelectValue(),
-          subnet: emptyResourceSelectValue(),
-          securityGroups: [],
-          autoExternalIpAttachment: false,
+          useDefaultNetwork: provisioningFieldValue(false),
+          virtualNetwork: provisioningFieldValue(emptyResourceSelectValue()),
+          subnet: provisioningFieldValue(emptyResourceSelectValue()),
+          securityGroups: provisioningFieldValue([]),
+          autoExternalIpAttachment: provisioningFieldValue(false),
         },
       },
     });
     expect(errors).toEqual({
       spec: {
         networking: {
-          virtualNetwork: { id: 'Virtual network is required' },
-          subnet: { id: 'Subnet is required' },
+          virtualNetwork: { value: { id: 'Virtual network is required' } },
+          subnet: { value: { id: 'Subnet is required' } },
         },
       },
     });
@@ -436,11 +478,11 @@ describe('buildComputeInstanceStepSchema', () => {
       spec: {
         ...emptyValues.spec,
         networking: {
-          useDefaultNetwork: false,
-          virtualNetwork: { id: 'vn-1', name: 'vn-1' },
-          subnet: { id: 'subnet-1', name: 'subnet-1' },
-          securityGroups: [],
-          autoExternalIpAttachment: false,
+          useDefaultNetwork: provisioningFieldValue(false),
+          virtualNetwork: provisioningFieldValue({ id: 'vn-1', name: 'vn-1' }),
+          subnet: provisioningFieldValue({ id: 'subnet-1', name: 'subnet-1' }),
+          securityGroups: provisioningFieldValue([]),
+          autoExternalIpAttachment: provisioningFieldValue(false),
         },
       },
     });

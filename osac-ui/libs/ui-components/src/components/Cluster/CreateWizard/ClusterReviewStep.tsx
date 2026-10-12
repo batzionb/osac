@@ -33,10 +33,10 @@ import { formatReviewScalar } from '../../ProvisioningWizard/reviewFormatters';
 const formatNodeSetsForReview = (
   nodeSetRows: ClusterWizardValues['spec']['nodeSetRows'],
 ): string => {
-  if (nodeSetRows.length === 0) {
+  if (nodeSetRows.value.length === 0) {
     return '—';
   }
-  return nodeSetRows
+  return nodeSetRows.value
     .map((row) => {
       return `${row.hostType}: ${row.size}`;
     })
@@ -61,11 +61,11 @@ export const ClusterReviewStep = ({ catalogItem }: Props) => {
     error: projectsError,
   } = useProjects({ filter: fullProjectPathToQueryFilter(values.metadata.project) });
 
-  const isCustomNetwork = !values.spec.useDefaultNetwork;
+  const isCustomNetwork = !values.spec.useDefaultNetwork.value;
 
   const versionDisplay = versionDisplayName(
-    findVersionByName(versions, values.spec.versionName),
-    values.spec.versionName,
+    findVersionByName(versions, values.spec.versionName.value),
+    values.spec.versionName.value,
   );
 
   if (projectsLoading) {
@@ -113,13 +113,13 @@ export const ClusterReviewStep = ({ catalogItem }: Props) => {
           <DescriptionListGroup>
             <DescriptionListTerm>{t('SSH public key')}</DescriptionListTerm>
             <DescriptionListDescription>
-              {formatReviewScalar(values.spec.sshPublicKey)}
+              {formatReviewScalar(values.spec.sshPublicKey.value)}
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
             <DescriptionListTerm>{t('Pull secret')}</DescriptionListTerm>
             <DescriptionListDescription>
-              {values.spec.pullSecretSecret.name}
+              {formatReviewScalar(values.spec.pullSecretSecret.value)}
             </DescriptionListDescription>
           </DescriptionListGroup>
 
@@ -152,16 +152,16 @@ export const ClusterReviewStep = ({ catalogItem }: Props) => {
 
           {isCustomNetwork && (
             <NetworkAttachmentReviewFields
-              virtualNetwork={values.spec.networkAttachment.virtualNetwork}
-              subnet={values.spec.networkAttachment.subnet}
-              securityGroups={values.spec.networkAttachment.securityGroups}
+              virtualNetwork={values.spec.networkAttachment.virtualNetwork.value}
+              subnet={values.spec.networkAttachment.subnet.value}
+              securityGroups={values.spec.networkAttachment.securityGroups.value}
             />
           )}
 
           <DescriptionListGroup>
             <DescriptionListTerm>{t('Auto attach external IP')}</DescriptionListTerm>
             <DescriptionListDescription>
-              {values.spec.autoExternalIpAttachment ? t('Yes') : t('No')}
+              {values.spec.autoExternalIpAttachment.value ? t('Yes') : t('No')}
             </DescriptionListDescription>
           </DescriptionListGroup>
         </DescriptionList>
@@ -175,14 +175,14 @@ export const ClusterReviewStep = ({ catalogItem }: Props) => {
           <DescriptionListGroup>
             <DescriptionListTerm>{t('Pod CIDR')}</DescriptionListTerm>
             <DescriptionListDescription>
-              {formatReviewScalar(values.spec.network.podCidr)}
+              {formatReviewScalar(values.spec.network.podCidr.value)}
             </DescriptionListDescription>
           </DescriptionListGroup>
 
           <DescriptionListGroup>
             <DescriptionListTerm>{t('Service CIDR')}</DescriptionListTerm>
             <DescriptionListDescription>
-              {formatReviewScalar(values.spec.network.serviceCidr)}
+              {formatReviewScalar(values.spec.network.serviceCidr.value)}
             </DescriptionListDescription>
           </DescriptionListGroup>
         </DescriptionList>

@@ -1,16 +1,15 @@
 import { useMemo } from 'react';
 
+import type { ProvisioningFieldControlProps } from './provisioningFieldValue';
 import { hostTypeDisplayName, useHostTypes } from '../../../api/v1/host-types';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { SelectField } from '../../Form/SelectField';
 
-interface HostTypeFieldProps {
-  name: string;
+interface HostTypeFieldProps extends ProvisioningFieldControlProps {
   fieldId: string;
-  isDisabled?: boolean;
 }
 
-const HostTypeField = ({ name, fieldId, isDisabled = false }: HostTypeFieldProps) => {
+const HostTypeField = ({ name = '', fieldId, isDisabled = false }: HostTypeFieldProps) => {
   const { t } = useTranslation();
   const { data: hostTypes = [], isLoading } = useHostTypes();
 

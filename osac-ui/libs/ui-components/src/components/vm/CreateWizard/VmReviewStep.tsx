@@ -40,7 +40,7 @@ export const VmReviewStep = ({ catalogItem }: Props) => {
     data: instanceType,
     isLoading: instanceLoading,
     error: instanceErr,
-  } = useInstanceType(values.spec.instanceType);
+  } = useInstanceType(values.spec.instanceType.value);
 
   const {
     data: projects,
@@ -56,11 +56,18 @@ export const VmReviewStep = ({ catalogItem }: Props) => {
     );
   }
 
-  const storageRows = getVmStorageRows(t, values.spec.bootDisk, values.spec.additionalDisks);
+  const storageRows = getVmStorageRows(
+    t,
+    {
+      sizeGib: values.spec.bootDisk.sizeGib.value,
+      storageTier: values.spec.bootDisk.storageTier.value,
+    },
+    values.spec.additionalDisks.value,
+  );
 
   // Read networking names directly from formik values (ResourceSelectValue stores name).
   const networking = values.spec.networking;
-  const isCustomNetwork = !networking.useDefaultNetwork;
+  const isCustomNetwork = !networking.useDefaultNetwork.value;
 
   return (
     <Stack hasGutter>
@@ -106,7 +113,7 @@ export const VmReviewStep = ({ catalogItem }: Props) => {
           <DescriptionListGroup>
             <DescriptionListTerm>{t('SSH public key')}</DescriptionListTerm>
             <DescriptionListDescription>
-              {formatReviewScalar(values.spec.sshKey.name)}
+              {formatReviewScalar(values.spec.sshKey.value)}
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
@@ -115,7 +122,7 @@ export const VmReviewStep = ({ catalogItem }: Props) => {
               {formatInstanceTypeReviewLabelFromType(
                 instanceType,
                 undefined,
-                values.spec.instanceType,
+                values.spec.instanceType.value,
               )}
             </DescriptionListDescription>
           </DescriptionListGroup>
@@ -124,10 +131,10 @@ export const VmReviewStep = ({ catalogItem }: Props) => {
             <DescriptionListTerm>{t('User Data')}</DescriptionListTerm>
             <DescriptionListDescription>
               {formatReviewScalar(
-                values.spec.userDataSource === 'secret'
-                  ? values.spec.userDataSecret.name
-                  : values.spec.userData,
-                values.spec.userDataSource === 'inline',
+                values.spec.userDataSource.value === 'secret'
+                  ? values.spec.userDataSecret.value
+                  : values.spec.userData.value,
+                values.spec.userDataSource.value === 'inline',
               )}
             </DescriptionListDescription>
           </DescriptionListGroup>
@@ -141,16 +148,16 @@ export const VmReviewStep = ({ catalogItem }: Props) => {
 
           {isCustomNetwork && (
             <NetworkAttachmentReviewFields
-              virtualNetwork={networking.virtualNetwork}
-              subnet={networking.subnet}
-              securityGroups={networking.securityGroups}
+              virtualNetwork={networking.virtualNetwork.value}
+              subnet={networking.subnet.value}
+              securityGroups={networking.securityGroups.value}
             />
           )}
 
           <DescriptionListGroup>
             <DescriptionListTerm>{t('Auto attach external IP')}</DescriptionListTerm>
             <DescriptionListDescription>
-              {networking.autoExternalIpAttachment ? t('Yes') : t('No')}
+              {networking.autoExternalIpAttachment.value ? t('Yes') : t('No')}
             </DescriptionListDescription>
           </DescriptionListGroup>
         </DescriptionList>

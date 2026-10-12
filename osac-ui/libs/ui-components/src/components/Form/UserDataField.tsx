@@ -1,13 +1,9 @@
 import { CATALOG_PROVISION_MULTILINE_TEXTAREA } from './constants';
 import { InputField } from './InputField';
 import { useTranslation } from '../../hooks/useTranslation';
+import type { ProvisioningFieldControlProps } from '../ProvisioningWizard/fields/provisioningFieldValue';
 
-type UserDataFieldProps = {
-  name: string;
-  isDisabled?: boolean;
-};
-
-const UserDataField = ({ name, isDisabled = false }: UserDataFieldProps) => {
+const UserDataField = ({ name = '', isDisabled = false }: ProvisioningFieldControlProps) => {
   const { t } = useTranslation();
 
   return (

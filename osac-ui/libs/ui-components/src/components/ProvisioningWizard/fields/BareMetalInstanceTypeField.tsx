@@ -6,17 +6,16 @@ import { useListResource } from '@osac/ui-components/api/use-resource';
 import { getErrorMessage } from '@osac/ui-components/utils/error';
 
 import BareMetalInstanceTypeDescription from './BareMetalInstanceTypeDescription';
+import type { ProvisioningFieldControlProps } from './provisioningFieldValue';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { SelectField } from '../../Form/SelectField';
 
-interface BareMetalInstanceTypeFieldProps {
-  name: string;
+interface BareMetalInstanceTypeFieldProps extends ProvisioningFieldControlProps {
   fieldId?: string;
-  isDisabled?: boolean;
 }
 
 const BareMetalInstanceTypeField = ({
-  name,
+  name = '',
   fieldId = 'instance-type',
   isDisabled = false,
 }: BareMetalInstanceTypeFieldProps) => {

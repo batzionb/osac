@@ -9,6 +9,7 @@ import { createEmptyComputeInstanceValues } from './payload';
 import { VmStorageStep } from './VmStorageStep';
 import { renderWithProviders } from '../../../test-utils/TestProviders';
 import { type ResourceSelectValue, emptyResourceSelectValue } from '../../Form/resourceSelectValue';
+import { provisioningFieldValue } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 
 const makeTier = (name: string, displayName: string) =>
   create(StorageTierSchema, {
@@ -24,7 +25,10 @@ const renderStep = (storageTier: ResourceSelectValue = emptyResourceSelectValue(
         ...createEmptyComputeInstanceValues(),
         spec: {
           ...createEmptyComputeInstanceValues().spec,
-          bootDisk: { sizeGib: '', storageTier },
+          bootDisk: {
+            sizeGib: provisioningFieldValue(''),
+            storageTier: provisioningFieldValue(storageTier),
+          },
         },
       }}
       onSubmit={() => undefined}

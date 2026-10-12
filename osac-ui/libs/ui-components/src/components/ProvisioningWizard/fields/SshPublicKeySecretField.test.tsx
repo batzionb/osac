@@ -19,11 +19,11 @@ const secrets = [
 describe('SshPublicKeySecretField', () => {
   it('lets the user select an SSH public key secret', async () => {
     const { user } = renderWithProviders(
-      <Formik initialValues={{ spec: { sshKey: { name: '' } } }} onSubmit={() => undefined}>
+      <Formik initialValues={{ spec: { sshKey: '' } }} onSubmit={() => undefined}>
         {({ values }) => (
           <>
-            <SshPublicKeySecretField name="spec.sshKey.name" project="project-a" />
-            <output aria-label="selected-secret">{values.spec.sshKey.name}</output>
+            <SshPublicKeySecretField name="spec.sshKey" project="project-a" />
+            <output aria-label="selected-secret">{values.spec.sshKey}</output>
           </>
         )}
       </Formik>,
@@ -40,11 +40,8 @@ describe('SshPublicKeySecretField', () => {
 
   it('disables the control when requested', async () => {
     renderWithProviders(
-      <Formik
-        initialValues={{ spec: { sshKey: { name: 'tenant-ssh-key' } } }}
-        onSubmit={() => undefined}
-      >
-        <SshPublicKeySecretField name="spec.sshKey.name" project="project-a" isDisabled />
+      <Formik initialValues={{ spec: { sshKey: 'tenant-ssh-key' } }} onSubmit={() => undefined}>
+        <SshPublicKeySecretField name="spec.sshKey" project="project-a" isDisabled />
       </Formik>,
       { apiFixtures: { secrets } },
     );

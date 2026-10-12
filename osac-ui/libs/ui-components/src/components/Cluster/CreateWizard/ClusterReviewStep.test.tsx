@@ -38,7 +38,10 @@ describe('ClusterReviewStep', () => {
     const emptyValues = createEmptyClusterValues();
     renderWithProviders(
       <Formik
-        initialValues={{ ...emptyValues, spec: { ...emptyValues.spec, versionName: '4-17-0' } }}
+        initialValues={{
+          ...emptyValues,
+          spec: { ...emptyValues.spec, versionName: { value: '4-17-0', locked: false } },
+        }}
         onSubmit={() => undefined}
       >
         <ClusterReviewStep catalogItem={null} />

@@ -2,16 +2,15 @@ import { DiskImages } from '@osac/types';
 import { DISK_IMAGE_NON_OBSOLETE_FILTER } from '@osac/ui-components/api/v1/disk-image';
 import { ResourceSelectField } from '@osac/ui-components/components/Form/ResourceSelectField';
 
+import type { ProvisioningFieldControlProps } from './provisioningFieldValue';
 import { useTranslation } from '../../../hooks/useTranslation';
 
-interface DiskImageFieldProps {
-  name: string;
+interface DiskImageFieldProps extends ProvisioningFieldControlProps {
   fieldId?: string;
-  isDisabled?: boolean;
 }
 
 const DiskImageField = ({
-  name,
+  name = '',
   fieldId = 'disk-image',
   isDisabled = false,
 }: DiskImageFieldProps) => {

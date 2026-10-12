@@ -5,6 +5,7 @@ import { BM_SSH_KEY_FORM_PATH } from './fields';
 import NameField from '../../Form/NameField';
 import OsacForm from '../../Form/OsacForm';
 import SshKeyField from '../../Form/SshKeyField';
+import ProvisioningField from '../../ProvisioningWizard/fields/ProvisioningField';
 
 interface BareMetalGeneralStepProps {
   catalogItem: BareMetalInstanceCatalogItem | null;
@@ -14,7 +15,11 @@ const BareMetalGeneralStep = (_props: BareMetalGeneralStepProps) => (
   <OsacForm>
     <ProjectField />
     <NameField />
-    <SshKeyField name={BM_SSH_KEY_FORM_PATH} />
+    <ProvisioningField name={BM_SSH_KEY_FORM_PATH}>
+      {({ valueName, isDisabled }) => (
+        <SshKeyField name={valueName} isDisabled={isDisabled} />
+      )}
+    </ProvisioningField>
   </OsacForm>
 );
 

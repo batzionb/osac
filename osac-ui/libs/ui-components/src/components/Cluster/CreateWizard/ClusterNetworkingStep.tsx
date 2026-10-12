@@ -3,10 +3,11 @@ import { FormSection, Stack, StackItem } from '@patternfly/react-core';
 import type { ClusterCatalogItem } from '@osac/types';
 
 import { useTranslation } from '../../../hooks/useTranslation';
-import { NetworkAttachmentPickers } from '../../Form/NetworkAttachmentPickers';
 import OsacForm from '../../Form/OsacForm';
 import ClusterPodCidrField from '../../ProvisioningWizard/fields/ClusterPodCidrField';
 import ClusterServiceCidrField from '../../ProvisioningWizard/fields/ClusterServiceCidrField';
+import NetworkAttachmentFields from '../../ProvisioningWizard/fields/NetworkAttachmentFields';
+import ProvisioningField from '../../ProvisioningWizard/fields/ProvisioningField';
 
 interface Props {
   catalogItem: ClusterCatalogItem | null;
@@ -24,19 +25,29 @@ export const ClusterNetworkingStep = ({ catalogItem }: Props) => {
       <StackItem>
         <OsacForm>
           <FormSection title={t('Infrastructure Networking')} titleElement="h2">
-            <NetworkAttachmentPickers
-              fieldPrefix="spec.networkAttachment"
-              fieldIdPrefix="cluster"
+            <NetworkAttachmentFields
               useDefaultNetworkName="spec.useDefaultNetwork"
+              virtualNetworkName="spec.networkAttachment.virtualNetwork"
+              subnetName="spec.networkAttachment.subnet"
+              securityGroupsName="spec.networkAttachment.securityGroups"
               autoExternalIpName="spec.autoExternalIpAttachment"
+              fieldIdPrefix="cluster"
               autoExternalIpHelperText={t(
                 'Automatically provision external IPs for the cluster API and ingress endpoints.',
               )}
             />
           </FormSection>
           <FormSection title={t('Cluster Networking')} titleElement="h2">
-            <ClusterPodCidrField name="spec.network.podCidr" />
-            <ClusterServiceCidrField name="spec.network.serviceCidr" />
+            <ProvisioningField name="spec.network.podCidr">
+              {({ valueName, isDisabled }) => (
+                <ClusterPodCidrField name={valueName} isDisabled={isDisabled} />
+              )}
+            </ProvisioningField>
+            <ProvisioningField name="spec.network.serviceCidr">
+              {({ valueName, isDisabled }) => (
+                <ClusterServiceCidrField name={valueName} isDisabled={isDisabled} />
+              )}
+            </ProvisioningField>
           </FormSection>
         </OsacForm>
       </StackItem>

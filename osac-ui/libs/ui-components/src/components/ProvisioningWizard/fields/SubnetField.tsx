@@ -1,0 +1,41 @@
+import { useField } from 'formik';
+
+import { Subnets } from '@osac/types';
+
+import type { ProvisioningFieldControlProps, ProvisioningFieldValue } from './provisioningFieldValue';
+import { virtualNetworkFilterForSubnetList } from '../../../api/v1/networking';
+import { useTranslation } from '../../../hooks/useTranslation';
+import { ResourceSelectField } from '../../Form/ResourceSelectField';
+import type { ResourceSelectValue } from '../../Form/resourceSelectValue';
+
+interface SubnetFieldProps extends ProvisioningFieldControlProps {
+  fieldId?: string;
+  virtualNetworkName: string;
+}
+
+const SubnetField = ({
+  name = '',
+  fieldId = 'subnet',
+  virtualNetworkName,
+  isDisabled = false,
+}: SubnetFieldProps) => {
+  const { t } = useTranslation();
+  const [virtualNetwork] = useField<ProvisioningFieldValue<ResourceSelectValue>>(virtualNetworkName);
+  const virtualNetworkId = virtualNetwork.value?.value?.id ?? '';
+
+  return (
+    <ResourceSelectField
+      name={name}
+      label={t('Subnet')}
+      fieldId={fieldId}
+      service={Subnets}
+      request={virtualNetworkId ? { filter: virtualNetworkFilterForSubnetList(virtualNetworkId) } : {}}
+      isDisabled={isDisabled || !virtualNetworkId}
+      autoSelectSingleOption
+      placeholder={t('Select subnet')}
+      loadErrorTitle={t('Could not load subnets')}
+    />
+  );
+};
+
+export default SubnetField;

@@ -5,28 +5,34 @@ import { type ClusterCatalogItem, ClusterSchema } from '@osac/types';
 import type { ClusterWizardValues } from './fields';
 import { createEmptyNodeSetRow } from './fields';
 import { emptyResourceSelectValue } from '../../Form/resourceSelectValue';
+import {
+  boolFieldFromPolicy,
+  networkAttachmentFieldsFromPolicy,
+} from '../../ProvisioningWizard/fields/networkAttachmentPolicy';
+import {
+  provisioningFieldFromPolicy,
+  provisioningFieldValue,
+} from '../../ProvisioningWizard/fields/provisioningFieldValue';
 
 export const createEmptyClusterValues = (): ClusterWizardValues => ({
   catalogItemId: '',
   metadata: { name: '', project: '' },
   spec: {
-    sshPublicKey: '',
-    pullSecretSecret: {
-      name: '',
-    },
-    versionName: '',
-    nodeSetRows: [createEmptyNodeSetRow()],
+    sshPublicKey: provisioningFieldValue(''),
+    pullSecretSecret: provisioningFieldValue(''),
+    versionName: provisioningFieldValue(''),
+    nodeSetRows: provisioningFieldValue([createEmptyNodeSetRow()]),
     network: {
-      podCidr: '',
-      serviceCidr: '',
+      podCidr: provisioningFieldValue(''),
+      serviceCidr: provisioningFieldValue(''),
     },
-    useDefaultNetwork: true,
+    useDefaultNetwork: provisioningFieldValue(true),
     networkAttachment: {
-      virtualNetwork: emptyResourceSelectValue(),
-      subnet: emptyResourceSelectValue(),
-      securityGroups: [],
+      virtualNetwork: provisioningFieldValue(emptyResourceSelectValue()),
+      subnet: provisioningFieldValue(emptyResourceSelectValue()),
+      securityGroups: provisioningFieldValue([]),
     },
-    autoExternalIpAttachment: false,
+    autoExternalIpAttachment: provisioningFieldValue(false),
   },
 });
 
@@ -71,14 +77,35 @@ export const getClusterInitialValues = (catalogItem?: ClusterCatalogItem): Clust
     catalogItemId: catalogItem.id,
     spec: {
       ...values.spec,
-      sshPublicKey,
-      pullSecretSecret: { name: pullSecret },
-      versionName: version,
+      sshPublicKey: provisioningFieldFromPolicy(sshPublicKey, fields?.sshPublicKey),
+      pullSecretSecret: provisioningFieldFromPolicy(pullSecret, fields?.pullSecretSecret),
+      versionName: provisioningFieldFromPolicy(version, fields?.version),
+      nodeSetRows: provisioningFieldFromPolicy(values.spec.nodeSetRows.value, fields?.nodeSets),
       network: {
-        ...values.spec.network,
-        podCidr,
-        serviceCidr,
+        podCidr: provisioningFieldFromPolicy(podCidr, fields?.network?.podCidr),
+        serviceCidr: provisioningFieldFromPolicy(serviceCidr, fields?.network?.serviceCidr),
       },
+      ...(() => {
+        const attachment =
+          fields?.networkAttachment?.behavior.case === 'locked'
+            ? fields.networkAttachment.behavior.value
+            : fields?.networkAttachment?.behavior.case === 'editable'
+              ? fields.networkAttachment.behavior.value.defaultValue
+              : undefined;
+        const networkFields = networkAttachmentFieldsFromPolicy(
+          fields?.networkAttachment,
+          attachment,
+        );
+        return {
+          useDefaultNetwork: networkFields.useDefaultNetwork,
+          networkAttachment: {
+            virtualNetwork: networkFields.virtualNetwork,
+            subnet: networkFields.subnet,
+            securityGroups: networkFields.securityGroups,
+          },
+          autoExternalIpAttachment: boolFieldFromPolicy(fields?.autoExternalIpAttachment),
+        };
+      })(),
     },
   };
 };
@@ -92,24 +119,24 @@ export const buildClusterCreatePayload = (
       id: catalogItem.id,
     },
     pullSecretSecret: {
-      name: values.spec.pullSecretSecret.name,
+      name: values.spec.pullSecretSecret.value,
     },
   };
 
-  const sshPublicKey = values.spec.sshPublicKey.trim();
+  const sshPublicKey = values.spec.sshPublicKey.value.trim();
   if (sshPublicKey) {
     spec.sshPublicKey = sshPublicKey;
   }
 
-  if (values.spec.versionName) {
-    spec.version = { name: values.spec.versionName };
+  if (values.spec.versionName.value) {
+    spec.version = { name: values.spec.versionName.value };
   }
 
   const nodeSets = Object.create(null) as Record<
     string,
     { hostType: { id: string }; size: number }
   >;
-  for (const row of values.spec.nodeSetRows) {
+  for (const row of values.spec.nodeSetRows.value) {
     const nodeSetId = row.name.trim();
     const hostTypeId = row.hostType;
     const size = Number(row.size);
@@ -122,8 +149,8 @@ export const buildClusterCreatePayload = (
     spec.nodeSets = nodeSets;
   }
 
-  const podCidr = values.spec.network.podCidr.trim();
-  const serviceCidr = values.spec.network.serviceCidr.trim();
+  const podCidr = values.spec.network.podCidr.value.trim();
+  const serviceCidr = values.spec.network.serviceCidr.value.trim();
   if (podCidr || serviceCidr) {
     spec.network = {
       ...(podCidr ? { podCidr } : {}),
@@ -131,19 +158,19 @@ export const buildClusterCreatePayload = (
     };
   }
 
-  if (!values.spec.useDefaultNetwork) {
-    const subnetId = values.spec.networkAttachment.subnet.id.trim();
+  if (!values.spec.useDefaultNetwork.value) {
+    const subnetId = values.spec.networkAttachment.subnet.value.id.trim();
     if (subnetId) {
       spec.networkAttachment = {
         subnet: { id: subnetId },
-        securityGroups: values.spec.networkAttachment.securityGroups
+        securityGroups: values.spec.networkAttachment.securityGroups.value
           .filter((sg) => sg.id.trim())
           .map((sg) => ({ id: sg.id })),
       };
     }
   }
 
-  if (values.spec.autoExternalIpAttachment) {
+  if (values.spec.autoExternalIpAttachment.value) {
     spec.autoExternalIpAttachment = true;
   }
 

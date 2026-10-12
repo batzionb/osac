@@ -38,11 +38,14 @@ const renderField = (
     <Formik
       initialValues={{
         ...createEmptyComputeInstanceValues(),
-        spec: { ...createEmptyComputeInstanceValues().spec, additionalDisks: initialDisks },
+        spec: {
+          ...createEmptyComputeInstanceValues().spec,
+          additionalDisks: { value: initialDisks, locked: false },
+        },
       }}
       initialTouched={
         withValidation
-          ? { spec: { additionalDisks: [{ storageTier: { id: true, name: true } }] } }
+          ? { spec: { additionalDisks: { value: [{ storageTier: { id: true, name: true } }] } } }
           : undefined
       }
       validateOnMount={withValidation}
@@ -50,20 +53,22 @@ const renderField = (
         withValidation
           ? yup.object({
               spec: yup.object({
-                additionalDisks: yup.array(
-                  yup.object({
-                    storageTier: yup.object({
-                      id: yup.string().required('Storage tier is required'),
+                additionalDisks: yup.object({
+                  value: yup.array(
+                    yup.object({
+                      storageTier: yup.object({
+                        id: yup.string().required('Storage tier is required'),
+                      }),
                     }),
-                  }),
-                ),
+                  ),
+                }),
               }),
             })
           : undefined
       }
       onSubmit={() => undefined}
     >
-      <AdditionalDisksArrayField />
+      <AdditionalDisksArrayField name="spec.additionalDisks.value" />
     </Formik>,
     { apiFixtures: { publicStorageTiers: storageTiers } },
   );

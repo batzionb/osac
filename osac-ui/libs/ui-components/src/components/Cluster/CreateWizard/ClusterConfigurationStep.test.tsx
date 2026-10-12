@@ -18,6 +18,7 @@ import { createEmptyClusterValues } from './payload';
 import { buildClusterStepSchema } from './schemas';
 import { renderWithProviders } from '../../../test-utils/TestProviders';
 import { FieldValidationProvider } from '../../Form/FieldValidationContext';
+import { provisioningFieldValue } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 
 const clusterCatalogItem: ClusterCatalogItem = {
   $typeName: 'osac.public.v1.ClusterCatalogItem',
@@ -179,14 +180,14 @@ describe('ClusterConfigurationStep', () => {
             catalogItemId: clusterCatalogItem.id,
             spec: {
               ...createEmptyClusterValues().spec,
-              versionName: '4-17-0',
-              nodeSetRows: [
+              versionName: provisioningFieldValue('4-17-0'),
+              nodeSetRows: provisioningFieldValue([
                 {
                   ...row,
                   hostType: 'acme_1tb',
                   size: '3',
                 },
-              ],
+              ]),
             },
           }}
           validationSchema={buildClusterStepSchema('configuration', tIdentity)}
@@ -222,11 +223,21 @@ describe('ClusterConfigurationStep', () => {
             catalogItemId: clusterCatalogItem.id,
             spec: {
               ...emptyValues.spec,
-              versionName: '4-17-0',
-              nodeSetRows: [
-                { ...createEmptyNodeSetRow(), name: 'workers', hostType: 'acme_1tb', size: '3' },
-                { ...createEmptyNodeSetRow(), name: 'workers', hostType: 'acme_1tb', size: '2' },
-              ],
+              versionName: provisioningFieldValue('4-17-0'),
+              nodeSetRows: provisioningFieldValue([
+                {
+                  ...createEmptyNodeSetRow(),
+                  name: 'workers',
+                  hostType: 'acme_1tb',
+                  size: '3',
+                },
+                {
+                  ...createEmptyNodeSetRow(),
+                  name: 'workers',
+                  hostType: 'acme_1tb',
+                  size: '2',
+                },
+              ]),
             },
           }}
           validationSchema={buildClusterStepSchema('configuration', tIdentity)}

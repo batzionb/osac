@@ -1,14 +1,13 @@
+import type { ProvisioningFieldControlProps } from './provisioningFieldValue';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { InputField } from '../../Form/InputField';
 
-interface ClusterPodCidrFieldProps {
-  name: string;
+interface ClusterPodCidrFieldProps extends ProvisioningFieldControlProps {
   fieldId?: string;
-  isDisabled?: boolean;
 }
 
 const ClusterPodCidrField = ({
-  name,
+  name = '',
   fieldId = 'cluster-pod-cidr',
   isDisabled = false,
 }: ClusterPodCidrFieldProps) => {

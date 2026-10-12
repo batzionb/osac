@@ -1,14 +1,13 @@
+import type { ProvisioningFieldControlProps } from './provisioningFieldValue';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { InputField } from '../../Form/InputField';
 
-interface BootDiskSizeFieldProps {
-  name: string;
+interface BootDiskSizeFieldProps extends ProvisioningFieldControlProps {
   fieldId?: string;
-  isDisabled?: boolean;
 }
 
 const BootDiskSizeField = ({
-  name,
+  name = '',
   fieldId = 'vm-boot-disk-size',
   isDisabled = false,
 }: BootDiskSizeFieldProps) => {

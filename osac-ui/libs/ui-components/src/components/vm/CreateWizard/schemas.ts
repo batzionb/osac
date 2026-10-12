@@ -5,7 +5,6 @@ import { buildNetworkAttachmentSchemas } from '@osac/ui-components/validation/ne
 import { resourceNameSchema } from '@osac/ui-components/validation/resource-name';
 import { userDataSchema } from '@osac/ui-components/validation/user-data';
 
-
 export type VmWizardStepId =
   | 'catalog'
   | 'general'
@@ -13,6 +12,12 @@ export type VmWizardStepId =
   | 'storage'
   | 'networking'
   | 'review';
+
+const lockedField = (valueSchema: yup.AnySchema) =>
+  yup.object({
+    value: valueSchema,
+    locked: yup.boolean(),
+  });
 
 const storageTierSchema = (t: TFunction) =>
   yup
@@ -30,46 +35,50 @@ const buildComputeInstanceFieldDefinitions = (t: TFunction) => {
   return {
     catalogItemId: yup.string().required(t('catalogProvision.validation.catalogItemRequired')),
     metadataName: resourceNameSchema(t),
-    specInstanceType: yup.string().required(t('catalogProvision.validation.instanceTypeRequired')),
-    specUserData: userDataSchema(t),
+    specInstanceType: lockedField(
+      yup.string().required(t('catalogProvision.validation.instanceTypeRequired')),
+    ),
+    specUserData: lockedField(userDataSchema(t)),
     specBootDisk: yup.object({
-      sizeGib: yup
-        .string()
-        .test(
-          'boot-disk-number',
-          t('catalogProvision.validation.bootDiskNumber'),
-          (value) => !value?.trim() || !Number.isNaN(Number(value)),
-        )
-        .required(t('catalogProvision.validation.required')),
-      storageTier: storageTierSchema(t),
-    }),
-    specAdditionalDisks: yup.array(
-      yup.object({
-        sizeGib: yup
+      sizeGib: lockedField(
+        yup
           .string()
-          .test('additional-disk-number', t('Additional disk size must be a number'), (value) => {
-            const size = Number(value?.trim());
-            return Number.isInteger(size) && size >= 1 && size <= 16384;
-          }),
-        storageTier: storageTierSchema(t),
-      }),
+          .test(
+            'boot-disk-number',
+            t('catalogProvision.validation.bootDiskNumber'),
+            (value) => !value?.trim() || !Number.isNaN(Number(value)),
+          )
+          .required(t('catalogProvision.validation.required')),
+      ),
+      storageTier: lockedField(storageTierSchema(t)),
+    }),
+    specAdditionalDisks: lockedField(
+      yup.array(
+        yup.object({
+          sizeGib: yup
+            .string()
+            .test('additional-disk-number', t('Additional disk size must be a number'), (value) => {
+              const size = Number(value?.trim());
+              return Number.isInteger(size) && size >= 1 && size <= 16384;
+            }),
+          storageTier: storageTierSchema(t),
+        }),
+      ),
     ),
     specNetworking: (() => {
       const na = buildNetworkAttachmentSchemas(t);
       return yup.object({
-        useDefaultNetwork: yup.boolean(),
-        virtualNetwork: yup.object().when('useDefaultNetwork', {
-          is: false,
-          then: () => na.requiredVirtualNetwork,
-          otherwise: () => na.optionalResourceSelect,
+        useDefaultNetwork: lockedField(yup.boolean()),
+        virtualNetwork: lockedField(na.optionalResourceSelect).when('useDefaultNetwork', {
+          is: (field: { value?: boolean }) => field?.value === false,
+          then: () => lockedField(na.requiredVirtualNetwork),
         }),
-        subnet: yup.object().when('useDefaultNetwork', {
-          is: false,
-          then: () => na.requiredSubnet,
-          otherwise: () => na.optionalResourceSelect,
+        subnet: lockedField(na.optionalResourceSelect).when('useDefaultNetwork', {
+          is: (field: { value?: boolean }) => field?.value === false,
+          then: () => lockedField(na.requiredSubnet),
         }),
-        securityGroups: na.securityGroupsSchema,
-        autoExternalIpAttachment: yup.boolean(),
+        securityGroups: lockedField(na.securityGroupsSchema),
+        autoExternalIpAttachment: lockedField(yup.boolean()),
       });
     })(),
   };
@@ -105,7 +114,7 @@ export const buildComputeInstanceStepSchema = (
           name: fields.metadataName,
         }),
         spec: yup.object({
-          sshKey: yup.object({ name: yup.string() }),
+          sshKey: lockedField(yup.string()),
         }),
       });
     case 'configuration':

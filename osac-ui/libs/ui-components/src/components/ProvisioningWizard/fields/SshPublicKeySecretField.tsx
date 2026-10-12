@@ -2,20 +2,19 @@ import { Secret, SecretType } from '@osac/types';
 import { cel } from '@osac/ui-components/api/cel';
 import SecretSelectionField from '@osac/ui-components/components/Form/SecretSelectionField';
 
+import type { ProvisioningFieldControlProps } from './provisioningFieldValue';
 import { useTranslation } from '../../../hooks/useTranslation';
 
-interface SshPublicKeySecretFieldProps {
-  name: string;
+interface SshPublicKeySecretFieldProps extends ProvisioningFieldControlProps {
   project: string;
-  isDisabled?: boolean;
   allowEmptySelection?: boolean;
 }
 
 const SshPublicKeySecretField = ({
-  name,
+  name = '',
   project,
   isDisabled = false,
-  allowEmptySelection = true,
+  allowEmptySelection,
 }: SshPublicKeySecretFieldProps) => {
   const { t } = useTranslation();
 
@@ -31,7 +30,7 @@ const SshPublicKeySecretField = ({
       name={name}
       fieldId={name.replace(/\./g, '-')}
       isDisabled={isDisabled}
-      allowEmptySelection={allowEmptySelection}
+      allowEmptySelection={allowEmptySelection ?? !isDisabled}
     />
   );
 };

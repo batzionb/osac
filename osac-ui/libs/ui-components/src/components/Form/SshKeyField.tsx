@@ -4,13 +4,9 @@ import { CATALOG_PROVISION_MULTILINE_TEXTAREA } from './constants';
 import { InputField } from './InputField';
 import { useTranslation } from '../../hooks/useTranslation';
 import { trimSshPublicKey } from '../ProvisioningWizard/credentialValidation';
+import type { ProvisioningFieldControlProps } from '../ProvisioningWizard/fields/provisioningFieldValue';
 
-interface SshKeyFieldProps {
-  name: string;
-  isDisabled?: boolean;
-}
-
-const SshKeyField = ({ name, isDisabled = false }: SshKeyFieldProps) => {
+const SshKeyField = ({ name = '', isDisabled = false }: ProvisioningFieldControlProps) => {
   const { t } = useTranslation();
   const { setFieldValue } = useFormikContext();
   const [field] = useField<string>(name);

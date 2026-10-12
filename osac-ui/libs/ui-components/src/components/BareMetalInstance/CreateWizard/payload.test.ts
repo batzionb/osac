@@ -27,7 +27,7 @@ describe('buildBareMetalInstanceCreatePayload', () => {
 
   it('includes the selected instance type', () => {
     const values = buildValues('');
-    values.spec.instanceType.name = 'bare-metal.large';
+    values.spec.instanceType.value = 'bare-metal.large';
 
     expect(buildBareMetalInstanceCreatePayload(values).spec?.instanceType).toEqual({
       name: 'bare-metal.large',
@@ -48,7 +48,7 @@ describe('buildBareMetalInstanceCreatePayload', () => {
 
   it('includes the selected disk image reference', () => {
     const values = buildValues('');
-    values.spec.diskImage = { id: 'disk-image-1', name: 'rhel' };
+    values.spec.diskImage.value = { id: 'disk-image-1', name: 'rhel' };
 
     expect(buildBareMetalInstanceCreatePayload(values).spec?.diskImage).toEqual({
       id: 'disk-image-1',

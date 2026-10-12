@@ -8,6 +8,7 @@ import { createEmptyNodeSetRow } from './fields';
 import { buildClusterStepSchema } from './schemas';
 import { tIdentity as t } from '../../../test-utils/i18n';
 import { emptyResourceSelectValue } from '../../Form/resourceSelectValue';
+import { provisioningFieldValue } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 
 const clusterCatalogItem: ClusterCatalogItem = {
   $typeName: 'osac.public.v1.ClusterCatalogItem',
@@ -41,23 +42,21 @@ const emptyValues: ClusterWizardValues = {
   catalogItemId: '',
   metadata: { name: '', project: '' },
   spec: {
-    sshPublicKey: '',
-    pullSecretSecret: {
-      name: '',
-    },
-    versionName: '',
-    nodeSetRows: [],
+    sshPublicKey: provisioningFieldValue(''),
+    pullSecretSecret: provisioningFieldValue(''),
+    versionName: provisioningFieldValue(''),
+    nodeSetRows: provisioningFieldValue([]),
     network: {
-      podCidr: '',
-      serviceCidr: '',
+      podCidr: provisioningFieldValue(''),
+      serviceCidr: provisioningFieldValue(''),
     },
-    useDefaultNetwork: true,
+    useDefaultNetwork: provisioningFieldValue(true),
     networkAttachment: {
-      virtualNetwork: emptyResourceSelectValue(),
-      subnet: emptyResourceSelectValue(),
-      securityGroups: [],
+      virtualNetwork: provisioningFieldValue(emptyResourceSelectValue()),
+      subnet: provisioningFieldValue(emptyResourceSelectValue()),
+      securityGroups: provisioningFieldValue([]),
     },
-    autoExternalIpAttachment: false,
+    autoExternalIpAttachment: provisioningFieldValue(false),
   },
 };
 
@@ -109,9 +108,7 @@ describe('buildClusterStepSchema', () => {
       metadata: { name: 'MyCluster', project: '' },
       spec: {
         ...emptyValues.spec,
-        pullSecretSecret: {
-          name: 'foo',
-        },
+        pullSecretSecret: provisioningFieldValue('foo'),
       },
     });
     expect(errors).toEqual({
@@ -128,15 +125,13 @@ describe('buildClusterStepSchema', () => {
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...emptyValues.spec,
-        pullSecretSecret: {
-          name: '',
-        },
+        pullSecretSecret: provisioningFieldValue(''),
       },
     });
     expect(errors).toEqual({
       spec: {
         pullSecretSecret: {
-          name: 'Pull secret is required',
+          value: 'Pull secret is required',
         },
       },
     });
@@ -149,16 +144,16 @@ describe('buildClusterStepSchema', () => {
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...emptyValues.spec,
-        pullSecretSecret: {
-          name: 'foo',
-        },
-        sshPublicKey: 'not-a-key',
+        pullSecretSecret: provisioningFieldValue('foo'),
+        sshPublicKey: provisioningFieldValue('not-a-key'),
       },
     });
     expect(errors).toEqual({
       spec: {
-        sshPublicKey:
-          'SSH public key must be in the form "[TYPE] key [[EMAIL]]". Supported types are ssh-rsa, ssh-ed25519, and ecdsa-sha2-nistp256/384/521.',
+        sshPublicKey: {
+          value:
+            'SSH public key must be in the form "[TYPE] key [[EMAIL]]". Supported types are ssh-rsa, ssh-ed25519, and ecdsa-sha2-nistp256/384/521.',
+        },
       },
     });
   });
@@ -170,7 +165,7 @@ describe('buildClusterStepSchema', () => {
       metadata: { name: 'my-cluster', project: '' },
     });
     expect(errors).toEqual({
-      spec: { pullSecretSecret: { name: 'Pull secret is required' } },
+      spec: { pullSecretSecret: { value: 'Pull secret is required' } },
     });
   });
 
@@ -182,15 +177,15 @@ describe('buildClusterStepSchema', () => {
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...emptyValues.spec,
-        pullSecretSecret: {
-          name: 'foo',
-        },
-        versionName: '',
-        nodeSetRows: [{ ...row, name: 'workers', hostType: 'acme_1tb', size: '3' }],
+        pullSecretSecret: provisioningFieldValue('foo'),
+        versionName: provisioningFieldValue(''),
+        nodeSetRows: provisioningFieldValue([
+          { ...row, name: 'workers', hostType: 'acme_1tb', size: '3' },
+        ]),
       },
     });
     expect(errors).toEqual({
-      spec: { versionName: 'Version is required' },
+      spec: { versionName: { value: 'Version is required' } },
     });
   });
 
@@ -201,15 +196,13 @@ describe('buildClusterStepSchema', () => {
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...emptyValues.spec,
-        pullSecretSecret: {
-          name: 'foo',
-        },
-        versionName: '4-17-0',
-        nodeSetRows: [],
+        pullSecretSecret: provisioningFieldValue('foo'),
+        versionName: provisioningFieldValue('4-17-0'),
+        nodeSetRows: provisioningFieldValue([]),
       },
     });
     expect(errors).toEqual({
-      spec: { nodeSetRows: 'At least one node set is required' },
+      spec: { nodeSetRows: { value: 'At least one node set is required' } },
     });
   });
 
@@ -221,23 +214,21 @@ describe('buildClusterStepSchema', () => {
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...emptyValues.spec,
-        pullSecretSecret: {
-          name: 'foo',
-        },
-        versionName: '4-17-0',
-        nodeSetRows: [
+        pullSecretSecret: provisioningFieldValue('foo'),
+        versionName: provisioningFieldValue('4-17-0'),
+        nodeSetRows: provisioningFieldValue([
           {
             ...row,
             name: 'workers',
             hostType: 'acme_1tb',
             size: '0',
           },
-        ],
+        ]),
       },
     });
     expect(errors).toEqual({
       spec: {
-        'nodeSetRows[0]': { size: 'Pool size must be greater than zero' },
+        nodeSetRows: { 'value[0]': { size: 'Pool size must be greater than zero' } },
       },
     });
   });
@@ -250,11 +241,9 @@ describe('buildClusterStepSchema', () => {
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...emptyValues.spec,
-        pullSecretSecret: {
-          name: 'foo',
-        },
-        versionName: '4-17-0',
-        nodeSetRows: [
+        pullSecretSecret: provisioningFieldValue('foo'),
+        versionName: provisioningFieldValue('4-17-0'),
+        nodeSetRows: provisioningFieldValue([
           {
             ...row,
             rowId: 'row-1',
@@ -269,7 +258,7 @@ describe('buildClusterStepSchema', () => {
             hostType: 'acme_1tb',
             size: '2',
           },
-        ],
+        ]),
       },
     });
     expect(errors).toEqual({});
@@ -283,18 +272,18 @@ describe('buildClusterStepSchema', () => {
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...emptyValues.spec,
-        pullSecretSecret: { name: 'foo' },
-        versionName: '4-17-0',
-        nodeSetRows: [
+        pullSecretSecret: provisioningFieldValue('foo'),
+        versionName: provisioningFieldValue('4-17-0'),
+        nodeSetRows: provisioningFieldValue([
           { ...row, rowId: 'row-1', name: 'production', hostType: 'acme_1tb', size: '3' },
           { ...row, rowId: 'row-2', name: 'production', hostType: 'acme_1tb', size: '2' },
-        ],
+        ]),
       },
     });
 
     expect(errors).toEqual({
       spec: {
-        'nodeSetRows[1]': { name: 'Node set names must be unique' },
+        nodeSetRows: { 'value[1]': { name: 'Node set names must be unique' } },
       },
     });
   });
@@ -307,15 +296,17 @@ describe('buildClusterStepSchema', () => {
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...emptyValues.spec,
-        pullSecretSecret: { name: 'foo' },
-        versionName: '4-17-0',
-        nodeSetRows: [{ ...row, name: '', hostType: 'acme_1tb', size: '3' }],
+        pullSecretSecret: provisioningFieldValue('foo'),
+        versionName: provisioningFieldValue('4-17-0'),
+        nodeSetRows: provisioningFieldValue([
+          { ...row, name: '', hostType: 'acme_1tb', size: '3' },
+        ]),
       },
     });
 
     expect(errors).toEqual({
       spec: {
-        'nodeSetRows[0]': { name: 'Name is required' },
+        nodeSetRows: { 'value[0]': { name: 'Name is required' } },
       },
     });
   });
@@ -328,16 +319,20 @@ describe('buildClusterStepSchema', () => {
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...emptyValues.spec,
-        pullSecretSecret: { name: 'foo' },
-        versionName: '4-17-0',
-        nodeSetRows: [{ ...row, name: 'Workers_1', hostType: 'acme_1tb', size: '3' }],
+        pullSecretSecret: provisioningFieldValue('foo'),
+        versionName: provisioningFieldValue('4-17-0'),
+        nodeSetRows: provisioningFieldValue([
+          { ...row, name: 'Workers_1', hostType: 'acme_1tb', size: '3' },
+        ]),
       },
     });
 
     expect(errors).toEqual({
       spec: {
-        'nodeSetRows[0]': {
-          name: 'Name must only contain lowercase letters (a-z), digits (0-9), and hyphens (-)',
+        nodeSetRows: {
+          'value[0]': {
+            name: 'Name must only contain lowercase letters (a-z), digits (0-9), and hyphens (-)',
+          },
         },
       },
     });
@@ -350,15 +345,15 @@ describe('buildClusterStepSchema', () => {
       spec: {
         ...emptyValues.spec,
         network: {
-          podCidr: 'invalid',
-          serviceCidr: '',
+          podCidr: provisioningFieldValue('invalid'),
+          serviceCidr: provisioningFieldValue(''),
         },
       },
     });
     expect(errors).toEqual({
       spec: {
         network: {
-          podCidr: 'Invalid IPv4 CIDR notation',
+          podCidr: { value: 'Invalid IPv4 CIDR notation' },
         },
       },
     });
@@ -371,16 +366,16 @@ describe('buildClusterStepSchema', () => {
       spec: {
         ...emptyValues.spec,
         network: {
-          podCidr: 'fd01::/48',
-          serviceCidr: 'fd02::/112',
+          podCidr: provisioningFieldValue('fd01::/48'),
+          serviceCidr: provisioningFieldValue('fd02::/112'),
         },
       },
     });
     expect(errors).toEqual({
       spec: {
         network: {
-          podCidr: 'Invalid IPv4 CIDR notation',
-          serviceCidr: 'Invalid IPv4 CIDR notation',
+          podCidr: { value: 'Invalid IPv4 CIDR notation' },
+          serviceCidr: { value: 'Invalid IPv4 CIDR notation' },
         },
       },
     });
@@ -393,15 +388,15 @@ describe('buildClusterStepSchema', () => {
       spec: {
         ...emptyValues.spec,
         network: {
-          podCidr: '10.128.0.0/14',
-          serviceCidr: '10.128.0.0/14',
+          podCidr: provisioningFieldValue('10.128.0.0/14'),
+          serviceCidr: provisioningFieldValue('10.128.0.0/14'),
         },
       },
     });
     expect(errors).toEqual({
       spec: {
         network: {
-          serviceCidr: 'Service CIDR must not overlap the pod CIDR.',
+          serviceCidr: { value: 'Service CIDR must not overlap the pod CIDR.' },
         },
       },
     });
@@ -413,11 +408,11 @@ describe('buildClusterStepSchema', () => {
       catalogItemId: clusterCatalogItem.id,
       spec: {
         ...emptyValues.spec,
-        useDefaultNetwork: true,
+        useDefaultNetwork: provisioningFieldValue(true),
         networkAttachment: {
-          virtualNetwork: emptyResourceSelectValue(),
-          subnet: emptyResourceSelectValue(),
-          securityGroups: [],
+          virtualNetwork: provisioningFieldValue(emptyResourceSelectValue()),
+          subnet: provisioningFieldValue(emptyResourceSelectValue()),
+          securityGroups: provisioningFieldValue([]),
         },
       },
     });
@@ -430,19 +425,19 @@ describe('buildClusterStepSchema', () => {
       catalogItemId: clusterCatalogItem.id,
       spec: {
         ...emptyValues.spec,
-        useDefaultNetwork: false,
+        useDefaultNetwork: provisioningFieldValue(false),
         networkAttachment: {
-          virtualNetwork: emptyResourceSelectValue(),
-          subnet: emptyResourceSelectValue(),
-          securityGroups: [],
+          virtualNetwork: provisioningFieldValue(emptyResourceSelectValue()),
+          subnet: provisioningFieldValue(emptyResourceSelectValue()),
+          securityGroups: provisioningFieldValue([]),
         },
       },
     });
     expect(errors).toEqual({
       spec: {
         networkAttachment: {
-          virtualNetwork: { id: 'Virtual network is required' },
-          subnet: { id: 'Subnet is required' },
+          virtualNetwork: { value: { id: 'Virtual network is required' } },
+          subnet: { value: { id: 'Subnet is required' } },
         },
       },
     });
@@ -454,11 +449,11 @@ describe('buildClusterStepSchema', () => {
       catalogItemId: clusterCatalogItem.id,
       spec: {
         ...emptyValues.spec,
-        useDefaultNetwork: false,
+        useDefaultNetwork: provisioningFieldValue(false),
         networkAttachment: {
-          virtualNetwork: { id: 'vn-1', name: 'vn-1' },
-          subnet: { id: 'subnet-1', name: 'subnet-1' },
-          securityGroups: [],
+          virtualNetwork: provisioningFieldValue({ id: 'vn-1', name: 'vn-1' }),
+          subnet: provisioningFieldValue({ id: 'subnet-1', name: 'subnet-1' }),
+          securityGroups: provisioningFieldValue([]),
         },
       },
     });
@@ -471,7 +466,7 @@ describe('buildClusterStepSchema', () => {
       catalogItemId: clusterCatalogItem.id,
       spec: {
         ...emptyValues.spec,
-        autoExternalIpAttachment: true,
+        autoExternalIpAttachment: provisioningFieldValue(true),
       },
     });
     expect(errors).toEqual({});

@@ -2,15 +2,14 @@ import { Secret, SecretType } from '@osac/types';
 import { cel } from '@osac/ui-components/api/cel';
 import SecretSelectionField from '@osac/ui-components/components/Form/SecretSelectionField';
 
+import type { ProvisioningFieldControlProps } from './provisioningFieldValue';
 import { useTranslation } from '../../../hooks/useTranslation';
 
-interface PullSecretFieldProps {
-  name: string;
+interface PullSecretFieldProps extends ProvisioningFieldControlProps {
   project: string;
-  isDisabled?: boolean;
 }
 
-const PullSecretField = ({ name, project, isDisabled = false }: PullSecretFieldProps) => {
+const PullSecretField = ({ name = '', project, isDisabled = false }: PullSecretFieldProps) => {
   const { t } = useTranslation();
 
   return (

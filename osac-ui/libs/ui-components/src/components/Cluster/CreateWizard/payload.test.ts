@@ -4,6 +4,7 @@ import type { ClusterCatalogItem } from '@osac/types';
 
 import { createEmptyNodeSetRow } from './fields';
 import { buildClusterCreatePayload, createEmptyClusterValues } from './payload';
+import { provisioningFieldValue } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 
 const clusterCatalogItem: ClusterCatalogItem = {
   $typeName: 'osac.public.v1.ClusterCatalogItem',
@@ -42,20 +43,20 @@ describe('buildClusterCreatePayload', () => {
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...createEmptyClusterValues().spec,
-        sshPublicKey: 'ssh-rsa AAAA',
-        pullSecretSecret: { name: 'pull-secret' },
-        versionName: '4-17-0',
-        nodeSetRows: [
+        sshPublicKey: provisioningFieldValue('ssh-rsa AAAA'),
+        pullSecretSecret: provisioningFieldValue('pull-secret'),
+        versionName: provisioningFieldValue('4-17-0'),
+        nodeSetRows: provisioningFieldValue([
           {
             ...row,
             name: 'production',
             hostType: 'acme_1tb',
             size: '3',
           },
-        ],
+        ]),
         network: {
-          podCidr: '10.128.0.0/14',
-          serviceCidr: '',
+          podCidr: provisioningFieldValue('10.128.0.0/14'),
+          serviceCidr: provisioningFieldValue(''),
         },
       },
     };
@@ -84,10 +85,10 @@ describe('buildClusterCreatePayload', () => {
       metadata: { name: 'empty-pools', project: '' },
       spec: {
         ...createEmptyClusterValues().spec,
-        pullSecretSecret: { name: 'secret' },
-        versionName: '',
-        nodeSetRows: [],
-        network: { podCidr: '', serviceCidr: '' },
+        pullSecretSecret: provisioningFieldValue('secret'),
+        versionName: provisioningFieldValue(''),
+        nodeSetRows: provisioningFieldValue([]),
+        network: { podCidr: provisioningFieldValue(''), serviceCidr: provisioningFieldValue('') },
       },
     };
 
@@ -109,16 +110,16 @@ describe('buildClusterCreatePayload', () => {
       metadata: { name: 'filtered-pools', project: '' },
       spec: {
         ...createEmptyClusterValues().spec,
-        pullSecretSecret: { name: 'secret' },
-        versionName: '4-17-0',
-        nodeSetRows: [
+        pullSecretSecret: provisioningFieldValue('secret'),
+        versionName: provisioningFieldValue('4-17-0'),
+        nodeSetRows: provisioningFieldValue([
           { ...row, name: 'empty-host-type', hostType: '', size: '3' },
           { ...row, name: 'zero-size', hostType: 'acme_1tb', size: '0' },
           { ...row, name: 'invalid-size', hostType: 'acme_2tb', size: 'not-a-number' },
           { ...row, name: 'production', hostType: 'acme_1tb', size: '3' },
           { ...row, name: 'development', hostType: 'acme_1tb', size: '2' },
-        ],
-        network: { podCidr: '', serviceCidr: '' },
+        ]),
+        network: { podCidr: provisioningFieldValue(''), serviceCidr: provisioningFieldValue('') },
       },
     };
 
@@ -136,12 +137,17 @@ describe('buildClusterCreatePayload', () => {
       metadata: { name: 'proto-pool', project: '' },
       spec: {
         ...createEmptyClusterValues().spec,
-        pullSecretSecret: { name: 'secret' },
-        versionName: '4-17-0',
-        nodeSetRows: [
-          { ...createEmptyNodeSetRow(), name: '__proto__', hostType: 'acme_1tb', size: '3' },
-        ],
-        network: { podCidr: '', serviceCidr: '' },
+        pullSecretSecret: provisioningFieldValue('secret'),
+        versionName: provisioningFieldValue('4-17-0'),
+        nodeSetRows: provisioningFieldValue([
+          {
+            ...createEmptyNodeSetRow(),
+            name: '__proto__',
+            hostType: 'acme_1tb',
+            size: '3',
+          },
+        ]),
+        network: { podCidr: provisioningFieldValue(''), serviceCidr: provisioningFieldValue('') },
       },
     };
 
@@ -157,12 +163,12 @@ describe('buildClusterCreatePayload', () => {
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...createEmptyClusterValues().spec,
-        pullSecretSecret: { name: 'secret' },
-        useDefaultNetwork: true,
+        pullSecretSecret: provisioningFieldValue('secret'),
+        useDefaultNetwork: provisioningFieldValue(true),
         networkAttachment: {
-          virtualNetwork: { id: 'vn-1', name: 'vn-1' },
-          subnet: { id: 'subnet-1', name: 'subnet-1' },
-          securityGroups: [{ id: 'sg-1', name: 'sg-1' }],
+          virtualNetwork: provisioningFieldValue({ id: 'vn-1', name: 'vn-1' }),
+          subnet: provisioningFieldValue({ id: 'subnet-1', name: 'subnet-1' }),
+          securityGroups: provisioningFieldValue([{ id: 'sg-1', name: 'sg-1' }]),
         },
       },
     };
@@ -178,12 +184,12 @@ describe('buildClusterCreatePayload', () => {
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...createEmptyClusterValues().spec,
-        pullSecretSecret: { name: 'secret' },
-        useDefaultNetwork: false,
+        pullSecretSecret: provisioningFieldValue('secret'),
+        useDefaultNetwork: provisioningFieldValue(false),
         networkAttachment: {
-          virtualNetwork: { id: '', name: '' },
-          subnet: { id: '', name: '' },
-          securityGroups: [],
+          virtualNetwork: provisioningFieldValue({ id: '', name: '' }),
+          subnet: provisioningFieldValue({ id: '', name: '' }),
+          securityGroups: provisioningFieldValue([]),
         },
       },
     };
@@ -199,15 +205,15 @@ describe('buildClusterCreatePayload', () => {
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...createEmptyClusterValues().spec,
-        pullSecretSecret: { name: 'secret' },
-        useDefaultNetwork: false,
+        pullSecretSecret: provisioningFieldValue('secret'),
+        useDefaultNetwork: provisioningFieldValue(false),
         networkAttachment: {
-          virtualNetwork: { id: 'vn-1', name: 'tenant-vn' },
-          subnet: { id: 'my-subnet', name: 'tenant-subnet' },
-          securityGroups: [
+          virtualNetwork: provisioningFieldValue({ id: 'vn-1', name: 'tenant-vn' }),
+          subnet: provisioningFieldValue({ id: 'my-subnet', name: 'tenant-subnet' }),
+          securityGroups: provisioningFieldValue([
             { id: 'sg-1', name: 'default-sg-1' },
             { id: 'sg-2', name: 'default-sg-2' },
-          ],
+          ]),
         },
       },
     };
@@ -226,8 +232,8 @@ describe('buildClusterCreatePayload', () => {
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...createEmptyClusterValues().spec,
-        pullSecretSecret: { name: 'secret' },
-        autoExternalIpAttachment: true,
+        pullSecretSecret: provisioningFieldValue('secret'),
+        autoExternalIpAttachment: provisioningFieldValue(true),
       },
     };
 
@@ -242,8 +248,8 @@ describe('buildClusterCreatePayload', () => {
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...createEmptyClusterValues().spec,
-        pullSecretSecret: { name: 'secret' },
-        autoExternalIpAttachment: false,
+        pullSecretSecret: provisioningFieldValue('secret'),
+        autoExternalIpAttachment: provisioningFieldValue(false),
       },
     };
 
@@ -262,7 +268,7 @@ describe('buildClusterCreatePayload', () => {
       metadata: { name: 'my-cluster', project },
       spec: {
         ...createEmptyClusterValues().spec,
-        pullSecretSecret: { name: 'secret' },
+        pullSecretSecret: provisioningFieldValue('secret'),
       },
     };
 

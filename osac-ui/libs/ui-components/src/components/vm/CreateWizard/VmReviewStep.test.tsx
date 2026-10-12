@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { createEmptyComputeInstanceValues } from './payload';
 import { VmReviewStep } from './VmReviewStep';
 import { renderWithProviders } from '../../../test-utils/TestProviders';
+import { provisioningFieldValue } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 
 const renderReviewStep = (
   specOverrides: Partial<ReturnType<typeof createEmptyComputeInstanceValues>['spec']>,
@@ -23,8 +24,13 @@ const renderReviewStep = (
 describe('VmReviewStep — Storage section', () => {
   it('lists the boot disk and each additional disk with size and resolved tier', async () => {
     renderReviewStep({
-      bootDisk: { sizeGib: '40', storageTier: { id: 'id-balanced', name: 'balanced' } },
-      additionalDisks: [{ sizeGib: '100', storageTier: { id: 'id-fast', name: 'fast' } }],
+      bootDisk: {
+        sizeGib: provisioningFieldValue('40'),
+        storageTier: provisioningFieldValue({ id: 'id-balanced', name: 'balanced' }),
+      },
+      additionalDisks: provisioningFieldValue([
+        { sizeGib: '100', storageTier: { id: 'id-fast', name: 'fast' } },
+      ]),
     });
 
     expect(await screen.findByText('Storage')).toBeInTheDocument();
@@ -34,7 +40,10 @@ describe('VmReviewStep — Storage section', () => {
 
   it('falls back to the raw tier value when no tier matches', async () => {
     renderReviewStep({
-      bootDisk: { sizeGib: '40', storageTier: { id: '', name: 'unknown-tier' } },
+      bootDisk: {
+        sizeGib: provisioningFieldValue('40'),
+        storageTier: provisioningFieldValue({ id: '', name: 'unknown-tier' }),
+      },
     });
 
     expect(await screen.findByText('40 GB, unknown-tier')).toBeInTheDocument();
@@ -42,7 +51,10 @@ describe('VmReviewStep — Storage section', () => {
 
   it('no longer lists the boot disk under the Configuration section', async () => {
     renderReviewStep({
-      bootDisk: { sizeGib: '40', storageTier: { id: 'id-balanced', name: 'balanced' } },
+      bootDisk: {
+        sizeGib: provisioningFieldValue('40'),
+        storageTier: provisioningFieldValue({ id: 'id-balanced', name: 'balanced' }),
+      },
     });
 
     await screen.findByText('Storage');

@@ -1,7 +1,7 @@
 import { ActionGroup, Alert, Button, Stack, StackItem } from '@patternfly/react-core';
 import MinusCircleIcon from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
 import PlusCircleIcon from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
-import { useFormikContext } from 'formik';
+import { useField } from 'formik';
 
 import { BareMetalInstanceTypes } from '@osac/types';
 import { useListResource } from '@osac/ui-components/api/use-resource';
@@ -12,12 +12,17 @@ import ClusterPoolSizeField from '../../Form/ClusterPoolSizeField';
 import NameField from '../../Form/NameField';
 import { SelectField } from '../../Form/SelectField';
 import ProvisioningFieldGroup from '../../ProvisioningWizard/fields/ProvisioningFieldGroup';
-import type { ClusterWizardValues } from './fields';
+import type { ProvisioningFieldControlProps } from '../../ProvisioningWizard/fields/provisioningFieldValue';
+import type { ClusterNodeSetRow } from './fields';
 import { createEmptyNodeSetRow } from './fields';
 
-const ClusterNodeSetsArrayField = () => {
+const ClusterNodeSetsArrayField = ({
+  name = '',
+  isDisabled = false,
+}: ProvisioningFieldControlProps) => {
   const { t } = useTranslation();
-  const { values, setFieldValue } = useFormikContext<ClusterWizardValues>();
+  const [field, , helpers] = useField<ClusterNodeSetRow[]>(name);
+  const rows = field.value ?? [];
   const {
     data: hostTypes,
     isLoading: hostTypesLoading,
@@ -31,14 +36,11 @@ const ClusterNodeSetsArrayField = () => {
   }));
 
   const addRow = () => {
-    void setFieldValue('spec.nodeSetRows', [...values.spec.nodeSetRows, createEmptyNodeSetRow()]);
+    void helpers.setValue([...rows, createEmptyNodeSetRow()]);
   };
 
   const removeRow = (rowIndex: number) => {
-    void setFieldValue(
-      'spec.nodeSetRows',
-      values.spec.nodeSetRows.filter((_, index) => index !== rowIndex),
-    );
+    void helpers.setValue(rows.filter((_, index) => index !== rowIndex));
   };
 
   return (
@@ -53,16 +55,14 @@ const ClusterNodeSetsArrayField = () => {
           </Alert>
         </StackItem>
       ) : null}
-      {values.spec.nodeSetRows.length === 0 ? (
-        <StackItem>{t('No node sets added yet.')}</StackItem>
-      ) : null}
-      {values.spec.nodeSetRows.map((row, rowIndex) => (
+      {rows.length === 0 ? <StackItem>{t('No node sets added yet.')}</StackItem> : null}
+      {rows.map((row, rowIndex) => (
         <StackItem key={row.rowId}>
           <ProvisioningFieldGroup
             title={t('Node set {{number}}', { number: rowIndex + 1 })}
             titleId={`cluster-node-set-group-${row.rowId}`}
             actions={
-              rowIndex > 0 ? (
+              !isDisabled && rowIndex > 0 ? (
                 <Button
                   variant="plain"
                   aria-label={t('Remove node set')}
@@ -73,38 +73,43 @@ const ClusterNodeSetsArrayField = () => {
             }
           >
             <NameField
-              name={`spec.nodeSetRows.${rowIndex}.name`}
+              name={`${name}.${rowIndex}.name`}
               fieldId={`cluster-node-set-name-${row.rowId}`}
+              isDisabled={isDisabled}
             />
             <SelectField
-              name={`spec.nodeSetRows.${rowIndex}.hostType`}
+              name={`${name}.${rowIndex}.hostType`}
               label={t('Host type')}
               fieldId={`cluster-host-type-${row.rowId}`}
               options={hostTypeOptions}
               isRequired
               isLoading={hostTypesLoading}
               placeholder={t('Select host type')}
+              isDisabled={isDisabled}
             />
             <ClusterPoolSizeField
-              name={`spec.nodeSetRows.${rowIndex}.size`}
+              name={`${name}.${rowIndex}.size`}
               fieldId={`cluster-node-set-size-${rowIndex}`}
               isRequired
+              isDisabled={isDisabled}
             />
           </ProvisioningFieldGroup>
         </StackItem>
       ))}
-      <StackItem>
-        <ActionGroup>
-          <Button
-            variant="link"
-            icon={<PlusCircleIcon />}
-            onClick={addRow}
-            isDisabled={hostTypesLoading}
-          >
-            {t('Add node set')}
-          </Button>
-        </ActionGroup>
-      </StackItem>
+      {isDisabled ? null : (
+        <StackItem>
+          <ActionGroup>
+            <Button
+              variant="link"
+              icon={<PlusCircleIcon />}
+              onClick={addRow}
+              isDisabled={hostTypesLoading}
+            >
+              {t('Add node set')}
+            </Button>
+          </ActionGroup>
+        </StackItem>
+      )}
     </Stack>
   );
 };

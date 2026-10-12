@@ -1,15 +1,14 @@
 import { InputField } from './InputField';
 import { useTranslation } from '../../hooks/useTranslation';
+import type { ProvisioningFieldControlProps } from '../ProvisioningWizard/fields/provisioningFieldValue';
 
-interface ClusterPoolSizeFieldProps {
-  name: string;
+interface ClusterPoolSizeFieldProps extends ProvisioningFieldControlProps {
   fieldId: string;
   isRequired?: boolean;
-  isDisabled?: boolean;
 }
 
 const ClusterPoolSizeField = ({
-  name,
+  name = '',
   fieldId,
   isRequired = false,
   isDisabled = false,

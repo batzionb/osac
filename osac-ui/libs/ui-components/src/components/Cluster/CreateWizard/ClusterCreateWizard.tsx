@@ -102,9 +102,9 @@ const ClusterWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onCl
 
   const handleCatalogItemSelected = useCallback(
     (item: CatalogItem) => {
-      const computeItem = item as ClusterCatalogItem;
-      setSelectedCatalogItem(computeItem);
-      formik.resetForm({ values: getInitialFormValues(computeItem) });
+      const clusterItem = item as ClusterCatalogItem;
+      setSelectedCatalogItem(clusterItem);
+      formik.resetForm({ values: getInitialFormValues(clusterItem) });
     },
     [formik],
   );

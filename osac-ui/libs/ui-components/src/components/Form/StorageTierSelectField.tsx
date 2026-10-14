@@ -1,3 +1,6 @@
+import { Label } from '@patternfly/react-core';
+import LockIcon from '@patternfly/react-icons/dist/esm/icons/lock-icon';
+
 import { StorageProtocol, type StorageTier, StorageTierState, StorageTiers } from '@osac/types';
 
 import { ResourceSelectField } from './ResourceSelectField';
@@ -44,7 +47,14 @@ export const StorageTierSelectField = ({
             : STORAGE_TIER_ACTIVE_LIST_FILTER,
       }}
       isRequired={isRequired}
-      isDisabled={isDisabled}      
+      isDisabled={isDisabled}
+      labelInfo={
+        isDisabled ? (
+          <Label color="grey" icon={<LockIcon aria-hidden />}>
+            {t('Locked by catalog')}
+          </Label>
+        ) : undefined
+      }
       placeholder={t('Select a storage tier')}
       loadingPlaceholder={t('Loading...')}
       loadErrorTitle={t('Failed to load storage tiers')}

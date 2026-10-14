@@ -1,11 +1,13 @@
+import { useEffect, useMemo } from 'react';
 import { ActionGroup, Alert, Button, Stack, StackItem } from '@patternfly/react-core';
 import MinusCircleIcon from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
 import PlusCircleIcon from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
-import { useField } from 'formik';
+import { useField, useFormikContext } from 'formik';
 
 import { BareMetalInstanceTypes } from '@osac/types';
 import { useListResource } from '@osac/ui-components/api/use-resource';
 
+import { type ClusterNodeSetRow, createEmptyNodeSetRow } from './fields';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { getErrorMessage } from '../../../utils/error';
 import ClusterPoolSizeField from '../../Form/ClusterPoolSizeField';
@@ -13,16 +15,15 @@ import NameField from '../../Form/NameField';
 import { SelectField } from '../../Form/SelectField';
 import ProvisioningFieldGroup from '../../ProvisioningWizard/fields/ProvisioningFieldGroup';
 import type { ProvisioningFieldControlProps } from '../../ProvisioningWizard/fields/provisioningFieldValue';
-import type { ClusterNodeSetRow } from './fields';
-import { createEmptyNodeSetRow } from './fields';
 
 const ClusterNodeSetsArrayField = ({
   name = '',
   isDisabled = false,
 }: ProvisioningFieldControlProps) => {
   const { t } = useTranslation();
+  const { setFieldValue } = useFormikContext();
   const [field, , helpers] = useField<ClusterNodeSetRow[]>(name);
-  const rows = field.value ?? [];
+  const rows = useMemo(() => field.value ?? [], [field.value]);
   const {
     data: hostTypes,
     isLoading: hostTypesLoading,
@@ -30,10 +31,36 @@ const ClusterNodeSetsArrayField = ({
     refetch: refetchHostTypes,
   } = useListResource(BareMetalInstanceTypes);
 
-  const hostTypeOptions = (hostTypes?.items || []).map((hostType) => ({
+  const hostTypeItems = useMemo(() => hostTypes?.items ?? [], [hostTypes?.items]);
+  const hostTypeOptions = hostTypeItems.map((hostType) => ({
     value: hostType.id,
     label: hostType.metadata?.name || '',
   }));
+
+  useEffect(() => {
+    if (hostTypesLoading || hostTypeItems.length === 0) {
+      return;
+    }
+    let changed = false;
+    const nextRows = rows.map((row) => {
+      const currentValue = row.hostType.trim();
+      if (!currentValue || hostTypeItems.some((hostType) => hostType.id === currentValue)) {
+        return row;
+      }
+      const resolved = hostTypeItems.find(
+        (hostType) =>
+          hostType.id === currentValue || hostType.metadata?.name === currentValue,
+      );
+      if (resolved?.id && resolved.id !== currentValue) {
+        changed = true;
+        return { ...row, hostType: resolved.id };
+      }
+      return row;
+    });
+    if (changed) {
+      void setFieldValue(name, nextRows, false);
+    }
+  }, [hostTypeItems, hostTypesLoading, name, rows, setFieldValue]);
 
   const addRow = () => {
     void helpers.setValue([...rows, createEmptyNodeSetRow()]);
@@ -96,20 +123,18 @@ const ClusterNodeSetsArrayField = ({
           </ProvisioningFieldGroup>
         </StackItem>
       ))}
-      {isDisabled ? null : (
-        <StackItem>
-          <ActionGroup>
-            <Button
-              variant="link"
-              icon={<PlusCircleIcon />}
-              onClick={addRow}
-              isDisabled={hostTypesLoading}
-            >
-              {t('Add node set')}
-            </Button>
-          </ActionGroup>
-        </StackItem>
-      )}
+      <StackItem>
+        <ActionGroup>
+          <Button
+            variant="link"
+            icon={<PlusCircleIcon />}
+            onClick={addRow}
+            isDisabled={isDisabled || hostTypesLoading}
+          >
+            {t('Add node set')}
+          </Button>
+        </ActionGroup>
+      </StackItem>
     </Stack>
   );
 };

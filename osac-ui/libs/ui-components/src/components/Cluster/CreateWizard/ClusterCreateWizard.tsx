@@ -16,8 +16,8 @@ import ClusterConfigurationStep from './ClusterConfigurationStep';
 import ClusterGeneralStep from './ClusterGeneralStep';
 import { ClusterNetworkingStep } from './ClusterNetworkingStep';
 import { ClusterReviewStep } from './ClusterReviewStep';
-import type { ClusterWizardValues } from './fields';
-import { buildClusterCreatePayload, getClusterInitialValues } from './payload';
+import { type ClusterWizardValues, getInitialFormValues } from './fields';
+import { buildClusterCreatePayload } from './payload';
 import { type ClusterWizardStepId, buildClusterStepSchema } from './schemas';
 import type { CatalogItem } from '../../catalog/catalogItemDisplay';
 
@@ -84,7 +84,7 @@ const ClusterWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onCl
   const validationSchema = useMemo(() => buildClusterStepSchema(activeStep, t), [activeStep, t]);
 
   const formik = useFormik<ClusterWizardValues>({
-    initialValues: getClusterInitialValues(),
+    initialValues: getInitialFormValues(),
     validationSchema,
     onSubmit: handleSubmit,
     validateOnChange: false,
@@ -94,7 +94,7 @@ const ClusterWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onCl
     (item: CatalogItem) => {
       const computeItem = item as ClusterCatalogItem;
       setSelectedCatalogItem(computeItem);
-      formik.resetForm({ values: getClusterInitialValues(computeItem) });
+      formik.resetForm({ values: getInitialFormValues(computeItem) });
     },
     [formik],
   );
@@ -105,7 +105,7 @@ const ClusterWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onCl
     const item = catalogItems.find((entry) => entry.id === initialCatalogItemId);
     if (item && !selectedCatalogItem) {
       setSelectedCatalogItem(item);
-      formik.resetForm({ values: getClusterInitialValues(item) });
+      formik.resetForm({ values: getInitialFormValues(item) });
     }
   }, [catalogItems, formik, initialCatalogItemId, selectedCatalogItem, t]);
 

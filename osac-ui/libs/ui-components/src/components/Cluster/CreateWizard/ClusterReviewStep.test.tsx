@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { type ClusterVersion, ClusterVersionSchema, ClusterVersionState } from '@osac/types';
 
 import { ClusterReviewStep } from './ClusterReviewStep';
-import { createEmptyClusterValues } from './payload';
+import { createEmptyClusterValues } from './fields';
 import { renderWithProviders } from '../../../test-utils/TestProviders';
 
 const clusterVersions: ClusterVersion[] = [

@@ -70,6 +70,14 @@ const VmWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onClosed 
   );
   const catalogItems = useMemo(() => catalogQuery.data ?? [], [catalogQuery.data]);
   const steps = ['catalog', 'general', 'configuration', 'storage', 'networking', 'review'] as const;
+  const stepLabels: Record<VmWizardStepId, string> = {
+    catalog: t('Catalog item'),
+    general: t('General'),
+    configuration: t('Configuration'),
+    storage: t('Storage'),
+    networking: t('Networking'),
+    review: t('Review'),
+  };
 
   const handleSubmit = useCallback(
     async (values: ComputeInstanceWizardValues) => {
@@ -159,11 +167,7 @@ const VmWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onClosed 
             }
           >
             {steps.map((step) => (
-              <WizardStep
-                key={step}
-                id={step}
-                name={step === 'catalog' ? t('Catalog item') : t(step)}
-              >
+              <WizardStep key={step} id={step} name={stepLabels[step]}>
                 {step === 'catalog' ? (
                   <CatalogStep
                     catalogItems={catalogItems}

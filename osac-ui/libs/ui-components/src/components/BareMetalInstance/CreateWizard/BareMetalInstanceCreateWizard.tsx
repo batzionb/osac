@@ -72,6 +72,13 @@ const BareMetalInstanceWizardContent = ({
     useState<BareMetalInstanceCatalogItem | null>(null);
   const catalogItems = useMemo(() => catalogQuery.data ?? [], [catalogQuery.data]);
   const steps = ['catalog', 'general', 'configuration', 'networking', 'review'] as const;
+  const stepLabels: Record<BareMetalWizardStepId, string> = {
+    catalog: t('Catalog item'),
+    general: t('General'),
+    configuration: t('Configuration'),
+    networking: t('Networking'),
+    review: t('Review'),
+  };
 
   const handleSubmit = useCallback(
     async (values: BareMetalInstanceWizardValues) => {
@@ -159,11 +166,7 @@ const BareMetalInstanceWizardContent = ({
             }
           >
             {steps.map((step) => (
-              <WizardStep
-                key={step}
-                id={step}
-                name={step === 'catalog' ? t('Catalog item') : t(step)}
-              >
+              <WizardStep key={step} id={step} name={stepLabels[step]}>
                 {step === 'catalog' ? (
                   <CatalogStep
                     catalogItems={catalogItems}

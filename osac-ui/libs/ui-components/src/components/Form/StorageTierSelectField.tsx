@@ -1,6 +1,3 @@
-import { Label } from '@patternfly/react-core';
-import LockIcon from '@patternfly/react-icons/dist/esm/icons/lock-icon';
-
 import { StorageProtocol, type StorageTier, StorageTierState, StorageTiers } from '@osac/types';
 
 import { ResourceSelectField } from './ResourceSelectField';

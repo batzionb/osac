@@ -41,6 +41,7 @@ const emptyValues: ComputeInstanceWizardValues = {
   metadata: { name: '', project: '' },
   spec: {
     sshKey: provisioningFieldValue(''),
+    diskImage: provisioningFieldValue(emptyResourceSelectValue()),
     instanceType: provisioningFieldValue(''),
     userDataSource: provisioningFieldValue('inline'),
     userData: provisioningFieldValue(''),
@@ -52,9 +53,9 @@ const emptyValues: ComputeInstanceWizardValues = {
     additionalDisks: provisioningFieldValue([]),
     networking: {
       useDefaultNetwork: provisioningFieldValue(true),
-      virtualNetwork: provisioningFieldValue(emptyResourceSelectValue()),
-      subnet: provisioningFieldValue(emptyResourceSelectValue()),
-      securityGroups: provisioningFieldValue([]),
+      virtualNetwork: emptyResourceSelectValue(),
+      subnet: emptyResourceSelectValue(),
+      securityGroups: [],
       autoExternalIpAttachment: provisioningFieldValue(false),
     },
   },
@@ -108,6 +109,10 @@ describe('buildComputeInstanceStepSchema', () => {
       ...emptyValues,
       catalogItemId: vmCatalogItem.id,
       metadata: { name: '', project: '' },
+      spec: {
+        ...emptyValues.spec,
+        diskImage: provisioningFieldValue({ id: 'disk-image-rhel', name: 'rhel' }),
+      },
     });
     expect(errors).toEqual({ metadata: { name: 'Name is required' } });
   });
@@ -117,6 +122,10 @@ describe('buildComputeInstanceStepSchema', () => {
       ...emptyValues,
       catalogItemId: vmCatalogItem.id,
       metadata: { name: 'MyVM', project: '' },
+      spec: {
+        ...emptyValues.spec,
+        diskImage: provisioningFieldValue({ id: 'disk-image-rhel', name: 'rhel' }),
+      },
     });
     expect(errors).toEqual({
       metadata: {
@@ -130,8 +139,23 @@ describe('buildComputeInstanceStepSchema', () => {
       ...emptyValues,
       catalogItemId: vmCatalogItem.id,
       metadata: { name: 'my-vm', project: '' },
+      spec: {
+        ...emptyValues.spec,
+        diskImage: provisioningFieldValue({ id: 'disk-image-rhel', name: 'rhel' }),
+      },
     });
     expect(errors).toEqual({});
+  });
+
+  it('requires a disk image on general step', async () => {
+    const errors = await validateStep('general', {
+      ...emptyValues,
+      catalogItemId: vmCatalogItem.id,
+      metadata: { name: 'my-vm', project: '' },
+    });
+    expect(errors).toEqual({
+      spec: { diskImage: { value: { id: 'Disk image is required' } } },
+    });
   });
 
   it('validates boot disk as numeric on storage step', async () => {
@@ -424,9 +448,9 @@ describe('buildComputeInstanceStepSchema', () => {
         ...emptyValues.spec,
         networking: {
           useDefaultNetwork: provisioningFieldValue(true),
-          virtualNetwork: provisioningFieldValue(emptyResourceSelectValue()),
-          subnet: provisioningFieldValue(emptyResourceSelectValue()),
-          securityGroups: provisioningFieldValue([]),
+          virtualNetwork: emptyResourceSelectValue(),
+          subnet: emptyResourceSelectValue(),
+          securityGroups: [],
           autoExternalIpAttachment: provisioningFieldValue(false),
         },
       },
@@ -443,9 +467,9 @@ describe('buildComputeInstanceStepSchema', () => {
         ...emptyValues.spec,
         networking: {
           useDefaultNetwork: provisioningFieldValue(false),
-          virtualNetwork: provisioningFieldValue(emptyResourceSelectValue()),
-          subnet: provisioningFieldValue(emptyResourceSelectValue()),
-          securityGroups: provisioningFieldValue([]),
+          virtualNetwork: emptyResourceSelectValue(),
+          subnet: emptyResourceSelectValue(),
+          securityGroups: [],
           autoExternalIpAttachment: provisioningFieldValue(false),
         },
       },
@@ -453,8 +477,8 @@ describe('buildComputeInstanceStepSchema', () => {
     expect(errors).toEqual({
       spec: {
         networking: {
-          virtualNetwork: { value: { id: 'Virtual network is required' } },
-          subnet: { value: { id: 'Subnet is required' } },
+          virtualNetwork: { id: 'Virtual network is required' },
+          subnet: { id: 'Subnet is required' },
         },
       },
     });
@@ -469,9 +493,9 @@ describe('buildComputeInstanceStepSchema', () => {
         ...emptyValues.spec,
         networking: {
           useDefaultNetwork: provisioningFieldValue(false),
-          virtualNetwork: provisioningFieldValue({ id: 'vn-1', name: 'vn-1' }),
-          subnet: provisioningFieldValue({ id: 'subnet-1', name: 'subnet-1' }),
-          securityGroups: provisioningFieldValue([]),
+          virtualNetwork: { id: 'vn-1', name: 'vn-1' },
+          subnet: { id: 'subnet-1', name: 'subnet-1' },
+          securityGroups: [],
           autoExternalIpAttachment: provisioningFieldValue(false),
         },
       },

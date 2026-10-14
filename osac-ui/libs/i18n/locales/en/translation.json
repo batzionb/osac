@@ -218,6 +218,7 @@
   "Could not load host types": "Could not load host types",
   "Could not load instance types": "Could not load instance types",
   "Could not load security groups": "Could not load security groups",
+  "Could not load subnet": "Could not load subnet",
   "Could not load subnets": "Could not load subnets",
   "Could not load virtual networks": "Could not load virtual networks",
   "Count": "Count",

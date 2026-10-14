@@ -64,6 +64,17 @@ describe('VmReviewStep — Storage section', () => {
   });
 });
 
+describe('VmReviewStep — disk image', () => {
+  it('shows the selected disk image after the SSH public key', async () => {
+    renderReviewStep({
+      diskImage: provisioningFieldValue({ id: 'disk-image-rhel', name: 'rhel' }),
+    });
+
+    expect(await screen.findByText('Disk image')).toBeInTheDocument();
+    expect(screen.getByText('rhel')).toBeInTheDocument();
+  });
+});
+
 describe('VmReviewStep — user data source', () => {
   it('shows the selected Secret reference instead of inline user data', async () => {
     renderReviewStep({

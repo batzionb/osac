@@ -1,10 +1,11 @@
 import { BareMetalInstanceCatalogItem } from '@osac/types';
 
+import { bareMetalDiskImageReferenceFromPolicy } from '../../catalog/bareMetalCatalogItemResourceDisplay';
 import type { ResourceSelectValue } from '../../Form/resourceSelectValue';
 import { emptyResourceSelectValue } from '../../Form/resourceSelectValue';
 import {
   boolFieldFromPolicy,
-  networkAttachmentFieldsFromPolicy,
+  catalogAttachmentFromPolicy,
 } from '../../ProvisioningWizard/fields/networkAttachmentPolicy';
 import type { ProvisioningFieldValue } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 import {
@@ -24,14 +25,18 @@ export const BM_DISK_IMAGE_FORM_PATH = 'spec.diskImage';
 
 export interface BareMetalNetworkAttachmentRow {
   id: string;
-  virtualNetwork: ProvisioningFieldValue<ResourceSelectValue>;
-  subnet: ProvisioningFieldValue<ResourceSelectValue>;
-  securityGroups: ProvisioningFieldValue<ResourceSelectValue[]>;
+  virtualNetwork: ResourceSelectValue;
+  subnet: ResourceSelectValue;
+  securityGroups: ResourceSelectValue[];
+}
+
+export interface BareMetalNetworkAttachmentUnit {
+  useDefaults: boolean;
+  attachments: BareMetalNetworkAttachmentRow[];
 }
 
 export interface BareMetalNetworkingFormValues {
-  useDefaults: ProvisioningFieldValue<boolean>;
-  attachments: BareMetalNetworkAttachmentRow[];
+  networkAttachment: ProvisioningFieldValue<BareMetalNetworkAttachmentUnit>;
   attachExternalIp: ProvisioningFieldValue<boolean>;
 }
 
@@ -66,16 +71,59 @@ export const createNetworkAttachmentRowId = (): string => {
 
 export const createEmptyNetworkAttachmentRow = (): BareMetalNetworkAttachmentRow => ({
   id: createNetworkAttachmentRowId(),
-  virtualNetwork: provisioningFieldValue(emptyResourceSelectValue()),
-  subnet: provisioningFieldValue(emptyResourceSelectValue()),
-  securityGroups: provisioningFieldValue([]),
+  virtualNetwork: emptyResourceSelectValue(),
+  subnet: emptyResourceSelectValue(),
+  securityGroups: [],
 });
 
 export const createEmptyBareMetalNetworkingValues = (): BareMetalNetworkingFormValues => ({
-  useDefaults: provisioningFieldValue(true),
-  attachments: [createEmptyNetworkAttachmentRow()],
+  networkAttachment: provisioningFieldValue({
+    useDefaults: true,
+    attachments: [createEmptyNetworkAttachmentRow()],
+  }),
   attachExternalIp: provisioningFieldValue(false),
 });
+
+const resourceSelectFromReference = (reference?: {
+  id?: string;
+  name?: string;
+}): ResourceSelectValue => {
+  const id = reference?.id?.trim() ?? '';
+  const name = reference?.name?.trim() ?? '';
+  return id || name ? { id, name } : emptyResourceSelectValue();
+};
+
+export const getBareMetalNetworkingFormValues = (
+  catalogItem?: BareMetalInstanceCatalogItem,
+): BareMetalNetworkingFormValues => {
+  if (!catalogItem) {
+    return createEmptyBareMetalNetworkingValues();
+  }
+
+  const policy = catalogItem.fields?.networkAttachments;
+  const attachment = catalogAttachmentFromPolicy(policy)?.items[0];
+  const subnet = resourceSelectFromReference(attachment?.subnet);
+  const hasCustomAttachment = Boolean(subnet.id || subnet.name);
+
+  return {
+    networkAttachment: provisioningFieldFromPolicy(
+      {
+        useDefaults: !hasCustomAttachment,
+        attachments: [
+          {
+            ...createEmptyNetworkAttachmentRow(),
+            subnet: hasCustomAttachment ? subnet : emptyResourceSelectValue(),
+            securityGroups: (attachment?.securityGroups ?? []).map((group) =>
+              resourceSelectFromReference(group),
+            ),
+          },
+        ],
+      },
+      policy,
+    ),
+    attachExternalIp: boolFieldFromPolicy(catalogItem.fields?.autoExternalIpAttachment),
+  };
+};
 
 export const createEmptyBareMetalInstanceValues = (): BareMetalInstanceWizardValues => ({
   catalogItemId: '',
@@ -90,6 +138,16 @@ export const createEmptyBareMetalInstanceValues = (): BareMetalInstanceWizardVal
     networking: createEmptyBareMetalNetworkingValues(),
   },
 });
+
+const diskImageSelectValueFromCatalog = (
+  catalogItem: BareMetalInstanceCatalogItem,
+): ResourceSelectValue => {
+  const reference = bareMetalDiskImageReferenceFromPolicy(catalogItem.fields?.diskImage);
+  if (!reference?.id && !reference?.name) {
+    return emptyResourceSelectValue();
+  }
+  return { id: reference.id, name: reference.name };
+};
 
 export const getBareMetalInstanceInitialValues = (
   catalogItem?: BareMetalInstanceCatalogItem,
@@ -128,34 +186,10 @@ export const getBareMetalInstanceInitialValues = (
         catalogItem.fields?.instanceType,
       ),
       diskImage: provisioningFieldFromPolicy(
-        emptyResourceSelectValue(),
+        diskImageSelectValueFromCatalog(catalogItem),
         catalogItem.fields?.diskImage,
       ),
-      networking: (() => {
-        const attachmentList =
-          catalogItem.fields?.networkAttachments?.behavior.case === 'locked'
-            ? catalogItem.fields.networkAttachments.behavior.value
-            : catalogItem.fields?.networkAttachments?.behavior.case === 'editable'
-              ? catalogItem.fields.networkAttachments.behavior.value.defaultValue
-              : undefined;
-        const attachment = attachmentList?.items[0];
-        const fields = networkAttachmentFieldsFromPolicy(
-          catalogItem.fields?.networkAttachments,
-          attachment,
-        );
-        return {
-          useDefaults: fields.useDefaultNetwork,
-          attachments: [
-            {
-              ...createEmptyNetworkAttachmentRow(),
-              virtualNetwork: fields.virtualNetwork,
-              subnet: fields.subnet,
-              securityGroups: fields.securityGroups,
-            },
-          ],
-          attachExternalIp: boolFieldFromPolicy(catalogItem.fields?.autoExternalIpAttachment),
-        };
-      })(),
+      networking: getBareMetalNetworkingFormValues(catalogItem),
     },
   };
 };

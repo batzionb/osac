@@ -73,15 +73,15 @@ const buildComputeInstanceFieldDefinitions = (t: TFunction) => {
       const na = buildNetworkAttachmentSchemas(t);
       return yup.object({
         useDefaultNetwork: lockedField(yup.boolean()),
-        virtualNetwork: lockedField(na.optionalResourceSelect).when('useDefaultNetwork', {
+        virtualNetwork: na.optionalResourceSelect.when('useDefaultNetwork', {
           is: (field: { value?: boolean }) => field?.value === false,
-          then: () => lockedField(na.requiredVirtualNetwork),
+          then: () => na.requiredVirtualNetwork,
         }),
-        subnet: lockedField(na.optionalResourceSelect).when('useDefaultNetwork', {
+        subnet: na.optionalResourceSelect.when('useDefaultNetwork', {
           is: (field: { value?: boolean }) => field?.value === false,
-          then: () => lockedField(na.requiredSubnet),
+          then: () => na.requiredSubnet,
         }),
-        securityGroups: lockedField(na.securityGroupsSchema),
+        securityGroups: na.securityGroupsSchema,
         autoExternalIpAttachment: lockedField(yup.boolean()),
       });
     })(),
@@ -119,6 +119,11 @@ export const buildComputeInstanceStepSchema = (
         }),
         spec: yup.object({
           sshKey: lockedField(yup.string()),
+          diskImage: lockedField(
+            yup.object({
+              id: yup.string().required(t('Disk image is required')),
+            }),
+          ),
         }),
       });
     case 'configuration':

@@ -1,7 +1,18 @@
-import { screen } from '@testing-library/react';
+import { create } from '@bufbuild/protobuf';
+import { Code, ConnectError } from '@connectrpc/connect';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Formik } from 'formik';
 import { describe, expect, it } from 'vitest';
+
+import {
+  SecurityGroupSchema,
+  SecurityGroupState,
+  SubnetSchema,
+  SubnetState,
+  VirtualNetworkSchema,
+  VirtualNetworkState,
+} from '@osac/types';
 
 import NetworkAttachmentFields from './NetworkAttachmentFields';
 import { provisioningFieldValue } from './provisioningFieldValue';
@@ -9,22 +20,22 @@ import { renderWithProviders } from '../../../test-utils/TestProviders';
 import { type ResourceSelectValue, emptyResourceSelectValue } from '../../Form/resourceSelectValue';
 
 interface TestFormValues {
-  useDefaultNetwork: { value: boolean; locked: boolean };
+  useDefaultNetwork: boolean;
   autoExternalIp: { value: boolean; locked: boolean };
-  virtualNetwork: { value: ResourceSelectValue; locked: boolean };
-  subnet: { value: ResourceSelectValue; locked: boolean };
-  securityGroups: { value: ResourceSelectValue[]; locked: boolean };
+  virtualNetwork: ResourceSelectValue;
+  subnet: ResourceSelectValue;
+  securityGroups: ResourceSelectValue[];
 }
 
-const emptyTestValues = (useDefaultNetwork = true, locked = false): TestFormValues => ({
-  useDefaultNetwork: provisioningFieldValue(useDefaultNetwork, locked),
-  autoExternalIp: provisioningFieldValue(false, locked),
-  virtualNetwork: provisioningFieldValue(emptyResourceSelectValue(), locked),
-  subnet: provisioningFieldValue(emptyResourceSelectValue(), locked),
-  securityGroups: provisioningFieldValue([], locked),
+const emptyTestValues = (useDefaultNetwork = true): TestFormValues => ({
+  useDefaultNetwork,
+  autoExternalIp: provisioningFieldValue(false),
+  virtualNetwork: emptyResourceSelectValue(),
+  subnet: emptyResourceSelectValue(),
+  securityGroups: [],
 });
 
-const renderFields = (initialValues?: TestFormValues) =>
+const renderFields = (initialValues?: TestFormValues, isDisabled = false) =>
   renderWithProviders(
     <Formik initialValues={initialValues ?? emptyTestValues()} onSubmit={() => undefined}>
       <NetworkAttachmentFields
@@ -34,6 +45,7 @@ const renderFields = (initialValues?: TestFormValues) =>
         securityGroupsName="securityGroups"
         autoExternalIpName="autoExternalIp"
         fieldIdPrefix="test"
+        isDisabled={isDisabled}
       />
     </Formik>,
   );
@@ -106,15 +118,120 @@ describe('NetworkAttachmentFields', () => {
     expect(screen.queryByText('Subnet is required')).not.toBeInTheDocument();
   });
 
-  it('disables pickers when catalog policy locks the fields', () => {
-    renderFields(emptyTestValues(false, true));
+  it('disables the default-network checkbox and pickers together', () => {
+    renderFields(emptyTestValues(false), true);
 
     expect(screen.getByRole('checkbox', { name: 'Use tenant default network' })).toBeDisabled();
-    expect(screen.getByRole('checkbox', { name: 'Auto External IP Attachment' })).toBeDisabled();
     expect(screen.getByLabelText(/^Virtual network/)).toBeDisabled();
     expect(screen.getByLabelText(/^Subnet/)).toBeDisabled();
     expect(screen.getByLabelText(/^Security groups/).closest('.pf-v6-c-menu-toggle')).toHaveClass(
       'pf-m-disabled',
     );
+    expect(
+      screen.getByRole('checkbox', { name: 'Auto External IP Attachment' }),
+    ).not.toBeDisabled();
+  });
+
+  it('disables auto external IP from its own catalog policy', () => {
+    renderFields({
+      ...emptyTestValues(),
+      autoExternalIp: provisioningFieldValue(false, true),
+    });
+
+    expect(screen.getByRole('checkbox', { name: 'Use tenant default network' })).not.toBeDisabled();
+    expect(screen.getByRole('checkbox', { name: 'Auto External IP Attachment' })).toBeDisabled();
+  });
+
+  it('resolves the parent virtual network from a catalog subnet so attachments display', async () => {
+    renderWithProviders(
+      <Formik
+        initialValues={{
+          ...emptyTestValues(false),
+          subnet: { id: 'subnet-1', name: 'subnet-a' },
+          securityGroups: [{ id: 'sg-1', name: 'sg-web' }],
+        }}
+        onSubmit={() => undefined}
+      >
+        <NetworkAttachmentFields
+          useDefaultNetworkName="useDefaultNetwork"
+          virtualNetworkName="virtualNetwork"
+          subnetName="subnet"
+          securityGroupsName="securityGroups"
+          autoExternalIpName="autoExternalIp"
+          fieldIdPrefix="test"
+        />
+      </Formik>,
+      {
+        apiFixtures: {
+          virtualNetworks: [
+            create(VirtualNetworkSchema, {
+              id: 'vn-1',
+              metadata: { name: 'vn-prod' },
+              spec: { ipv4Cidr: '10.0.0.0/16' },
+              status: { state: VirtualNetworkState.READY },
+            }),
+            create(VirtualNetworkSchema, {
+              id: 'vn-2',
+              metadata: { name: 'vn-dev' },
+              spec: { ipv4Cidr: '10.1.0.0/16' },
+              status: { state: VirtualNetworkState.READY },
+            }),
+          ],
+          subnets: [
+            create(SubnetSchema, {
+              id: 'subnet-1',
+              metadata: { name: 'subnet-a' },
+              spec: { virtualNetwork: { id: 'vn-1', name: 'vn-prod' }, ipv4Cidr: '10.0.1.0/24' },
+              status: { state: SubnetState.READY },
+            }),
+          ],
+          securityGroups: [
+            create(SecurityGroupSchema, {
+              id: 'sg-1',
+              metadata: { name: 'sg-web' },
+              spec: { virtualNetwork: { id: 'vn-1' }, ingress: [], egress: [] },
+              status: { state: SecurityGroupState.READY },
+            }),
+          ],
+        },
+      },
+    );
+
+    await waitFor(() =>
+      expect(screen.getByLabelText(/^Virtual network/)).toHaveTextContent('vn-prod'),
+    );
+    await waitFor(() => expect(screen.getByLabelText(/^Subnet/)).toHaveTextContent('subnet-a'));
+  });
+
+  it('shows a load error with retry when catalog subnet lookup fails', async () => {
+    renderWithProviders(
+      <Formik
+        initialValues={{
+          ...emptyTestValues(false),
+          subnet: { id: 'subnet-1', name: 'subnet-a' },
+        }}
+        onSubmit={() => undefined}
+      >
+        <NetworkAttachmentFields
+          useDefaultNetworkName="useDefaultNetwork"
+          virtualNetworkName="virtualNetwork"
+          subnetName="subnet"
+          securityGroupsName="securityGroups"
+          autoExternalIpName="autoExternalIp"
+          fieldIdPrefix="test"
+        />
+      </Formik>,
+      {
+        transportOverrides: {
+          onSubnetGet: () => {
+            throw new ConnectError('subnet unavailable', Code.Unavailable);
+          },
+        },
+      },
+    );
+
+    expect(await screen.findByText('Could not load subnet')).toBeInTheDocument();
+    expect(screen.getByText('subnet unavailable')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
   });
 });

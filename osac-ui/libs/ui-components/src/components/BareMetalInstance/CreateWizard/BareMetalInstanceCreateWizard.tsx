@@ -78,7 +78,9 @@ const BareMetalInstanceWizardContent = ({
       if (!selectedCatalogItem) {
         throw new Error(t('catalogProvision.validation.catalogItemRequired'));
       }
-      const created = await provision.mutateAsync(buildBareMetalInstanceCreatePayload(values));
+      const created = await provision.mutateAsync(
+        buildBareMetalInstanceCreatePayload(values, selectedCatalogItem),
+      );
       if (!created?.id) {
         throw new Error('Create response missing id');
       }

@@ -5,10 +5,7 @@ import { useField } from 'formik';
 
 import { SecurityGroups } from '@osac/types';
 
-import type {
-  ProvisioningFieldControlProps,
-  ProvisioningFieldValue,
-} from './provisioningFieldValue';
+import type { ProvisioningFieldControlProps } from './provisioningFieldValue';
 import { useListResource } from '../../../api/use-resource';
 import { securityGroupFilterForVirtualNetworkList } from '../../../api/v1/networking';
 import { useTranslation } from '../../../hooks/useTranslation';
@@ -26,10 +23,9 @@ const SecurityGroupsField = ({
   isDisabled = false,
 }: SecurityGroupsFieldProps) => {
   const { t } = useTranslation();
-  const [virtualNetwork] =
-    useField<ProvisioningFieldValue<ResourceSelectValue>>(virtualNetworkName);
+  const [virtualNetwork] = useField<ResourceSelectValue>(virtualNetworkName);
   const [sgField, , sgHelpers] = useField<ResourceSelectValue[]>(name);
-  const virtualNetworkId = virtualNetwork.value?.value?.id ?? '';
+  const virtualNetworkId = virtualNetwork.value?.id ?? '';
 
   const securityGroupFilter = virtualNetworkId
     ? securityGroupFilterForVirtualNetworkList(virtualNetworkId)

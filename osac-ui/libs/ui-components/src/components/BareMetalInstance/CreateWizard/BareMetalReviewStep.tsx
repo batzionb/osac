@@ -34,7 +34,8 @@ export const BareMetalReviewStep = ({ catalogItem }: Props) => {
   );
 
   const networking = values.spec.networking;
-  const isCustomNetwork = !networking.useDefaults.value;
+  const networkAttachment = networking.networkAttachment.value;
+  const isCustomNetwork = !networkAttachment.useDefaults;
 
   return (
     <Stack hasGutter>
@@ -105,11 +106,11 @@ export const BareMetalReviewStep = ({ catalogItem }: Props) => {
             </DescriptionListDescription>
           </DescriptionListGroup>
 
-          {isCustomNetwork && networking.attachments.length > 0 && (
+          {isCustomNetwork && networkAttachment.attachments.length > 0 && (
             <NetworkAttachmentReviewFields
-              virtualNetwork={networking.attachments[0].virtualNetwork.value}
-              subnet={networking.attachments[0].subnet.value}
-              securityGroups={networking.attachments[0].securityGroups.value}
+              virtualNetwork={networkAttachment.attachments[0].virtualNetwork}
+              subnet={networkAttachment.attachments[0].subnet}
+              securityGroups={networkAttachment.attachments[0].securityGroups}
             />
           )}
 

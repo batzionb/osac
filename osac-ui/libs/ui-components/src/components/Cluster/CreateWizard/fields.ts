@@ -26,9 +26,9 @@ export interface ClusterWizardValues {
     };
     useDefaultNetwork: ProvisioningFieldValue<boolean>;
     networkAttachment: {
-      virtualNetwork: ProvisioningFieldValue<ResourceSelectValue>;
-      subnet: ProvisioningFieldValue<ResourceSelectValue>;
-      securityGroups: ProvisioningFieldValue<ResourceSelectValue[]>;
+      virtualNetwork: ResourceSelectValue;
+      subnet: ResourceSelectValue;
+      securityGroups: ResourceSelectValue[];
     };
     autoExternalIpAttachment: ProvisioningFieldValue<boolean>;
   };

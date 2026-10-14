@@ -1,11 +1,11 @@
-import { create } from '@bufbuild/protobuf';
+import { create, type MessageInitShape } from '@bufbuild/protobuf';
 import { Code, ConnectError } from '@connectrpc/connect';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { Formik } from 'formik';
 import { describe, expect, it } from 'vitest';
 
 import {
-  type ClusterCatalogItem,
+  ClusterCatalogItemSchema,
   HostTypeSchema,
   type ClusterVersion,
   ClusterVersionSchema,
@@ -21,17 +21,11 @@ import { renderWithProviders } from '../../../test-utils/TestProviders';
 import { FieldValidationProvider } from '../../Form/FieldValidationContext';
 import { provisioningFieldValue } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 
-const clusterCatalogItem: ClusterCatalogItem = {
-  $typeName: 'osac.public.v1.ClusterCatalogItem',
+const clusterCatalogItemInit: MessageInitShape<typeof ClusterCatalogItemSchema> = {
   id: 'catalog-openshift-4',
   metadata: {
-    $typeName: 'osac.public.v1.Metadata',
-    displayName: '',
-    description: '',
     name: 'catalog-openshift-4',
-    annotations: {},
     creator: 'foo',
-    labels: {},
     project: 'foo',
     tenant: 'foo',
     version: 1,
@@ -39,15 +33,12 @@ const clusterCatalogItem: ClusterCatalogItem = {
   title: 'OpenShift 4 cluster',
   description: 'Standard OpenShift cluster offering',
   template: {
-    $typeName: 'osac.public.v1.ClusterTemplateReference',
     id: 'tpl-openshift-4',
-    name: '',
-    project: '',
-    shared: false,
   },
   published: true,
-  templateParameters: {},
 };
+
+const clusterCatalogItem = create(ClusterCatalogItemSchema, clusterCatalogItemInit);
 
 const makeClusterVersion = (
   name: string,
@@ -258,8 +249,8 @@ describe('ClusterConfigurationStep', () => {
   });
 
   it('prepopulates locked catalog node sets and disables editing', async () => {
-    const catalogItem: ClusterCatalogItem = {
-      ...clusterCatalogItem,
+    const catalogItem = create(ClusterCatalogItemSchema, {
+      ...clusterCatalogItemInit,
       fields: {
         nodeSets: {
           behavior: {
@@ -275,7 +266,7 @@ describe('ClusterConfigurationStep', () => {
           },
         },
       },
-    } as ClusterCatalogItem;
+    });
 
     renderWithProviders(
       <Formik

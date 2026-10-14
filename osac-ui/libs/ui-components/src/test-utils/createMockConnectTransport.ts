@@ -53,6 +53,7 @@ import {
   SecurityGroup,
   ServiceTier,
   Subnet,
+  SubnetsGetRequest,
   User,
   VirtualNetwork,
   Volume,
@@ -453,6 +454,7 @@ export type MockTransportOverrides = {
   onDiskImageCreate?: (req: DiskImagesCreateRequest) => DiskImagesCreateResponse;
   onDiskImageUpdate?: (req: DiskImagesUpdateRequest) => DiskImagesUpdateResponse;
   onDiskImageDelete?: (req: DiskImagesDeleteRequest) => DiskImagesDeleteResponse;
+  onSubnetGet?: (req: SubnetsGetRequest) => { object?: Subnet };
   onNatGatewayList?: (req: NATGatewaysListRequest) => void;
   onNatGatewayCreate?: (
     req: NATGatewaysCreateRequest,
@@ -593,9 +595,14 @@ export const createMockConnectTransport = (
               matchesVirtualNetworkScopeFilter(req.filter, item.spec?.virtualNetwork?.id),
           ),
         }),
-        get: (req) => ({
-          object: subnets.find((i) => i.id === req.id),
-        }),
+        get: (req) => {
+          if (overrides.onSubnetGet) {
+            return overrides.onSubnetGet(req);
+          }
+          return {
+            object: subnets.find((i) => i.id === req.id),
+          };
+        },
       });
 
       router.service(SecurityGroups, {
@@ -893,19 +900,14 @@ export const createMockConnectTransport = (
           if (overrides.onPublicBaremetalInstanceTypeList) {
             return overrides.onPublicBaremetalInstanceTypeList();
           }
-          const items = publicBaremetalInstanceTypes.length
-            ? publicBaremetalInstanceTypes
-            : bareMetalInstanceTypes;
           return {
-            items,
-            size: items.length,
-            total: items.length,
+            items: publicBaremetalInstanceTypes,
+            size: publicBaremetalInstanceTypes.length,
+            total: publicBaremetalInstanceTypes.length,
           };
         },
         get: (req) => ({
-          object:
-            bareMetalInstanceTypes.find((item) => item.id === req.id) ??
-            publicBaremetalInstanceTypes.find((item) => item.id === req.id),
+          object: publicBaremetalInstanceTypes.find((item) => item.id === req.id),
         }),
       });
 

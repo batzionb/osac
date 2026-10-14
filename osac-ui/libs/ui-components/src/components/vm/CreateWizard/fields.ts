@@ -3,9 +3,9 @@ import type { ProvisioningFieldValue } from '../../ProvisioningWizard/fields/pro
 
 export interface ComputeInstanceNetworkingValues {
   useDefaultNetwork: ProvisioningFieldValue<boolean>;
-  virtualNetwork: ProvisioningFieldValue<ResourceSelectValue>;
-  subnet: ProvisioningFieldValue<ResourceSelectValue>;
-  securityGroups: ProvisioningFieldValue<ResourceSelectValue[]>;
+  virtualNetwork: ResourceSelectValue;
+  subnet: ResourceSelectValue;
+  securityGroups: ResourceSelectValue[];
   autoExternalIpAttachment: ProvisioningFieldValue<boolean>;
 }
 
@@ -24,6 +24,7 @@ export interface ComputeInstanceWizardValues {
   };
   spec: {
     sshKey: ProvisioningFieldValue<string>;
+    diskImage: ProvisioningFieldValue<ResourceSelectValue>;
     instanceType: ProvisioningFieldValue<string>;
     userDataSource: ProvisioningFieldValue<UserDataSource>;
     userData: ProvisioningFieldValue<string>;
@@ -38,6 +39,7 @@ export interface ComputeInstanceWizardValues {
 }
 
 export const VM_SSH_KEY_FORM_PATH = 'spec.sshKey';
+export const VM_DISK_IMAGE_FORM_PATH = 'spec.diskImage';
 export const VM_USER_DATA_SOURCE_FORM_PATH = 'spec.userDataSource';
 export const VM_USER_DATA_FORM_PATH = 'spec.userData';
 export const VM_USER_DATA_SECRET_FORM_PATH = 'spec.userDataSecret';

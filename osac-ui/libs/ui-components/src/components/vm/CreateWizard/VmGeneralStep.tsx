@@ -5,11 +5,13 @@ import ProjectField from '@osac/ui-components/components/Form/ProjectField';
 
 import {
   ComputeInstanceWizardValues,
+  VM_DISK_IMAGE_FORM_PATH,
   VM_SSH_KEY_FORM_PATH,
   VM_USER_DATA_SECRET_FORM_PATH,
 } from './fields';
 import NameField from '../../Form/NameField';
 import OsacForm from '../../Form/OsacForm';
+import DiskImageField from '../../ProvisioningWizard/fields/DiskImageField';
 import ProvisioningField from '../../ProvisioningWizard/fields/ProvisioningField';
 import SshPublicKeySecretField from '../../ProvisioningWizard/fields/SshPublicKeySecretField';
 
@@ -37,6 +39,9 @@ const VmGeneralStep = (_props: VmGeneralStepProps) => {
             isDisabled={isDisabled}
           />
         )}
+      </ProvisioningField>
+      <ProvisioningField name={VM_DISK_IMAGE_FORM_PATH}>
+        {({ valueName, isDisabled }) => <DiskImageField name={valueName} isDisabled={isDisabled} />}
       </ProvisioningField>
     </OsacForm>
   );

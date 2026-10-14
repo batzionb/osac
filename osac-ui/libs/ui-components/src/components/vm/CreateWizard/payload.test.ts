@@ -47,9 +47,9 @@ const buildValues = (project: string) => ({
     instanceType: provisioningFieldValue('standard-4-8'),
     networking: {
       useDefaultNetwork: provisioningFieldValue(false),
-      virtualNetwork: provisioningFieldValue({ id: 'vnet-1', name: 'vnet-1' }),
-      subnet: provisioningFieldValue({ id: 'subnet-1', name: 'subnet-1' }),
-      securityGroups: provisioningFieldValue([{ id: 'sg-1', name: 'sg-1' }]),
+      virtualNetwork: { id: 'vnet-1', name: 'vnet-1' },
+      subnet: { id: 'subnet-1', name: 'subnet-1' },
+      securityGroups: [{ id: 'sg-1', name: 'sg-1' }],
       autoExternalIpAttachment: provisioningFieldValue(false),
     },
   },
@@ -66,9 +66,9 @@ const baseValues = () => {
       instanceType: provisioningFieldValue('standard-4-8'),
       networking: {
         useDefaultNetwork: provisioningFieldValue(false),
-        virtualNetwork: provisioningFieldValue({ id: 'vnet', name: 'vnet' }),
-        subnet: provisioningFieldValue({ id: 'subnet-1', name: 'subnet-1' }),
-        securityGroups: provisioningFieldValue([{ id: 'sg-1', name: 'sg-1' }]),
+        virtualNetwork: { id: 'vnet', name: 'vnet' },
+        subnet: { id: 'subnet-1', name: 'subnet-1' },
+        securityGroups: [{ id: 'sg-1', name: 'sg-1' }],
         autoExternalIpAttachment: provisioningFieldValue(false),
       },
     },
@@ -89,6 +89,7 @@ describe('buildComputeInstanceCreatePayload', () => {
             securityGroups: [{ id: 'sg-1' }],
           },
         ],
+        autoExternalIpAttachment: false,
       },
     });
   });
@@ -237,13 +238,13 @@ describe('buildComputeInstanceCreatePayload — disk storage tiers', () => {
 });
 
 describe('buildComputeInstanceCreatePayload — useDefaultNetwork', () => {
-  it('omits networkAttachments when useDefaultNetwork is true', () => {
+  it('sends an empty networkAttachments list when useDefaultNetwork is true', () => {
     const values = baseValues();
     values.spec.networking.useDefaultNetwork.value = true;
 
     const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
 
-    expect(payload.spec).not.toHaveProperty('networkAttachments');
+    expect(payload.spec?.networkAttachments).toEqual([]);
   });
 
   it('includes networkAttachments when useDefaultNetwork is false and subnet is set', () => {
@@ -263,7 +264,7 @@ describe('buildComputeInstanceCreatePayload — useDefaultNetwork', () => {
   it('omits networkAttachments when useDefaultNetwork is false but subnet is empty', () => {
     const values = baseValues();
     values.spec.networking.useDefaultNetwork.value = false;
-    values.spec.networking.subnet.value = emptyResourceSelectValue();
+    values.spec.networking.subnet = emptyResourceSelectValue();
 
     const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
 
@@ -273,7 +274,7 @@ describe('buildComputeInstanceCreatePayload — useDefaultNetwork', () => {
   it('filters out security groups with empty IDs', () => {
     const values = baseValues();
     values.spec.networking.useDefaultNetwork.value = false;
-    values.spec.networking.securityGroups.value = [
+    values.spec.networking.securityGroups = [
       { id: 'sg-1', name: 'sg-1' },
       { id: '', name: '' },
       { id: 'sg-2', name: 'sg-2' },
@@ -322,16 +323,167 @@ describe('getComputeInstanceInitialValues — instance type', () => {
 
     expect(values.spec.instanceType).toEqual({ value: 'u1-small', locked: false });
   });
+
+  it('locks the instance type when the catalog policy is locked', () => {
+    const values = getComputeInstanceInitialValues({
+      ...vmCatalogItem,
+      fields: {
+        instanceType: {
+          behavior: {
+            case: 'locked',
+            value: { id: 'it-small', name: 'u1-small', shared: true },
+          },
+        },
+      },
+    } as ComputeInstanceCatalogItem);
+
+    expect(values.spec.instanceType).toEqual({ value: 'it-small', locked: true });
+  });
+});
+
+describe('getComputeInstanceInitialValues — disk image', () => {
+  it('loads a locked catalog disk image into the wizard', () => {
+    const values = getComputeInstanceInitialValues({
+      ...vmCatalogItem,
+      fields: {
+        diskImage: {
+          behavior: {
+            case: 'locked',
+            value: { id: 'disk-image-rhel', name: 'rhel' },
+          },
+        },
+      },
+    } as ComputeInstanceCatalogItem);
+
+    expect(values.spec.diskImage).toEqual({
+      value: { id: 'disk-image-rhel', name: 'rhel' },
+      locked: true,
+    });
+  });
+
+  it('loads an editable catalog disk image default into the wizard', () => {
+    const values = getComputeInstanceInitialValues({
+      ...vmCatalogItem,
+      fields: {
+        diskImage: {
+          behavior: {
+            case: 'editable',
+            value: {
+              defaultValue: { id: 'disk-image-fedora', name: 'fedora' },
+            },
+          },
+        },
+      },
+    } as ComputeInstanceCatalogItem);
+
+    expect(values.spec.diskImage).toEqual({
+      value: { id: 'disk-image-fedora', name: 'fedora' },
+      locked: false,
+    });
+  });
+});
+
+describe('getComputeInstanceInitialValues — network attachments', () => {
+  it('locks the attachment unit without locking nested pickers', () => {
+    const values = getComputeInstanceInitialValues({
+      ...vmCatalogItem,
+      fields: {
+        networkAttachments: {
+          behavior: {
+            case: 'locked',
+            value: {
+              items: [
+                {
+                  subnet: { id: 'subnet-1', name: 'subnet-a' },
+                  securityGroups: [{ id: 'sg-1', name: 'sg-web' }],
+                },
+              ],
+            },
+          },
+        },
+      },
+    } as ComputeInstanceCatalogItem);
+
+    expect(values.spec.networking.useDefaultNetwork).toEqual({ value: false, locked: true });
+    expect(values.spec.networking.virtualNetwork).toEqual(emptyResourceSelectValue());
+    expect(values.spec.networking.subnet).toEqual({ id: 'subnet-1', name: 'subnet-a' });
+    expect(values.spec.networking.securityGroups).toEqual([{ id: 'sg-1', name: 'sg-web' }]);
+  });
+});
+
+describe('buildComputeInstanceCreatePayload — locked catalog fields', () => {
+  it('omits a locked instance type so the catalog policy can apply it', () => {
+    const values = baseValues();
+    values.spec.instanceType = provisioningFieldValue('standard-4-8', true);
+
+    const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
+
+    expect(payload.spec).not.toHaveProperty('instanceType');
+  });
+
+  it('sends instance type when the catalog policy is not locked', () => {
+    const values = baseValues();
+    values.spec.instanceType = provisioningFieldValue('standard-4-8');
+
+    expect(buildComputeInstanceCreatePayload(values, vmCatalogItem).spec?.instanceType).toEqual({
+      id: 'standard-4-8',
+    });
+  });
+
+  it('includes the selected disk image reference', () => {
+    const values = baseValues();
+    values.spec.diskImage.value = { id: 'disk-image-1', name: 'rhel' };
+
+    expect(buildComputeInstanceCreatePayload(values, vmCatalogItem).spec?.diskImage).toEqual({
+      id: 'disk-image-1',
+    });
+  });
+
+  it('omits a locked disk image so the catalog policy can apply it', () => {
+    const values = baseValues();
+    values.spec.diskImage = provisioningFieldValue({ id: 'disk-image-1', name: 'rhel' }, true);
+
+    expect(buildComputeInstanceCreatePayload(values, vmCatalogItem).spec).not.toHaveProperty(
+      'diskImage',
+    );
+  });
+
+  it('omits locked SSH key, user data, disks, networking, and auto external IP', () => {
+    const values = baseValues();
+    values.spec.sshKey = provisioningFieldValue('my-ssh-key', true);
+    values.spec.diskImage = provisioningFieldValue({ id: 'disk-image-1', name: 'rhel' }, true);
+    values.spec.userData = provisioningFieldValue('#cloud-config', true);
+    values.spec.bootDisk = {
+      sizeGib: provisioningFieldValue('20', true),
+      storageTier: provisioningFieldValue({ id: 'id-balanced', name: 'balanced' }, true),
+    };
+    values.spec.additionalDisks = provisioningFieldValue(
+      [{ sizeGib: '100', storageTier: { id: 'id-bulk', name: 'bulk' } }],
+      true,
+    );
+    values.spec.networking.useDefaultNetwork = provisioningFieldValue(false, true);
+    values.spec.networking.autoExternalIpAttachment = provisioningFieldValue(true, true);
+
+    const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
+
+    expect(payload.spec).not.toHaveProperty('sshKey');
+    expect(payload.spec).not.toHaveProperty('diskImage');
+    expect(payload.spec).not.toHaveProperty('userData');
+    expect(payload.spec).not.toHaveProperty('bootDisk');
+    expect(payload.spec).not.toHaveProperty('additionalDisks');
+    expect(payload.spec).not.toHaveProperty('networkAttachments');
+    expect(payload.spec).not.toHaveProperty('autoExternalIpAttachment');
+  });
 });
 
 describe('buildComputeInstanceCreatePayload — autoExternalIpAttachment', () => {
-  it('omits autoExternalIpAttachment when disabled', () => {
+  it('includes autoExternalIpAttachment when disabled so catalog defaults are not applied', () => {
     const values = baseValues();
     values.spec.networking.autoExternalIpAttachment.value = false;
 
     const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
 
-    expect(payload.spec).not.toHaveProperty('autoExternalIpAttachment');
+    expect(payload.spec?.autoExternalIpAttachment).toBe(false);
   });
 
   it('sets autoExternalIpAttachment when enabled', () => {

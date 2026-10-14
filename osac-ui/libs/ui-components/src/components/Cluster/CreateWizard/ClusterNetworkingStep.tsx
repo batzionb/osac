@@ -25,17 +25,22 @@ export const ClusterNetworkingStep = ({ catalogItem }: Props) => {
       <StackItem>
         <OsacForm>
           <FormSection title={t('Infrastructure Networking')} titleElement="h2">
-            <NetworkAttachmentFields
-              useDefaultNetworkName="spec.useDefaultNetwork"
-              virtualNetworkName="spec.networkAttachment.virtualNetwork"
-              subnetName="spec.networkAttachment.subnet"
-              securityGroupsName="spec.networkAttachment.securityGroups"
-              autoExternalIpName="spec.autoExternalIpAttachment"
-              fieldIdPrefix="cluster"
-              autoExternalIpHelperText={t(
-                'Automatically provision external IPs for the cluster API and ingress endpoints.',
+            <ProvisioningField name="spec.useDefaultNetwork">
+              {({ isDisabled, valueName }) => (
+                <NetworkAttachmentFields
+                  useDefaultNetworkName={valueName}
+                  virtualNetworkName="spec.networkAttachment.virtualNetwork"
+                  subnetName="spec.networkAttachment.subnet"
+                  securityGroupsName="spec.networkAttachment.securityGroups"
+                  autoExternalIpName="spec.autoExternalIpAttachment"
+                  fieldIdPrefix="cluster"
+                  isDisabled={isDisabled}
+                  autoExternalIpHelperText={t(
+                    'Automatically provision external IPs for the cluster API and ingress endpoints.',
+                  )}
+                />
               )}
-            />
+            </ProvisioningField>
           </FormSection>
           <FormSection title={t('Cluster Networking')} titleElement="h2">
             <ProvisioningField name="spec.network.podCidr">

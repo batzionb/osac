@@ -15,6 +15,8 @@ import {
 
 import { useTranslation } from '../../../hooks/useTranslation.ts';
 import { type CatalogItem, catalogItemMetadataLabelEntries } from '../catalogItemDisplay.ts';
+import { useCatalogItemResourceLookups } from '../catalogItemResourceLookups.ts';
+import CatalogItemResources from '../CatalogItemResources.tsx';
 
 interface CatalogItemDetailContentProps {
   item: CatalogItem;
@@ -22,6 +24,7 @@ interface CatalogItemDetailContentProps {
 
 export const CatalogItemDetailContent = ({ item }: CatalogItemDetailContentProps) => {
   const { t } = useTranslation();
+  const resourceLookups = useCatalogItemResourceLookups();
   const metadataLabels = catalogItemMetadataLabelEntries(item);
   const description = item.description?.trim();
 
@@ -65,6 +68,15 @@ export const CatalogItemDetailContent = ({ item }: CatalogItemDetailContentProps
                 </DescriptionListGroup>
               ) : null}
             </DescriptionList>
+          </CardBody>
+        </Card>
+      </StackItem>
+
+      <StackItem>
+        <Card>
+          <CardTitle>{t('Configuration')}</CardTitle>
+          <CardBody>
+            <CatalogItemResources catalogItem={item} resourceLookups={resourceLookups} />
           </CardBody>
         </Card>
       </StackItem>

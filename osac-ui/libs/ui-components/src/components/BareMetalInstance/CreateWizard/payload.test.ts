@@ -91,6 +91,24 @@ describe('buildBareMetalInstanceCreatePayload', () => {
     ).not.toHaveProperty('runStrategy');
   });
 
+  it('sends run_strategy ALWAYS when the catalog policy makes it editable', () => {
+    const catalogItem = create(BareMetalInstanceCatalogItemSchema, {
+      id: 'catalog-bm-1',
+      fields: {
+        runStrategy: {
+          behavior: {
+            case: 'editable',
+            value: { defaultValue: BareMetalInstanceRunStrategy.HALTED },
+          },
+        },
+      },
+    });
+
+    expect(
+      buildBareMetalInstanceCreatePayload(buildValues(''), catalogItem).spec?.runStrategy,
+    ).toBe(BareMetalInstanceRunStrategy.ALWAYS);
+  });
+
   it('sends inline user data when the inline source is selected', () => {
     const values = buildValues('');
     values.spec.userDataSource = provisioningFieldValue('inline');

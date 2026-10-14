@@ -8,7 +8,7 @@ import {
 } from '@osac/types';
 
 import type { BareMetalInstanceWizardValues } from './fields';
-import { catalogFieldPolicyIsConfigured } from '../../catalog/catalogFieldPolicyDisplay';
+import { catalogFieldPolicyLocked } from '../../catalog/catalogFieldPolicyDisplay';
 
 export const buildBareMetalInstanceCreatePayload = (
   values: BareMetalInstanceWizardValues,
@@ -24,7 +24,7 @@ export const buildBareMetalInstanceCreatePayload = (
       catalogItem: {
         id: values.catalogItemId,
       },
-      ...(!catalogFieldPolicyIsConfigured(catalogItem?.fields?.runStrategy) && {
+      ...(!catalogFieldPolicyLocked(catalogItem?.fields?.runStrategy) && {
         runStrategy: BareMetalInstanceRunStrategy.ALWAYS,
       }),
       ...(!values.spec.sshKey.locked && sshKey && { sshPublicKey: sshKey }),

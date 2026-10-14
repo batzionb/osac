@@ -113,9 +113,9 @@ const BareMetalInstanceWizardContent = ({
 
   const handleCatalogItemSelected = useCallback(
     (item: CatalogItem) => {
-      const computeItem = item as BareMetalInstanceCatalogItem;
-      setSelectedCatalogItem(computeItem);
-      formik.resetForm({ values: getBareMetalInstanceInitialValues(computeItem) });
+      const bareMetalItem = item as BareMetalInstanceCatalogItem;
+      setSelectedCatalogItem(bareMetalItem);
+      formik.resetForm({ values: getBareMetalInstanceInitialValues(bareMetalItem) });
     },
     [formik],
   );

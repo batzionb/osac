@@ -48,8 +48,7 @@ const ClusterNodeSetsArrayField = ({
         return row;
       }
       const resolved = hostTypeItems.find(
-        (hostType) =>
-          hostType.id === currentValue || hostType.metadata?.name === currentValue,
+        (hostType) => hostType.id === currentValue || hostType.metadata?.name === currentValue,
       );
       if (resolved?.id && resolved.id !== currentValue) {
         changed = true;

@@ -83,17 +83,20 @@ const BareMetalInstanceWizardContent = ({
   const handleSubmit = useCallback(
     async (values: BareMetalInstanceWizardValues) => {
       if (!selectedCatalogItem) {
-        throw new Error(t('catalogProvision.validation.catalogItemRequired'));
+        return;
       }
-      const created = await provision.mutateAsync(
-        buildBareMetalInstanceCreatePayload(values, selectedCatalogItem),
-      );
-      if (!created?.id) {
-        throw new Error('Create response missing id');
+      try {
+        const created = await provision.mutateAsync(
+          buildBareMetalInstanceCreatePayload(values, selectedCatalogItem),
+        );
+        if (created?.id) {
+          navigate(`/bare-metal/${created.id}`);
+        }
+      } catch {
+        // Surfaced via provision.error in the footer; nothing further to do here.
       }
-      navigate(`/bare-metal/${created.id}`);
     },
-    [navigate, provision, selectedCatalogItem, t],
+    [navigate, provision, selectedCatalogItem],
   );
 
   const validationSchema = useMemo(

@@ -3,11 +3,17 @@ import { screen, waitFor } from '@testing-library/react';
 import { Formik } from 'formik';
 import { describe, expect, it } from 'vitest';
 
-import type { BareMetalInstanceCatalogItem } from '@osac/types';
-import { DiskImageLifecycle, DiskImageSchema, SecretSchema, SecretType } from '@osac/types';
+import {
+  type BareMetalInstanceCatalogItem,
+  BareMetalInstanceCatalogItemSchema,
+  DiskImageLifecycle,
+  DiskImageSchema,
+  SecretSchema,
+  SecretType,
+} from '@osac/types';
 
 import BareMetalConfigurationStep from './BareMetalConfigurationStep';
-import { createEmptyBareMetalInstanceValues } from './fields';
+import { createEmptyBareMetalInstanceValues, getBareMetalInstanceInitialValues } from './fields';
 import { renderWithProviders } from '../../../test-utils/TestProviders';
 import { provisioningFieldValue } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 
@@ -47,6 +53,39 @@ describe('BareMetalConfigurationStep', () => {
     await user.click(screen.getByRole('option', { name: /rhel/ }));
 
     await waitFor(() => expect(diskImageSelect).toHaveTextContent('rhel'));
+  });
+
+  it('shows the catalog item disk image when the wizard opens', async () => {
+    const catalogItem = create(BareMetalInstanceCatalogItemSchema, {
+      id: 'catalog-bm-1',
+      fields: {
+        diskImage: {
+          behavior: {
+            case: 'locked',
+            value: { id: 'disk-image-rhel', name: 'rhel' },
+          },
+        },
+      },
+    });
+
+    renderWithProviders(
+      <Formik
+        initialValues={getBareMetalInstanceInitialValues(catalogItem)}
+        onSubmit={() => undefined}
+      >
+        <BareMetalConfigurationStep catalogItem={catalogItem} />
+      </Formik>,
+      {
+        apiFixtures: { diskImages },
+        transportOverrides: {
+          onBaremetalInstanceTypeList: () => ({ items: [], size: 0, total: 0 }),
+        },
+      },
+    );
+
+    const diskImageSelect = await screen.findByLabelText(/^Disk image/);
+    await waitFor(() => expect(diskImageSelect).toHaveTextContent('rhel'));
+    expect(diskImageSelect).toBeDisabled();
   });
 
   it('disables instance type selection when the catalog item locks its value', async () => {

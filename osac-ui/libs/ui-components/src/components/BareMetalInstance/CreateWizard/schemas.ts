@@ -134,9 +134,9 @@ const buildAttachmentRowSchema = (t: TFunction) => {
   const na = buildNetworkAttachmentSchemas(t);
   return yup.object({
     id: yup.string().required(),
-    virtualNetwork: lockedField(na.requiredVirtualNetwork),
-    subnet: lockedField(na.requiredSubnet),
-    securityGroups: lockedField(na.securityGroupsSchema),
+    virtualNetwork: na.requiredVirtualNetwork,
+    subnet: na.requiredSubnet,
+    securityGroups: na.securityGroupsSchema,
   });
 };
 
@@ -151,12 +151,16 @@ const buildNetworkingSchema = (t: TFunction) =>
   yup.object({
     spec: yup.object({
       networking: yup.object({
-        useDefaults: lockedField(yup.boolean().required()),
-        attachments: yup.array().when('useDefaults', {
-          is: (field: { value?: boolean }) => field?.value === false,
-          then: () => buildCustomAttachmentsSchema(t),
-          otherwise: () => yup.array(),
-        }),
+        networkAttachment: lockedField(
+          yup.object({
+            useDefaults: yup.boolean().required(),
+            attachments: yup.array().when('useDefaults', {
+              is: false,
+              then: () => buildCustomAttachmentsSchema(t),
+              otherwise: () => yup.array(),
+            }),
+          }),
+        ),
         attachExternalIp: lockedField(yup.boolean().required()),
       }),
     }),

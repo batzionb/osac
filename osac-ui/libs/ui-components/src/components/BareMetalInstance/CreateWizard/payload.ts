@@ -1,15 +1,18 @@
 import { MessageInitShape, create } from '@bufbuild/protobuf';
 
 import {
+  type BareMetalInstanceCatalogItem,
   BareMetalInstanceRunStrategy,
   BareMetalInstanceSchema,
   BareMetalNetworkAttachmentSchema,
 } from '@osac/types';
 
 import type { BareMetalInstanceWizardValues } from './fields';
+import { catalogFieldPolicyIsConfigured } from '../../catalog/catalogFieldPolicyDisplay';
 
 export const buildBareMetalInstanceCreatePayload = (
   values: BareMetalInstanceWizardValues,
+  catalogItem?: BareMetalInstanceCatalogItem,
 ): MessageInitShape<typeof BareMetalInstanceSchema> => {
   const sshKey = values.spec.sshKey.value.trim();
   const userData = values.spec.userData.value.trim();
@@ -21,44 +24,57 @@ export const buildBareMetalInstanceCreatePayload = (
       catalogItem: {
         id: values.catalogItemId,
       },
-      runStrategy: BareMetalInstanceRunStrategy.ALWAYS,
-      ...(sshKey && { sshPublicKey: sshKey }),
+      ...(!catalogFieldPolicyIsConfigured(catalogItem?.fields?.runStrategy) && {
+        runStrategy: BareMetalInstanceRunStrategy.ALWAYS,
+      }),
+      ...(!values.spec.sshKey.locked && sshKey && { sshPublicKey: sshKey }),
       ...(values.spec.userDataSource.value === 'secret'
-        ? userDataSecretName && { userDataSecret: { name: userDataSecretName } }
-        : userData && { userData }),
-      ...(values.spec.instanceType.value && {
-        instanceType: {
-          name: values.spec.instanceType.value,
-          shared: true,
+        ? !values.spec.userDataSecret.locked &&
+          userDataSecretName && { userDataSecret: { name: userDataSecretName } }
+        : !values.spec.userData.locked && userData && { userData }),
+      ...(!values.spec.instanceType.locked &&
+        values.spec.instanceType.value && {
+          instanceType: {
+            name: values.spec.instanceType.value,
+            shared: true,
+          },
+        }),
+      ...(!values.spec.diskImage.locked && {
+        diskImage: {
+          id: values.spec.diskImage.value.id,
         },
       }),
-      diskImage: {
-        id: values.spec.diskImage.value.id,
-      },
     },
   };
 
   // Add networking configuration
   const networking = values.spec.networking;
 
-  // Only include networkAttachments if custom networking is enabled
-  if (!networking.useDefaults.value && networking.attachments.length > 0) {
-    bmi.spec = {
-      ...bmi.spec,
-      networkAttachments: networking.attachments.slice(0, 1).map((attachment) =>
-        create(BareMetalNetworkAttachmentSchema, {
-          subnet: { id: attachment.subnet.value.id },
-          securityGroups: attachment.securityGroups.value.map((sg) => ({ id: sg.id })),
-        }),
-      ),
-    };
+  if (!networking.networkAttachment.locked) {
+    if (networking.networkAttachment.value.useDefaults) {
+      bmi.spec = {
+        ...bmi.spec,
+        networkAttachments: [],
+      };
+    } else if (networking.networkAttachment.value.attachments.length > 0) {
+      bmi.spec = {
+        ...bmi.spec,
+        networkAttachments: networking.networkAttachment.value.attachments
+          .slice(0, 1)
+          .map((attachment) =>
+            create(BareMetalNetworkAttachmentSchema, {
+              subnet: { id: attachment.subnet.id },
+              securityGroups: attachment.securityGroups.map((sg) => ({ id: sg.id })),
+            }),
+          ),
+      };
+    }
   }
 
-  // Add auto external IP attachment if enabled
-  if (networking.attachExternalIp.value) {
+  if (!networking.attachExternalIp.locked) {
     bmi.spec = {
       ...bmi.spec,
-      autoExternalIpAttachment: true,
+      autoExternalIpAttachment: networking.attachExternalIp.value,
     };
   }
 

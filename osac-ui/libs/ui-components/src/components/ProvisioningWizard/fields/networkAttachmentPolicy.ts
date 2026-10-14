@@ -7,14 +7,15 @@ import { emptyResourceSelectValue } from '../../Form/resourceSelectValue';
 
 interface AttachmentLike {
   subnet?: { id?: string; name?: string };
+  virtualNetwork?: { id?: string; name?: string };
   securityGroups?: { id?: string; name?: string }[];
 }
 
 export interface NetworkAttachmentFormFields {
   useDefaultNetwork: ProvisioningFieldValue<boolean>;
-  virtualNetwork: ProvisioningFieldValue<ResourceSelectValue>;
-  subnet: ProvisioningFieldValue<ResourceSelectValue>;
-  securityGroups: ProvisioningFieldValue<ResourceSelectValue[]>;
+  virtualNetwork: ResourceSelectValue;
+  subnet: ResourceSelectValue;
+  securityGroups: ResourceSelectValue[];
 }
 
 export const boolFieldFromPolicy = (
@@ -41,24 +42,22 @@ export const networkAttachmentFieldsFromPolicy = (
 ): NetworkAttachmentFormFields => {
   const locked = catalogFieldPolicyLocked(policy);
   const subnetId = attachment?.subnet?.id?.trim() ?? '';
-  const hasCustomAttachment = Boolean(subnetId);
+  const subnetName = attachment?.subnet?.name?.trim() ?? '';
+  const virtualNetworkId = attachment?.virtualNetwork?.id?.trim() ?? '';
+  const virtualNetworkName = attachment?.virtualNetwork?.name?.trim() ?? '';
+  const hasCustomAttachment = Boolean(subnetId || subnetName);
 
   return {
     useDefaultNetwork: provisioningFieldValue(!hasCustomAttachment, locked),
-    virtualNetwork: provisioningFieldFromPolicy(emptyResourceSelectValue(), policy),
-    subnet: provisioningFieldFromPolicy(
-      subnetId
-        ? { id: subnetId, name: attachment?.subnet?.name ?? '' }
+    virtualNetwork:
+      virtualNetworkId || virtualNetworkName
+        ? { id: virtualNetworkId, name: virtualNetworkName }
         : emptyResourceSelectValue(),
-      policy,
-    ),
-    securityGroups: provisioningFieldFromPolicy(
-      (attachment?.securityGroups ?? []).map((group) => ({
-        id: group.id ?? '',
-        name: group.name ?? '',
-      })),
-      policy,
-    ),
+    subnet: hasCustomAttachment ? { id: subnetId, name: subnetName } : emptyResourceSelectValue(),
+    securityGroups: (attachment?.securityGroups ?? []).map((group) => ({
+      id: group.id ?? '',
+      name: group.name ?? '',
+    })),
   };
 };
 

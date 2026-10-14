@@ -147,15 +147,15 @@ export const buildClusterStepSchema = (
             is: (field: { value?: boolean }) => field?.value === false,
             then: () =>
               yup.object({
-                virtualNetwork: lockedField(na.requiredVirtualNetwork),
-                subnet: lockedField(na.requiredSubnet),
-                securityGroups: lockedField(na.securityGroupsSchema),
+                virtualNetwork: na.requiredVirtualNetwork,
+                subnet: na.requiredSubnet,
+                securityGroups: na.securityGroupsSchema,
               }),
             otherwise: () =>
               yup.object({
-                virtualNetwork: lockedField(na.optionalResourceSelect),
-                subnet: lockedField(na.optionalResourceSelect),
-                securityGroups: lockedField(na.securityGroupsSchema),
+                virtualNetwork: na.optionalResourceSelect,
+                subnet: na.optionalResourceSelect,
+                securityGroups: na.securityGroupsSchema,
               }),
           }),
           autoExternalIpAttachment: lockedField(fields.specAutoExternalIpAttachment),

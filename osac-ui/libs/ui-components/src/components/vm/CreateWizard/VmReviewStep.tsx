@@ -117,6 +117,12 @@ export const VmReviewStep = ({ catalogItem }: Props) => {
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
+            <DescriptionListTerm>{t('Disk image')}</DescriptionListTerm>
+            <DescriptionListDescription>
+              {values.spec.diskImage.value.name || values.spec.diskImage.value.id || '—'}
+            </DescriptionListDescription>
+          </DescriptionListGroup>
+          <DescriptionListGroup>
             <DescriptionListTerm>{t('Instance type')}</DescriptionListTerm>
             <DescriptionListDescription>
               {formatInstanceTypeReviewLabelFromType(
@@ -148,9 +154,9 @@ export const VmReviewStep = ({ catalogItem }: Props) => {
 
           {isCustomNetwork && (
             <NetworkAttachmentReviewFields
-              virtualNetwork={networking.virtualNetwork.value}
-              subnet={networking.subnet.value}
-              securityGroups={networking.securityGroups.value}
+              virtualNetwork={networking.virtualNetwork}
+              subnet={networking.subnet}
+              securityGroups={networking.securityGroups}
             />
           )}
 

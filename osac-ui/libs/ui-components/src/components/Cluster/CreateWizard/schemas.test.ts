@@ -52,9 +52,9 @@ const emptyValues: ClusterWizardValues = {
     },
     useDefaultNetwork: provisioningFieldValue(true),
     networkAttachment: {
-      virtualNetwork: provisioningFieldValue(emptyResourceSelectValue()),
-      subnet: provisioningFieldValue(emptyResourceSelectValue()),
-      securityGroups: provisioningFieldValue([]),
+      virtualNetwork: emptyResourceSelectValue(),
+      subnet: emptyResourceSelectValue(),
+      securityGroups: [],
     },
     autoExternalIpAttachment: provisioningFieldValue(false),
   },
@@ -422,9 +422,9 @@ describe('buildClusterStepSchema', () => {
         ...emptyValues.spec,
         useDefaultNetwork: provisioningFieldValue(true),
         networkAttachment: {
-          virtualNetwork: provisioningFieldValue(emptyResourceSelectValue()),
-          subnet: provisioningFieldValue(emptyResourceSelectValue()),
-          securityGroups: provisioningFieldValue([]),
+          virtualNetwork: emptyResourceSelectValue(),
+          subnet: emptyResourceSelectValue(),
+          securityGroups: [],
         },
       },
     });
@@ -439,17 +439,17 @@ describe('buildClusterStepSchema', () => {
         ...emptyValues.spec,
         useDefaultNetwork: provisioningFieldValue(false),
         networkAttachment: {
-          virtualNetwork: provisioningFieldValue(emptyResourceSelectValue()),
-          subnet: provisioningFieldValue(emptyResourceSelectValue()),
-          securityGroups: provisioningFieldValue([]),
+          virtualNetwork: emptyResourceSelectValue(),
+          subnet: emptyResourceSelectValue(),
+          securityGroups: [],
         },
       },
     });
     expect(errors).toEqual({
       spec: {
         networkAttachment: {
-          virtualNetwork: { value: { id: 'Virtual network is required' } },
-          subnet: { value: { id: 'Subnet is required' } },
+          virtualNetwork: { id: 'Virtual network is required' },
+          subnet: { id: 'Subnet is required' },
         },
       },
     });
@@ -463,9 +463,9 @@ describe('buildClusterStepSchema', () => {
         ...emptyValues.spec,
         useDefaultNetwork: provisioningFieldValue(false),
         networkAttachment: {
-          virtualNetwork: provisioningFieldValue({ id: 'vn-1', name: 'vn-1' }),
-          subnet: provisioningFieldValue({ id: 'subnet-1', name: 'subnet-1' }),
-          securityGroups: provisioningFieldValue([]),
+          virtualNetwork: { id: 'vn-1', name: 'vn-1' },
+          subnet: { id: 'subnet-1', name: 'subnet-1' },
+          securityGroups: [],
         },
       },
     });

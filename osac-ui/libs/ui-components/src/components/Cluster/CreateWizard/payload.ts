@@ -1,10 +1,6 @@
 import { type MessageInitShape } from '@bufbuild/protobuf';
 
-import {
-  type ClusterCatalogItem,
-  type ClusterNodeSetMapPolicy,
-  ClusterSchema,
-} from '@osac/types';
+import { type ClusterCatalogItem, type ClusterNodeSetMapPolicy, ClusterSchema } from '@osac/types';
 
 import type { ClusterNodeSetRow, ClusterWizardValues } from './fields';
 import { createEmptyNodeSetRow, createNodeSetRowId } from './fields';
@@ -12,6 +8,7 @@ import { clusterNodeSetItemsFromPolicy } from '../../catalog/clusterCatalogItemR
 import { emptyResourceSelectValue } from '../../Form/resourceSelectValue';
 import {
   boolFieldFromPolicy,
+  catalogAttachmentFromPolicy,
   networkAttachmentFieldsFromPolicy,
 } from '../../ProvisioningWizard/fields/networkAttachmentPolicy';
 import {
@@ -33,15 +30,17 @@ export const createEmptyClusterValues = (): ClusterWizardValues => ({
     },
     useDefaultNetwork: provisioningFieldValue(true),
     networkAttachment: {
-      virtualNetwork: provisioningFieldValue(emptyResourceSelectValue()),
-      subnet: provisioningFieldValue(emptyResourceSelectValue()),
-      securityGroups: provisioningFieldValue([]),
+      virtualNetwork: emptyResourceSelectValue(),
+      subnet: emptyResourceSelectValue(),
+      securityGroups: [],
     },
     autoExternalIpAttachment: provisioningFieldValue(false),
   },
 });
 
-const nodeSetRowsFromPolicy = (policy: ClusterNodeSetMapPolicy | undefined): ClusterNodeSetRow[] => {
+const nodeSetRowsFromPolicy = (
+  policy: ClusterNodeSetMapPolicy | undefined,
+): ClusterNodeSetRow[] => {
   const items = clusterNodeSetItemsFromPolicy(policy);
   const rows = Object.entries(items ?? {}).map(([name, nodeSet]) => ({
     rowId: createNodeSetRowId(),
@@ -105,15 +104,9 @@ export const getClusterInitialValues = (catalogItem?: ClusterCatalogItem): Clust
         serviceCidr: provisioningFieldFromPolicy(serviceCidr, fields?.network?.serviceCidr),
       },
       ...(() => {
-        const attachment =
-          fields?.networkAttachment?.behavior.case === 'locked'
-            ? fields.networkAttachment.behavior.value
-            : fields?.networkAttachment?.behavior.case === 'editable'
-              ? fields.networkAttachment.behavior.value.defaultValue
-              : undefined;
         const networkFields = networkAttachmentFieldsFromPolicy(
           fields?.networkAttachment,
-          attachment,
+          catalogAttachmentFromPolicy(fields?.networkAttachment),
         );
         return {
           useDefaultNetwork: networkFields.useDefaultNetwork,
@@ -173,7 +166,9 @@ export const buildClusterCreatePayload = (
     }
   }
 
-  const podCidr = values.spec.network.podCidr.locked ? '' : values.spec.network.podCidr.value.trim();
+  const podCidr = values.spec.network.podCidr.locked
+    ? ''
+    : values.spec.network.podCidr.value.trim();
   const serviceCidr = values.spec.network.serviceCidr.locked
     ? ''
     : values.spec.network.serviceCidr.value.trim();
@@ -185,19 +180,19 @@ export const buildClusterCreatePayload = (
   }
 
   if (!values.spec.useDefaultNetwork.locked && !values.spec.useDefaultNetwork.value) {
-    const subnetId = values.spec.networkAttachment.subnet.value.id.trim();
+    const subnetId = values.spec.networkAttachment.subnet.id.trim();
     if (subnetId) {
       spec.networkAttachment = {
         subnet: { id: subnetId },
-        securityGroups: values.spec.networkAttachment.securityGroups.value
+        securityGroups: values.spec.networkAttachment.securityGroups
           .filter((sg) => sg.id.trim())
           .map((sg) => ({ id: sg.id })),
       };
     }
   }
 
-  if (!values.spec.autoExternalIpAttachment.locked && values.spec.autoExternalIpAttachment.value) {
-    spec.autoExternalIpAttachment = true;
+  if (!values.spec.autoExternalIpAttachment.locked) {
+    spec.autoExternalIpAttachment = values.spec.autoExternalIpAttachment.value;
   }
 
   return {

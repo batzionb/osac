@@ -152,9 +152,9 @@ export const ClusterReviewStep = ({ catalogItem }: Props) => {
 
           {isCustomNetwork && (
             <NetworkAttachmentReviewFields
-              virtualNetwork={values.spec.networkAttachment.virtualNetwork.value}
-              subnet={values.spec.networkAttachment.subnet.value}
-              securityGroups={values.spec.networkAttachment.securityGroups.value}
+              virtualNetwork={values.spec.networkAttachment.virtualNetwork}
+              subnet={values.spec.networkAttachment.subnet}
+              securityGroups={values.spec.networkAttachment.securityGroups}
             />
           )}
 

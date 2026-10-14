@@ -2,10 +2,7 @@ import { useField } from 'formik';
 
 import { Subnets } from '@osac/types';
 
-import type {
-  ProvisioningFieldControlProps,
-  ProvisioningFieldValue,
-} from './provisioningFieldValue';
+import type { ProvisioningFieldControlProps } from './provisioningFieldValue';
 import { virtualNetworkFilterForSubnetList } from '../../../api/v1/networking';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { ResourceSelectField } from '../../Form/ResourceSelectField';
@@ -23,9 +20,8 @@ const SubnetField = ({
   isDisabled = false,
 }: SubnetFieldProps) => {
   const { t } = useTranslation();
-  const [virtualNetwork] =
-    useField<ProvisioningFieldValue<ResourceSelectValue>>(virtualNetworkName);
-  const virtualNetworkId = virtualNetwork.value?.value?.id ?? '';
+  const [virtualNetwork] = useField<ResourceSelectValue>(virtualNetworkName);
+  const virtualNetworkId = virtualNetwork.value?.id ?? '';
 
   return (
     <ResourceSelectField

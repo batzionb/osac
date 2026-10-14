@@ -1,6 +1,7 @@
+import { create } from '@bufbuild/protobuf';
 import { describe, expect, it } from 'vitest';
 
-import { BareMetalInstanceRunStrategy } from '@osac/types';
+import { BareMetalInstanceCatalogItemSchema, BareMetalInstanceRunStrategy } from '@osac/types';
 
 import { createEmptyBareMetalInstanceValues } from './fields';
 import { buildBareMetalInstanceCreatePayload } from './payload';
@@ -22,6 +23,8 @@ describe('buildBareMetalInstanceCreatePayload', () => {
         diskImage: {
           id: '',
         },
+        networkAttachments: [],
+        autoExternalIpAttachment: false,
       },
     });
   });
@@ -34,6 +37,13 @@ describe('buildBareMetalInstanceCreatePayload', () => {
       name: 'bare-metal.large',
       shared: true,
     });
+  });
+
+  it('omits a locked instance type so the catalog policy can apply it', () => {
+    const values = buildValues('');
+    values.spec.instanceType = provisioningFieldValue('bare-metal.large', true);
+
+    expect(buildBareMetalInstanceCreatePayload(values).spec).not.toHaveProperty('instanceType');
   });
 
   it.each([
@@ -54,6 +64,31 @@ describe('buildBareMetalInstanceCreatePayload', () => {
     expect(buildBareMetalInstanceCreatePayload(values).spec?.diskImage).toEqual({
       id: 'disk-image-1',
     });
+  });
+
+  it('omits a locked disk image so the catalog policy can apply it', () => {
+    const values = buildValues('');
+    values.spec.diskImage = provisioningFieldValue({ id: 'disk-image-1', name: 'rhel' }, true);
+
+    expect(buildBareMetalInstanceCreatePayload(values).spec).not.toHaveProperty('diskImage');
+  });
+
+  it('omits run strategy when the catalog item defines it', () => {
+    const catalogItem = create(BareMetalInstanceCatalogItemSchema, {
+      id: 'catalog-bm-1',
+      fields: {
+        runStrategy: {
+          behavior: {
+            case: 'locked',
+            value: BareMetalInstanceRunStrategy.ALWAYS,
+          },
+        },
+      },
+    });
+
+    expect(buildBareMetalInstanceCreatePayload(buildValues(''), catalogItem).spec).not.toHaveProperty(
+      'runStrategy',
+    );
   });
 
   it('sends inline user data when the inline source is selected', () => {
@@ -90,5 +125,65 @@ describe('buildBareMetalInstanceCreatePayload', () => {
 
     expect(payload.spec).not.toHaveProperty('userData');
     expect(payload.spec).not.toHaveProperty('userDataSecret');
+  });
+});
+
+describe('buildBareMetalInstanceCreatePayload — useDefaults', () => {
+  it('sends an empty networkAttachments list when useDefaults is true', () => {
+    const values = buildValues('');
+    values.spec.networking.networkAttachment.value.useDefaults = true;
+
+    const payload = buildBareMetalInstanceCreatePayload(values);
+
+    expect(payload.spec?.networkAttachments).toEqual([]);
+  });
+
+  it('includes networkAttachments when useDefaults is false', () => {
+    const values = buildValues('');
+    values.spec.networking.networkAttachment.value.useDefaults = false;
+    values.spec.networking.networkAttachment.value.attachments[0].subnet = {
+      id: 'subnet-1',
+      name: 'subnet-1',
+    };
+    values.spec.networking.networkAttachment.value.attachments[0].securityGroups = [
+      { id: 'sg-1', name: 'sg-1' },
+    ];
+
+    const payload = buildBareMetalInstanceCreatePayload(values);
+
+    expect(payload.spec?.networkAttachments).toHaveLength(1);
+    expect(payload.spec?.networkAttachments?.[0]).toMatchObject({
+      subnet: { id: 'subnet-1' },
+      securityGroups: [{ id: 'sg-1' }],
+    });
+  });
+});
+
+describe('buildBareMetalInstanceCreatePayload — autoExternalIpAttachment', () => {
+  it('includes autoExternalIpAttachment when disabled so catalog defaults are not applied', () => {
+    const values = buildValues('');
+    values.spec.networking.attachExternalIp = provisioningFieldValue(false);
+
+    const payload = buildBareMetalInstanceCreatePayload(values);
+
+    expect(payload.spec?.autoExternalIpAttachment).toBe(false);
+  });
+
+  it('sets autoExternalIpAttachment when enabled', () => {
+    const values = buildValues('');
+    values.spec.networking.attachExternalIp = provisioningFieldValue(true);
+
+    const payload = buildBareMetalInstanceCreatePayload(values);
+
+    expect(payload.spec?.autoExternalIpAttachment).toBe(true);
+  });
+
+  it('omits autoExternalIpAttachment when locked', () => {
+    const values = buildValues('');
+    values.spec.networking.attachExternalIp = provisioningFieldValue(true, true);
+
+    const payload = buildBareMetalInstanceCreatePayload(values);
+
+    expect(payload.spec).not.toHaveProperty('autoExternalIpAttachment');
   });
 });

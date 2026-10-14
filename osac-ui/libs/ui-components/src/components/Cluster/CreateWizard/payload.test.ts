@@ -1,6 +1,7 @@
+import { type MessageInitShape, create } from '@bufbuild/protobuf';
 import { describe, expect, it } from 'vitest';
 
-import type { ClusterCatalogItem } from '@osac/types';
+import { ClusterCatalogItemSchema } from '@osac/types';
 
 import { createEmptyNodeSetRow } from './fields';
 import {
@@ -10,17 +11,11 @@ import {
 } from './payload';
 import { provisioningFieldValue } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 
-const clusterCatalogItem: ClusterCatalogItem = {
-  $typeName: 'osac.public.v1.ClusterCatalogItem',
+const clusterCatalogItemInit: MessageInitShape<typeof ClusterCatalogItemSchema> = {
   id: 'catalog-openshift-4',
   metadata: {
-    $typeName: 'osac.public.v1.Metadata',
-    displayName: '',
-    description: '',
     name: 'catalog-openshift-4',
-    annotations: {},
     creator: 'foo',
-    labels: {},
     project: 'foo',
     tenant: 'foo',
     version: 1,
@@ -28,15 +23,12 @@ const clusterCatalogItem: ClusterCatalogItem = {
   title: 'OpenShift 4 cluster',
   description: 'Standard OpenShift cluster offering',
   template: {
-    $typeName: 'osac.public.v1.ClusterTemplateReference',
     id: 'tpl-openshift-4',
-    name: '',
-    project: '',
-    shared: false,
   },
   published: true,
-  templateParameters: {},
 };
+
+const clusterCatalogItem = create(ClusterCatalogItemSchema, clusterCatalogItemInit);
 
 describe('buildClusterCreatePayload', () => {
   it('builds catalog-item create payload with node sets keyed by user-defined IDs', () => {
@@ -78,6 +70,7 @@ describe('buildClusterCreatePayload', () => {
         network: {
           podCidr: '10.128.0.0/14',
         },
+        autoExternalIpAttachment: false,
       },
     });
   });
@@ -100,6 +93,7 @@ describe('buildClusterCreatePayload', () => {
     expect(payload.spec).toEqual({
       catalogItem: { id: clusterCatalogItem.id },
       pullSecretSecret: { name: 'secret' },
+      autoExternalIpAttachment: false,
     });
     expect(payload.spec).not.toHaveProperty('version');
     expect(payload.spec).not.toHaveProperty('nodeSets');
@@ -170,9 +164,9 @@ describe('buildClusterCreatePayload', () => {
         pullSecretSecret: provisioningFieldValue('secret'),
         useDefaultNetwork: provisioningFieldValue(true),
         networkAttachment: {
-          virtualNetwork: provisioningFieldValue({ id: 'vn-1', name: 'vn-1' }),
-          subnet: provisioningFieldValue({ id: 'subnet-1', name: 'subnet-1' }),
-          securityGroups: provisioningFieldValue([{ id: 'sg-1', name: 'sg-1' }]),
+          virtualNetwork: { id: 'vn-1', name: 'vn-1' },
+          subnet: { id: 'subnet-1', name: 'subnet-1' },
+          securityGroups: [{ id: 'sg-1', name: 'sg-1' }],
         },
       },
     };
@@ -191,9 +185,9 @@ describe('buildClusterCreatePayload', () => {
         pullSecretSecret: provisioningFieldValue('secret'),
         useDefaultNetwork: provisioningFieldValue(false),
         networkAttachment: {
-          virtualNetwork: provisioningFieldValue({ id: '', name: '' }),
-          subnet: provisioningFieldValue({ id: '', name: '' }),
-          securityGroups: provisioningFieldValue([]),
+          virtualNetwork: { id: '', name: '' },
+          subnet: { id: '', name: '' },
+          securityGroups: [],
         },
       },
     };
@@ -212,12 +206,12 @@ describe('buildClusterCreatePayload', () => {
         pullSecretSecret: provisioningFieldValue('secret'),
         useDefaultNetwork: provisioningFieldValue(false),
         networkAttachment: {
-          virtualNetwork: provisioningFieldValue({ id: 'vn-1', name: 'tenant-vn' }),
-          subnet: provisioningFieldValue({ id: 'my-subnet', name: 'tenant-subnet' }),
-          securityGroups: provisioningFieldValue([
+          virtualNetwork: { id: 'vn-1', name: 'tenant-vn' },
+          subnet: { id: 'my-subnet', name: 'tenant-subnet' },
+          securityGroups: [
             { id: 'sg-1', name: 'default-sg-1' },
             { id: 'sg-2', name: 'default-sg-2' },
-          ]),
+          ],
         },
       },
     };
@@ -229,7 +223,7 @@ describe('buildClusterCreatePayload', () => {
     });
   });
 
-  it('includes autoExternalIpAttachment only when true', () => {
+  it('includes autoExternalIpAttachment when true', () => {
     const values = {
       ...createEmptyClusterValues(),
       catalogItemId: clusterCatalogItem.id,
@@ -245,7 +239,7 @@ describe('buildClusterCreatePayload', () => {
     expect(payload.spec?.autoExternalIpAttachment).toBe(true);
   });
 
-  it('omits autoExternalIpAttachment when false', () => {
+  it('includes autoExternalIpAttachment when false so catalog defaults are not applied', () => {
     const values = {
       ...createEmptyClusterValues(),
       catalogItemId: clusterCatalogItem.id,
@@ -258,7 +252,7 @@ describe('buildClusterCreatePayload', () => {
     };
 
     const payload = buildClusterCreatePayload(values, clusterCatalogItem);
-    expect(payload.spec).not.toHaveProperty('autoExternalIpAttachment');
+    expect(payload.spec?.autoExternalIpAttachment).toBe(false);
   });
 
   it.each([
@@ -363,9 +357,9 @@ describe('buildClusterCreatePayload — locked catalog fields', () => {
         pullSecretSecret: provisioningFieldValue('catalog-secret', true),
         useDefaultNetwork: provisioningFieldValue(false, true),
         networkAttachment: {
-          virtualNetwork: provisioningFieldValue({ id: 'vn-1', name: 'vn-1' }, true),
-          subnet: provisioningFieldValue({ id: 'subnet-1', name: 'subnet-1' }, true),
-          securityGroups: provisioningFieldValue([{ id: 'sg-1', name: 'sg-1' }], true),
+          virtualNetwork: { id: 'vn-1', name: 'vn-1' },
+          subnet: { id: 'subnet-1', name: 'subnet-1' },
+          securityGroups: [{ id: 'sg-1', name: 'sg-1' }],
         },
       },
     };
@@ -378,24 +372,26 @@ describe('buildClusterCreatePayload — locked catalog fields', () => {
 
 describe('getClusterInitialValues — node sets', () => {
   it('prepopulates and locks node set rows from a locked catalog policy', () => {
-    const values = getClusterInitialValues({
-      ...clusterCatalogItem,
-      fields: {
-        nodeSets: {
-          behavior: {
-            case: 'locked',
-            value: {
-              items: {
-                workers: {
-                  size: 2,
-                  hostType: { id: 'bmit-worker', name: 'worker', shared: true },
+    const values = getClusterInitialValues(
+      create(ClusterCatalogItemSchema, {
+        ...clusterCatalogItemInit,
+        fields: {
+          nodeSets: {
+            behavior: {
+              case: 'locked',
+              value: {
+                items: {
+                  workers: {
+                    size: 2,
+                    hostType: { id: 'bmit-worker', name: 'worker', shared: true },
+                  },
                 },
               },
             },
           },
         },
-      },
-    } as ClusterCatalogItem);
+      }),
+    );
 
     expect(values.spec.nodeSetRows.locked).toBe(true);
     expect(values.spec.nodeSetRows.value).toHaveLength(1);
@@ -407,30 +403,32 @@ describe('getClusterInitialValues — node sets', () => {
   });
 
   it('prepopulates editable node set defaults without locking', () => {
-    const values = getClusterInitialValues({
-      ...clusterCatalogItem,
-      fields: {
-        nodeSets: {
-          behavior: {
-            case: 'editable',
-            value: {
-              defaultValue: {
-                items: {
-                  workers: {
-                    size: 3,
-                    hostType: { id: 'bmit-gpu', name: 'gpu-host' },
-                  },
-                  infra: {
-                    size: 1,
-                    hostType: { name: 'worker' },
+    const values = getClusterInitialValues(
+      create(ClusterCatalogItemSchema, {
+        ...clusterCatalogItemInit,
+        fields: {
+          nodeSets: {
+            behavior: {
+              case: 'editable',
+              value: {
+                defaultValue: {
+                  items: {
+                    workers: {
+                      size: 3,
+                      hostType: { id: 'bmit-gpu', name: 'gpu-host' },
+                    },
+                    infra: {
+                      size: 1,
+                      hostType: { name: 'worker' },
+                    },
                   },
                 },
               },
             },
           },
         },
-      },
-    } as ClusterCatalogItem);
+      }),
+    );
 
     expect(values.spec.nodeSetRows.locked).toBe(false);
     expect(values.spec.nodeSetRows.value).toEqual(
@@ -459,5 +457,30 @@ describe('getClusterInitialValues — node sets', () => {
       hostType: '',
       size: '',
     });
+  });
+});
+
+describe('getClusterInitialValues — network attachment', () => {
+  it('locks the attachment unit without locking nested pickers', () => {
+    const values = getClusterInitialValues(
+      create(ClusterCatalogItemSchema, {
+        ...clusterCatalogItemInit,
+        fields: {
+          networkAttachment: {
+            behavior: {
+              case: 'locked',
+              value: {
+                subnet: { id: 'subnet-1', name: 'subnet-a' },
+                securityGroups: [{ id: 'sg-1', name: 'sg-web' }],
+              },
+            },
+          },
+        },
+      }),
+    );
+
+    expect(values.spec.useDefaultNetwork).toEqual({ value: false, locked: true });
+    expect(values.spec.networkAttachment.subnet).toEqual({ id: 'subnet-1', name: 'subnet-a' });
+    expect(values.spec.networkAttachment.securityGroups).toEqual([{ id: 'sg-1', name: 'sg-web' }]);
   });
 });

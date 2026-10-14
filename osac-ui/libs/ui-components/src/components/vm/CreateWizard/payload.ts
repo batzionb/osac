@@ -4,10 +4,14 @@ import { type ComputeInstanceCatalogItem, ComputeInstanceSchema } from '@osac/ty
 import { ComputeInstanceRunStrategy } from '@osac/types';
 
 import type { ComputeInstanceWizardValues } from './fields';
-import { computeInstanceTypeReferenceFromPolicy } from '../../catalog/computeCatalogItemResourceDisplay';
+import {
+  computeDiskImageReferenceFromPolicy,
+  computeInstanceTypeReferenceFromPolicy,
+} from '../../catalog/computeCatalogItemResourceDisplay';
 import { type ResourceSelectValue, emptyResourceSelectValue } from '../../Form/resourceSelectValue';
 import {
   boolFieldFromPolicy,
+  catalogAttachmentFromPolicy,
   networkAttachmentFieldsFromPolicy,
 } from '../../ProvisioningWizard/fields/networkAttachmentPolicy';
 import {
@@ -20,6 +24,7 @@ export const createEmptyComputeInstanceValues = (): ComputeInstanceWizardValues 
   metadata: { name: '', project: '' },
   spec: {
     sshKey: provisioningFieldValue(''),
+    diskImage: provisioningFieldValue(emptyResourceSelectValue()),
     instanceType: provisioningFieldValue(''),
     userDataSource: provisioningFieldValue('inline'),
     userData: provisioningFieldValue(''),
@@ -31,9 +36,9 @@ export const createEmptyComputeInstanceValues = (): ComputeInstanceWizardValues 
     additionalDisks: provisioningFieldValue([]),
     networking: {
       useDefaultNetwork: provisioningFieldValue(true),
-      virtualNetwork: provisioningFieldValue(emptyResourceSelectValue()),
-      subnet: provisioningFieldValue(emptyResourceSelectValue()),
-      securityGroups: provisioningFieldValue([]),
+      virtualNetwork: emptyResourceSelectValue(),
+      subnet: emptyResourceSelectValue(),
+      securityGroups: [],
       autoExternalIpAttachment: provisioningFieldValue(false),
     },
   },
@@ -96,6 +101,11 @@ export const getComputeInstanceInitialValues = (
         : '';
   const instanceTypeRef = computeInstanceTypeReferenceFromPolicy(fields?.instanceType);
   const instanceTypeValue = instanceTypeRef?.id?.trim() || instanceTypeRef?.name?.trim() || '';
+  const diskImageRef = computeDiskImageReferenceFromPolicy(fields?.diskImage);
+  const diskImageValue =
+    !diskImageRef?.id && !diskImageRef?.name
+      ? emptyResourceSelectValue()
+      : { id: diskImageRef.id, name: diskImageRef.name };
   return {
     ...values,
     catalogItemId: catalogItem.id,
@@ -103,6 +113,7 @@ export const getComputeInstanceInitialValues = (
       ...values.spec,
       userData: provisioningFieldFromPolicy(userData, fields?.userData),
       sshKey: provisioningFieldFromPolicy(sshKeyName, catalogItem.fields?.sshKey),
+      diskImage: provisioningFieldFromPolicy(diskImageValue, fields?.diskImage),
       instanceType: provisioningFieldFromPolicy(instanceTypeValue, fields?.instanceType),
       bootDisk: {
         sizeGib: provisioningFieldFromPolicy(stringValue(sizeGib), fields?.bootDisk?.sizeGib),
@@ -120,11 +131,7 @@ export const getComputeInstanceInitialValues = (
       networking: {
         ...networkAttachmentFieldsFromPolicy(
           fields?.networkAttachments,
-          fields?.networkAttachments?.behavior.case === 'locked'
-            ? fields.networkAttachments.behavior.value.items[0]
-            : fields?.networkAttachments?.behavior.case === 'editable'
-              ? fields.networkAttachments.behavior.value.defaultValue?.items[0]
-              : undefined,
+          catalogAttachmentFromPolicy(fields?.networkAttachments)?.items[0],
         ),
         autoExternalIpAttachment: boolFieldFromPolicy(fields?.autoExternalIpAttachment),
       },
@@ -156,62 +163,82 @@ export const buildComputeInstanceCreatePayload = (
     catalogItem: {
       id: catalogItem.id,
     },
-    instanceType: {
-      id: values.spec.instanceType.value,
-    },
     runStrategy: ComputeInstanceRunStrategy.COMPUTE_INSTANCE_RUN_STRATEGY_ALWAYS,
   };
 
-  if (!values.spec.networking.useDefaultNetwork.value) {
-    const subnetId = values.spec.networking.subnet.value.id.trim();
-    if (subnetId) {
-      spec.networkAttachments = [
-        {
-          subnet: { id: subnetId },
-          securityGroups: values.spec.networking.securityGroups.value
-            .filter((sg) => sg.id.trim())
-            .map((sg) => ({ id: sg.id })),
-        },
-      ];
+  if (!values.spec.instanceType.locked && values.spec.instanceType.value) {
+    spec.instanceType = {
+      id: values.spec.instanceType.value,
+    };
+  }
+
+  if (!values.spec.networking.useDefaultNetwork.locked) {
+    if (values.spec.networking.useDefaultNetwork.value) {
+      spec.networkAttachments = [];
+    } else {
+      const subnetId = values.spec.networking.subnet.id.trim();
+      if (subnetId) {
+        spec.networkAttachments = [
+          {
+            subnet: { id: subnetId },
+            securityGroups: values.spec.networking.securityGroups
+              .filter((sg) => sg.id.trim())
+              .map((sg) => ({ id: sg.id })),
+          },
+        ];
+      }
     }
   }
 
-  if (values.spec.networking.autoExternalIpAttachment.value) {
-    spec.autoExternalIpAttachment = true;
+  if (!values.spec.networking.autoExternalIpAttachment.locked) {
+    spec.autoExternalIpAttachment = values.spec.networking.autoExternalIpAttachment.value;
   }
 
   const sshKeyName = values.spec.sshKey.value.trim();
-  if (sshKeyName) {
+  if (!values.spec.sshKey.locked && sshKeyName) {
     spec.sshKey = { name: sshKeyName };
+  }
+
+  if (!values.spec.diskImage.locked) {
+    const diskImageId = values.spec.diskImage.value.id.trim();
+    if (diskImageId) {
+      spec.diskImage = { id: diskImageId };
+    }
   }
 
   if (values.spec.userDataSource.value === 'secret') {
     const userDataSecretName = values.spec.userDataSecret.value.trim();
-    if (userDataSecretName) {
+    if (!values.spec.userDataSecret.locked && userDataSecretName) {
       spec.userDataSecret = { name: userDataSecretName };
     }
   } else {
     const userData = values.spec.userData.value.trim();
-    if (userData) {
+    if (!values.spec.userData.locked && userData) {
       spec.userData = userData;
     }
   }
 
+  const bootDisk: { sizeGib?: number; storageTier?: { id?: string; name?: string } } = {};
   const bootDiskRaw = values.spec.bootDisk.sizeGib.value.trim();
-  if (bootDiskRaw) {
-    spec.bootDisk = {
-      sizeGib: Number(bootDiskRaw),
-      ...tierField(values.spec.bootDisk.storageTier.value),
-    };
+  if (!values.spec.bootDisk.sizeGib.locked && bootDiskRaw) {
+    bootDisk.sizeGib = Number(bootDiskRaw);
+  }
+  if (!values.spec.bootDisk.storageTier.locked) {
+    Object.assign(bootDisk, tierField(values.spec.bootDisk.storageTier.value));
+  }
+  if (bootDisk.sizeGib !== undefined || bootDisk.storageTier) {
+    spec.bootDisk = bootDisk;
   }
 
-  const additionalDisks = values.spec.additionalDisks.value
-    .filter((disk) => disk.sizeGib.trim())
-    .map((disk) => ({ sizeGib: Number(disk.sizeGib.trim()), ...tierField(disk.storageTier) }));
-  const hasAdditionalDisksDefault =
-    catalogItem.fields?.additionalDisks?.behavior.case !== undefined;
-  if (additionalDisks.length > 0 || hasAdditionalDisksDefault) {
-    spec.additionalDisks = additionalDisks;
+  if (!values.spec.additionalDisks.locked) {
+    const additionalDisks = values.spec.additionalDisks.value
+      .filter((disk) => disk.sizeGib.trim())
+      .map((disk) => ({ sizeGib: Number(disk.sizeGib.trim()), ...tierField(disk.storageTier) }));
+    const hasAdditionalDisksDefault =
+      catalogItem.fields?.additionalDisks?.behavior.case !== undefined;
+    if (additionalDisks.length > 0 || hasAdditionalDisksDefault) {
+      spec.additionalDisks = additionalDisks;
+    }
   }
 
   return {

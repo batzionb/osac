@@ -18,7 +18,10 @@ const makeTier = (name: string, displayName: string) =>
     status: { state: StorageTierState.ACTIVE },
   });
 
-const renderStep = (storageTier: ResourceSelectValue = emptyResourceSelectValue()) =>
+const renderStep = (
+  storageTier: ResourceSelectValue = emptyResourceSelectValue(),
+  storageTierLocked = false,
+) =>
   renderWithProviders(
     <Formik
       initialValues={{
@@ -27,7 +30,7 @@ const renderStep = (storageTier: ResourceSelectValue = emptyResourceSelectValue(
           ...createEmptyComputeInstanceValues().spec,
           bootDisk: {
             sizeGib: provisioningFieldValue(''),
-            storageTier: provisioningFieldValue(storageTier),
+            storageTier: provisioningFieldValue(storageTier, storageTierLocked),
           },
         },
       }}
@@ -53,6 +56,16 @@ describe('VmStorageStep', () => {
       expect(screen.getByLabelText(/^Storage tier/)).not.toBeDisabled();
     });
     expect(screen.queryByText('Locked by catalog')).not.toBeInTheDocument();
+  });
+
+  it('shows a lock badge and disables the field when the catalog policy locks the tier', async () => {
+    renderStep({ id: 'id-fast', name: 'fast' }, true);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/^Storage tier/)).toHaveTextContent('fast');
+      expect(screen.getByLabelText(/^Storage tier/)).toBeDisabled();
+    });
+    expect(screen.getByText('Locked by catalog')).toBeInTheDocument();
   });
 
   it('leaves the tier picker editable and unset by default', async () => {

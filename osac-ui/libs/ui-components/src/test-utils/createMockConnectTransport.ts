@@ -2,6 +2,9 @@ import type { MessageInitShape } from '@bufbuild/protobuf';
 import { Code, ConnectError, type Transport, createRouterTransport } from '@connectrpc/connect';
 
 import {
+  BareMetalInstanceCatalogItem,
+  BareMetalInstancesCreateRequest,
+  BareMetalInstancesCreateResponse,
   Cluster,
   ClusterCatalogItem,
   ClusterTemplate,
@@ -10,6 +13,8 @@ import {
   ClustersCreateRequest,
   ClustersCreateResponse,
   ComputeInstanceCatalogItem,
+  ComputeInstancesCreateRequest,
+  ComputeInstancesCreateResponse,
   DiskImage,
   DiskImagesCreateRequest,
   DiskImagesCreateResponse,
@@ -65,6 +70,8 @@ import {
   VolumesGetResponse,
 } from '@osac/types';
 import {
+  BareMetalInstanceCatalogItems,
+  BareMetalInstances,
   Capabilities,
   ClusterCatalogItems,
   ClusterTemplates,
@@ -73,6 +80,7 @@ import {
   ClusterVersionsListResponseSchema,
   Clusters,
   ComputeInstanceCatalogItems,
+  ComputeInstances,
   DiskImageLifecycle,
   DiskImages,
   DiskImagesGetResponseSchema,
@@ -172,6 +180,7 @@ export type MockApiFixtures = {
   catalogItems?: ComputeInstanceCatalogItem[];
   clusters?: Cluster[];
   clusterCatalogItems?: ClusterCatalogItem[];
+  bareMetalCatalogItems?: BareMetalInstanceCatalogItem[];
   clusterTemplates?: ClusterTemplate[];
   clusterVersions?: ClusterVersion[];
   tenants?: PrivateTenant[];
@@ -366,6 +375,12 @@ const matchesStorageTierActiveFilter = (
 
 export type MockTransportOverrides = {
   onClusterCreate?: (req: ClustersCreateRequest) => ClustersCreateResponse;
+  onComputeInstanceCreate?: (
+    req: ComputeInstancesCreateRequest,
+  ) => ComputeInstancesCreateResponse | Promise<ComputeInstancesCreateResponse>;
+  onBareMetalInstanceCreate?: (
+    req: BareMetalInstancesCreateRequest,
+  ) => BareMetalInstancesCreateResponse | Promise<BareMetalInstancesCreateResponse>;
   onClusterVersionList?: (
     req: ClusterVersionsListRequest,
   ) => MessageInitShape<typeof ClusterVersionsListResponseSchema>;
@@ -491,6 +506,7 @@ export const createMockConnectTransport = (
   const catalogItems = fixtures.catalogItems ?? [];
   const clusters = fixtures.clusters ?? [];
   const clusterCatalogItems = fixtures.clusterCatalogItems ?? [];
+  const bareMetalCatalogItems = fixtures.bareMetalCatalogItems ?? [];
   const clusterTemplates = fixtures.clusterTemplates ?? [];
   const clusterVersions = fixtures.clusterVersions ?? [];
   const tenants = fixtures.tenants ?? [];
@@ -532,11 +548,36 @@ export const createMockConnectTransport = (
         }),
       });
 
+      router.service(ComputeInstances, {
+        create: (req) => {
+          if (overrides.onComputeInstanceCreate) {
+            return overrides.onComputeInstanceCreate(req);
+          }
+          return { object: { id: 'compute-instance-1', ...req.object } };
+        },
+      });
+
       router.service(ClusterCatalogItems, {
         list: () => ({ items: clusterCatalogItems }),
         get: (req) => ({
           object: clusterCatalogItems.find((i) => i.id === req.id),
         }),
+      });
+
+      router.service(BareMetalInstanceCatalogItems, {
+        list: () => ({ items: bareMetalCatalogItems }),
+        get: (req) => ({
+          object: bareMetalCatalogItems.find((i) => i.id === req.id),
+        }),
+      });
+
+      router.service(BareMetalInstances, {
+        create: (req) => {
+          if (overrides.onBareMetalInstanceCreate) {
+            return overrides.onBareMetalInstanceCreate(req);
+          }
+          return { object: { id: 'baremetal-instance-1', ...req.object } };
+        },
       });
 
       router.service(Secrets, {

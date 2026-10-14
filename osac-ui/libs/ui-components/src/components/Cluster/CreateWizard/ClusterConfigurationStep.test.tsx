@@ -1,12 +1,12 @@
-import { create, type MessageInitShape } from '@bufbuild/protobuf';
+import { type MessageInitShape, create } from '@bufbuild/protobuf';
 import { Code, ConnectError } from '@connectrpc/connect';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { Formik } from 'formik';
 import { describe, expect, it } from 'vitest';
 
 import {
+  BareMetalInstanceTypeSchema,
   ClusterCatalogItemSchema,
-  HostTypeSchema,
   type ClusterVersion,
   ClusterVersionSchema,
   ClusterVersionState,
@@ -14,8 +14,7 @@ import {
 import { tIdentity } from '@osac/ui-components/test-utils/i18n';
 
 import ClusterConfigurationStep from './ClusterConfigurationStep';
-import { createEmptyNodeSetRow } from './fields';
-import { createEmptyClusterValues, getClusterInitialValues } from './payload';
+import { createEmptyClusterValues, createEmptyNodeSetRow, getInitialFormValues } from './fields';
 import { buildClusterStepSchema } from './schemas';
 import { renderWithProviders } from '../../../test-utils/TestProviders';
 import { FieldValidationProvider } from '../../Form/FieldValidationContext';
@@ -259,7 +258,7 @@ describe('ClusterConfigurationStep', () => {
               items: {
                 workers: {
                   size: 2,
-                  hostType: { id: 'bmit-worker', name: 'worker' },
+                  baremetalInstanceType: { id: 'bmit-worker', name: 'worker' },
                 },
               },
             },
@@ -269,17 +268,14 @@ describe('ClusterConfigurationStep', () => {
     });
 
     renderWithProviders(
-      <Formik
-        initialValues={getClusterInitialValues(catalogItem)}
-        onSubmit={() => undefined}
-      >
+      <Formik initialValues={getInitialFormValues(catalogItem)} onSubmit={() => undefined}>
         <ClusterConfigurationStep catalogItem={catalogItem} />
       </Formik>,
       {
         apiFixtures: {
           clusterVersions,
-          hostTypes: [
-            create(HostTypeSchema, {
+          publicBaremetalInstanceTypes: [
+            create(BareMetalInstanceTypeSchema, {
               id: 'bmit-worker',
               metadata: { name: 'worker' },
             }),
@@ -290,10 +286,105 @@ describe('ClusterConfigurationStep', () => {
 
     await waitFor(() => {
       expect(screen.getByLabelText(/^Name/)).toHaveValue('workers');
+      expect(screen.getByLabelText(/^Host type/)).toHaveTextContent('worker');
     });
     expect(screen.getByRole('spinbutton', { name: /^Nodes/ })).toHaveValue(2);
     expect(screen.getByLabelText(/^Name/)).toBeDisabled();
+    expect(screen.getByLabelText(/^Host type/)).toBeDisabled();
     expect(screen.getByRole('spinbutton', { name: /^Nodes/ })).toBeDisabled();
-    expect(screen.queryByRole('button', { name: 'Add node set' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add node set' })).toBeDisabled();
+  });
+
+  it('prepopulates host type from editable catalog node set defaults', async () => {
+    const catalogItem = create(ClusterCatalogItemSchema, {
+      ...clusterCatalogItemInit,
+      fields: {
+        nodeSets: {
+          behavior: {
+            case: 'editable',
+            value: {
+              defaultValue: {
+                items: {
+                  workers: {
+                    size: 3,
+                    baremetalInstanceType: { id: 'bmit-gpu', name: 'gpu-host' },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    renderWithProviders(
+      <Formik initialValues={getInitialFormValues(catalogItem)} onSubmit={() => undefined}>
+        <ClusterConfigurationStep catalogItem={catalogItem} />
+      </Formik>,
+      {
+        apiFixtures: {
+          clusterVersions,
+          publicBaremetalInstanceTypes: [
+            create(BareMetalInstanceTypeSchema, {
+              id: 'bmit-gpu',
+              metadata: { name: 'gpu-host' },
+            }),
+          ],
+        },
+      },
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/^Name/)).toHaveValue('workers');
+      expect(screen.getByLabelText(/^Host type/)).toHaveTextContent('gpu-host');
+    });
+    expect(screen.getByRole('spinbutton', { name: /^Nodes/ })).toHaveValue(3);
+    expect(screen.getByLabelText(/^Host type/)).toBeEnabled();
+  });
+
+  it('prepopulates host type from a catalog node set referenced by name', async () => {
+    const catalogItem = create(ClusterCatalogItemSchema, {
+      ...clusterCatalogItemInit,
+      fields: {
+        nodeSets: {
+          behavior: {
+            case: 'editable',
+            value: {
+              defaultValue: {
+                items: {
+                  workers: {
+                    size: 3,
+                    baremetalInstanceType: { name: 'gpu-host' },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    renderWithProviders(
+      <Formik initialValues={getInitialFormValues(catalogItem)} onSubmit={() => undefined}>
+        <ClusterConfigurationStep catalogItem={catalogItem} />
+      </Formik>,
+      {
+        apiFixtures: {
+          clusterVersions,
+          publicBaremetalInstanceTypes: [
+            create(BareMetalInstanceTypeSchema, {
+              id: 'bmit-gpu',
+              metadata: { name: 'gpu-host' },
+            }),
+          ],
+        },
+      },
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/^Name/)).toHaveValue('workers');
+      expect(screen.getByLabelText(/^Host type/)).toHaveTextContent('gpu-host');
+    });
+    expect(screen.getByRole('spinbutton', { name: /^Nodes/ })).toHaveValue(3);
   });
 });

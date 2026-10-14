@@ -69,13 +69,11 @@ export const AdditionalDisksArrayField = ({
           </ProvisioningFieldGroup>
         </StackItem>
       ))}
-      {isDisabled ? null : (
-        <StackItem>
-          <Button variant="link" icon={<PlusCircleIcon />} onClick={addDisk}>
-            {t('Add disk')}
-          </Button>
-        </StackItem>
-      )}
+      <StackItem>
+        <Button variant="link" icon={<PlusCircleIcon />} onClick={addDisk} isDisabled={isDisabled}>
+          {t('Add disk')}
+        </Button>
+      </StackItem>
     </Stack>
   );
 };

@@ -3,12 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 import { ClusterCatalogItemSchema } from '@osac/types';
 
-import { createEmptyNodeSetRow } from './fields';
-import {
-  buildClusterCreatePayload,
-  createEmptyClusterValues,
-  getClusterInitialValues,
-} from './payload';
+import { createEmptyClusterValues, createEmptyNodeSetRow } from './fields';
+import { buildClusterCreatePayload } from './payload';
 import { provisioningFieldValue } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 
 const clusterCatalogItemInit: MessageInitShape<typeof ClusterCatalogItemSchema> = {
@@ -65,7 +61,7 @@ describe('buildClusterCreatePayload', () => {
         pullSecretSecret: { name: 'pull-secret' },
         version: { name: '4-17-0' },
         nodeSets: {
-          production: { hostType: { id: 'acme_1tb' }, size: 3 },
+          production: { baremetalInstanceType: { id: 'acme_1tb' }, size: 3 },
         },
         network: {
           podCidr: '10.128.0.0/14',
@@ -123,8 +119,8 @@ describe('buildClusterCreatePayload', () => {
 
     const payload = buildClusterCreatePayload(values, clusterCatalogItem);
     expect(payload.spec?.nodeSets).toEqual({
-      production: { hostType: { id: 'acme_1tb' }, size: 3 },
-      development: { hostType: { id: 'acme_1tb' }, size: 2 },
+      production: { baremetalInstanceType: { id: 'acme_1tb' }, size: 3 },
+      development: { baremetalInstanceType: { id: 'acme_1tb' }, size: 2 },
     });
   });
 
@@ -151,7 +147,10 @@ describe('buildClusterCreatePayload', () => {
 
     const nodeSets = buildClusterCreatePayload(values, clusterCatalogItem).spec?.nodeSets;
     expect(Object.keys(nodeSets ?? {})).toContain('__proto__');
-    expect(nodeSets?.['__proto__']).toEqual({ hostType: { id: 'acme_1tb' }, size: 3 });
+    expect(nodeSets?.['__proto__']).toEqual({
+      baremetalInstanceType: { id: 'acme_1tb' },
+      size: 3,
+    });
   });
 
   it('omits networkAttachment when useDefaultNetwork is true', () => {
@@ -367,120 +366,5 @@ describe('buildClusterCreatePayload — locked catalog fields', () => {
     const payload = buildClusterCreatePayload(values, clusterCatalogItem);
     expect(payload.spec).not.toHaveProperty('pullSecretSecret');
     expect(payload.spec).not.toHaveProperty('networkAttachment');
-  });
-});
-
-describe('getClusterInitialValues — node sets', () => {
-  it('prepopulates and locks node set rows from a locked catalog policy', () => {
-    const values = getClusterInitialValues(
-      create(ClusterCatalogItemSchema, {
-        ...clusterCatalogItemInit,
-        fields: {
-          nodeSets: {
-            behavior: {
-              case: 'locked',
-              value: {
-                items: {
-                  workers: {
-                    size: 2,
-                    hostType: { id: 'bmit-worker', name: 'worker', shared: true },
-                  },
-                },
-              },
-            },
-          },
-        },
-      }),
-    );
-
-    expect(values.spec.nodeSetRows.locked).toBe(true);
-    expect(values.spec.nodeSetRows.value).toHaveLength(1);
-    expect(values.spec.nodeSetRows.value[0]).toMatchObject({
-      name: 'workers',
-      hostType: 'bmit-worker',
-      size: '2',
-    });
-  });
-
-  it('prepopulates editable node set defaults without locking', () => {
-    const values = getClusterInitialValues(
-      create(ClusterCatalogItemSchema, {
-        ...clusterCatalogItemInit,
-        fields: {
-          nodeSets: {
-            behavior: {
-              case: 'editable',
-              value: {
-                defaultValue: {
-                  items: {
-                    workers: {
-                      size: 3,
-                      hostType: { id: 'bmit-gpu', name: 'gpu-host' },
-                    },
-                    infra: {
-                      size: 1,
-                      hostType: { name: 'worker' },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      }),
-    );
-
-    expect(values.spec.nodeSetRows.locked).toBe(false);
-    expect(values.spec.nodeSetRows.value).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          name: 'workers',
-          hostType: 'bmit-gpu',
-          size: '3',
-        }),
-        expect.objectContaining({
-          name: 'infra',
-          hostType: 'worker',
-          size: '1',
-        }),
-      ]),
-    );
-  });
-
-  it('keeps an empty unlocked row when the catalog does not govern node sets', () => {
-    const values = getClusterInitialValues(clusterCatalogItem);
-
-    expect(values.spec.nodeSetRows.locked).toBe(false);
-    expect(values.spec.nodeSetRows.value).toHaveLength(1);
-    expect(values.spec.nodeSetRows.value[0]).toMatchObject({
-      name: '',
-      hostType: '',
-      size: '',
-    });
-  });
-});
-
-describe('getClusterInitialValues — network attachment', () => {
-  it('locks the attachment unit without locking nested pickers', () => {
-    const values = getClusterInitialValues(
-      create(ClusterCatalogItemSchema, {
-        ...clusterCatalogItemInit,
-        fields: {
-          networkAttachment: {
-            behavior: {
-              case: 'locked',
-              value: {
-                subnet: { id: 'subnet-1', name: 'subnet-a' },
-                securityGroups: [{ id: 'sg-1', name: 'sg-web' }],
-              },
-            },
-          },
-        },
-      }),
-    );
-
-    expect(values.spec.useDefaultNetwork).toEqual({ value: false, locked: true });
-    expect(values.spec.networkAttachment.subnet).toEqual({ id: 'subnet-1', name: 'subnet-a' });
-    expect(values.spec.networkAttachment.securityGroups).toEqual([{ id: 'sg-1', name: 'sg-web' }]);
   });
 });

@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import type { ClusterCatalogItem } from '@osac/types';
 
 import { ClusterNetworkingStep } from './ClusterNetworkingStep';
-import { createEmptyClusterValues } from './payload';
+import { createEmptyClusterValues } from './fields';
 import { renderWithProviders } from '../../../test-utils/TestProviders';
 
 const clusterCatalogItem: ClusterCatalogItem = {

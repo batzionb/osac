@@ -163,8 +163,11 @@ export const buildComputeInstanceCreatePayload = (
     catalogItem: {
       id: catalogItem.id,
     },
-    runStrategy: ComputeInstanceRunStrategy.COMPUTE_INSTANCE_RUN_STRATEGY_ALWAYS,
   };
+
+  if (catalogItem.fields?.runStrategy?.behavior.case !== 'locked') {
+    spec.runStrategy = ComputeInstanceRunStrategy.COMPUTE_INSTANCE_RUN_STRATEGY_ALWAYS;
+  }
 
   if (!values.spec.instanceType.locked && values.spec.instanceType.value) {
     spec.instanceType = {

@@ -430,6 +430,35 @@ describe('buildComputeInstanceCreatePayload — locked catalog fields', () => {
     });
   });
 
+  it('omits run_strategy when the catalog policy locks it', () => {
+    const values = baseValues();
+    const lockedCatalogItem: ComputeInstanceCatalogItem = {
+      ...vmCatalogItem,
+      fields: {
+        runStrategy: {
+          behavior: {
+            case: 'locked',
+            value: ComputeInstanceRunStrategy.COMPUTE_INSTANCE_RUN_STRATEGY_HALTED,
+          },
+        },
+      },
+    } as ComputeInstanceCatalogItem;
+
+    const payload = buildComputeInstanceCreatePayload(values, lockedCatalogItem);
+
+    expect(payload.spec).not.toHaveProperty('runStrategy');
+  });
+
+  it('sends run_strategy ALWAYS when the catalog policy does not lock it', () => {
+    const values = baseValues();
+
+    const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
+
+    expect(payload.spec?.runStrategy).toBe(
+      ComputeInstanceRunStrategy.COMPUTE_INSTANCE_RUN_STRATEGY_ALWAYS,
+    );
+  });
+
   it('includes the selected disk image reference', () => {
     const values = baseValues();
     values.spec.diskImage.value = { id: 'disk-image-1', name: 'rhel' };

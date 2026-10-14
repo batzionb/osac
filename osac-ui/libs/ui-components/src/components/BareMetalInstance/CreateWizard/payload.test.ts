@@ -86,9 +86,9 @@ describe('buildBareMetalInstanceCreatePayload', () => {
       },
     });
 
-    expect(buildBareMetalInstanceCreatePayload(buildValues(''), catalogItem).spec).not.toHaveProperty(
-      'runStrategy',
-    );
+    expect(
+      buildBareMetalInstanceCreatePayload(buildValues(''), catalogItem).spec,
+    ).not.toHaveProperty('runStrategy');
   });
 
   it('sends inline user data when the inline source is selected', () => {

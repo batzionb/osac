@@ -3,11 +3,7 @@ import { screen, waitFor } from '@testing-library/react';
 import { Formik } from 'formik';
 import { describe, expect, it } from 'vitest';
 
-import {
-  ComputeInstanceCatalogItemSchema,
-  DiskImageLifecycle,
-  DiskImageSchema,
-} from '@osac/types';
+import { ComputeInstanceCatalogItemSchema, DiskImageLifecycle, DiskImageSchema } from '@osac/types';
 
 import { createEmptyComputeInstanceValues, getComputeInstanceInitialValues } from './payload';
 import VmGeneralStep from './VmGeneralStep';

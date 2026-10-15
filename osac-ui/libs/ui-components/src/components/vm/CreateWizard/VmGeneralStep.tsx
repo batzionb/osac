@@ -26,8 +26,12 @@ const VmGeneralStep = (_props: VmGeneralStepProps) => {
     <OsacForm>
       <ProjectField
         onSelect={() => {
-          void setFieldValue(`${VM_SSH_KEY_FORM_PATH}.value`, '');
-          void setFieldValue(`${VM_USER_DATA_SECRET_FORM_PATH}.value`, '');
+          if (!values.spec.sshKey.locked) {
+            void setFieldValue(`${VM_SSH_KEY_FORM_PATH}.value`, '');
+          }
+          if (!values.spec.userDataSecret.locked) {
+            void setFieldValue(`${VM_USER_DATA_SECRET_FORM_PATH}.value`, '');
+          }
         }}
       />
       <NameField />

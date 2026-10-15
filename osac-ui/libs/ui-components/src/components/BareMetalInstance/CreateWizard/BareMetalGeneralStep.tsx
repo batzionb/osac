@@ -18,14 +18,18 @@ interface BareMetalGeneralStepProps {
 }
 
 const BareMetalGeneralStep = (_props: BareMetalGeneralStepProps) => {
-  const { setFieldValue } = useFormikContext<BareMetalInstanceWizardValues>();
+  const { values, setFieldValue } = useFormikContext<BareMetalInstanceWizardValues>();
 
   return (
     <OsacForm>
       <ProjectField
         onSelect={() => {
-          void setFieldValue(`${BM_USER_DATA_SECRET_FORM_PATH}.value`, '');
-          void setFieldValue(`${BM_SSH_KEY_FORM_PATH}.value`, '');
+          if (!values.spec.userDataSecret.locked) {
+            void setFieldValue(`${BM_USER_DATA_SECRET_FORM_PATH}.value`, '');
+          }
+          if (!values.spec.sshKey.locked) {
+            void setFieldValue(`${BM_SSH_KEY_FORM_PATH}.value`, '');
+          }
         }}
       />
       <NameField />

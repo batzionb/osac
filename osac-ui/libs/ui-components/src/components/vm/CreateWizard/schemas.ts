@@ -35,9 +35,7 @@ const buildComputeInstanceFieldDefinitions = (t: TFunction) => {
   return {
     catalogItemId: yup.string().required(t('catalogProvision.validation.catalogItemRequired')),
     metadataName: resourceNameSchema(t),
-    specInstanceType: lockedField(
-      yup.string().required(t('catalogProvision.validation.instanceTypeRequired')),
-    ),
+    specInstanceType: lockedField(yup.string().required(t('Instance type is required'))),
     specUserData: lockedField(yup.string()).when('userDataSource', {
       is: (source: { value?: string }) => source?.value !== 'secret',
       then: () => lockedField(userDataSchema(t)),

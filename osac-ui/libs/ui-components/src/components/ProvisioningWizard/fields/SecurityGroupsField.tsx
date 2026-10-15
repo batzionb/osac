@@ -85,7 +85,7 @@ const SecurityGroupsField = ({
           initialOptions={sgMultiSelectOptions}
           placeholder={securityGroupListLoading ? t('Loading...') : t('Select security groups')}
           isDisabled={isDisabled || !virtualNetworkId || securityGroupListLoading}
-          noOptionsFoundMessage={(filter) => `No options found for "${filter}"`}
+          noOptionsFoundMessage={(filter) => t('No options found for "{{filter}}"', { filter })}
           onSelectionChange={(_event, selections) => {
             const newValues: ResourceSelectValue[] = (selections as string[]).map((id) => {
               const option = securityGroupOptions.find((group) => group.value === id);

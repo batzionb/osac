@@ -232,7 +232,7 @@ describe('buildComputeInstanceStepSchema', () => {
     });
     expect(errors).toEqual({
       spec: {
-        instanceType: { value: 'catalogProvision.validation.instanceTypeRequired' },
+        instanceType: { value: 'Instance type is required' },
       },
     });
   });

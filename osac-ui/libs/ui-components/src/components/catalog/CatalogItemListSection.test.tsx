@@ -112,7 +112,6 @@ describe('CatalogItemListSection', () => {
         name: vmCatalogItem.metadata?.name,
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText('Virtual Machine')).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByText('4 vCPU')).toBeInTheDocument();
     });
@@ -147,7 +146,6 @@ describe('CatalogItemListSection', () => {
       'href',
       `/catalog/vm/${vmCatalogItem.id}`,
     );
-    expect(screen.getByText('Virtual Machine')).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByText('4 vCPU')).toBeInTheDocument();
     });

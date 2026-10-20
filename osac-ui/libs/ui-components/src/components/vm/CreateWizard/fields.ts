@@ -101,7 +101,7 @@ export const getComputeInstanceInitialValues = (
   return {
     ...values,
     catalogItemReference: {
-      name: catalogItem.title || catalogItem.metadata?.name || '',
+      name: catalogItem.metadata?.name || '',
       id: catalogItem.id,
     },
     spec: {
@@ -122,7 +122,7 @@ export const getComputeInstanceInitialValues = (
           catalogItem.fields?.instanceType,
           { id: '', name: '' },
         );
-        return provisioningFieldValue(field.value.id || field.value.name || '', field.locked);
+        return provisioningFieldValue(field.value.id || '', field.locked);
       })(),
       bootDisk: {
         sizeGib: (() => {

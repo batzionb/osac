@@ -309,22 +309,6 @@ describe('getComputeInstanceInitialValues — instance type', () => {
     expect(values.spec.instanceType).toEqual({ value: 'it-small', locked: false });
   });
 
-  it('falls back to the catalog instance type name when no id is present', () => {
-    const values = getComputeInstanceInitialValues({
-      ...vmCatalogItem,
-      fields: {
-        instanceType: {
-          behavior: {
-            case: 'editable',
-            value: { defaultValue: { name: 'u1-small', shared: true } },
-          },
-        },
-      },
-    } as ComputeInstanceCatalogItem);
-
-    expect(values.spec.instanceType).toEqual({ value: 'u1-small', locked: false });
-  });
-
   it('locks the instance type when the catalog policy is locked', () => {
     const values = getComputeInstanceInitialValues({
       ...vmCatalogItem,

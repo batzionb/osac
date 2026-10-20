@@ -553,7 +553,7 @@ export const createMockConnectTransport = (
           if (overrides.onComputeInstanceCreate) {
             return overrides.onComputeInstanceCreate(req);
           }
-          return { object: { id: 'compute-instance-1', ...req.object } };
+          return { object: { ...req.object, id: req.object?.id || 'compute-instance-1' } };
         },
       });
 
@@ -576,7 +576,7 @@ export const createMockConnectTransport = (
           if (overrides.onBareMetalInstanceCreate) {
             return overrides.onBareMetalInstanceCreate(req);
           }
-          return { object: { id: 'baremetal-instance-1', ...req.object } };
+          return { object: { ...req.object, id: req.object?.id || 'baremetal-instance-1' } };
         },
       });
 

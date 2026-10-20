@@ -91,7 +91,7 @@ export const getBareMetalInstanceInitialValues = (
   return {
     ...values,
     catalogItemReference: {
-      name: catalogItem.title || catalogItem.metadata?.name || '',
+      name: catalogItem.metadata?.name || '',
       id: catalogItem.id,
     },
     spec: {
@@ -101,10 +101,7 @@ export const getBareMetalInstanceInitialValues = (
       instanceType: (() => {
         const field = getFieldFromCatalogItemPolicy(catalogItem.fields?.instanceType, undefined);
         const reference = field.value as { id?: string; name?: string } | undefined;
-        return provisioningFieldValue(
-          reference?.id?.trim() || reference?.name?.trim() || '',
-          field.locked,
-        );
+        return provisioningFieldValue(reference?.name ?? '', field.locked);
       })(),
       diskImage: provisioningFieldValue(
         diskImageSelectValueFromCatalog(catalogItem),

@@ -52,12 +52,14 @@ export const CatalogStep = <T extends CatalogItem, V extends CatalogFormValues>(
     {},
     (data) => data.items,
   );
-  const items = useMemo(() => catalogQuery.data ?? [], [catalogQuery.data]);
   const loading = isInitializing || catalogQuery.isPending;
   const error = catalogQuery.isError;
   const retry = () => void catalogQuery.refetch();
 
-  const filtered = useMemo(() => filterCatalogItemsBySearch(items, search), [items, search]);
+  const filtered = useMemo(
+    () => filterCatalogItemsBySearch(catalogQuery.data ?? [], search),
+    [catalogQuery.data, search],
+  );
 
   const resourceLookups = useCatalogItemResourceLookups({
     enabled: !loading && !error && filtered.length > 0,

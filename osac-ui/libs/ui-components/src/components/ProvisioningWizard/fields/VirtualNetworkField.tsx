@@ -9,14 +9,12 @@ import { ResourceSelectField } from '../../Form/ResourceSelectField';
 import { emptyResourceSelectValue } from '../../Form/resourceSelectValue';
 
 interface VirtualNetworkFieldProps extends ProvisioningFieldControlProps {
-  fieldId?: string;
   subnetName: string;
   securityGroupsName: string;
 }
 
 const VirtualNetworkField = ({
-  name = '',
-  fieldId = 'virtual-network',
+  name,
   subnetName,
   securityGroupsName,
   isDisabled = false,
@@ -28,7 +26,7 @@ const VirtualNetworkField = ({
     <ResourceSelectField
       name={name}
       label={t('Virtual network')}
-      fieldId={fieldId}
+      fieldId={name}
       service={VirtualNetworks}
       request={{ filter: VIRTUAL_NETWORK_READY_LIST_FILTER }}
       autoSelectSingleOption

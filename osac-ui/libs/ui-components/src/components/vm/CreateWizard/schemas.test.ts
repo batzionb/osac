@@ -37,7 +37,7 @@ const vmCatalogItem: ComputeInstanceCatalogItem = {
 };
 
 const emptyValues: ComputeInstanceWizardValues = {
-  catalogItemId: '',
+  catalogItemReference: { name: '', id: '' },
   metadata: { name: '', project: '' },
   spec: {
     sshKey: provisioningFieldValue(''),
@@ -52,10 +52,12 @@ const emptyValues: ComputeInstanceWizardValues = {
     },
     additionalDisks: provisioningFieldValue([]),
     networking: {
-      useDefaultNetwork: provisioningFieldValue(true),
-      virtualNetwork: emptyResourceSelectValue(),
-      subnet: emptyResourceSelectValue(),
-      securityGroups: [],
+      networkAttachment: provisioningFieldValue({
+        useDefaultNetwork: true,
+        virtualNetwork: emptyResourceSelectValue(),
+        subnet: emptyResourceSelectValue(),
+        securityGroups: [],
+      }),
       autoExternalIpAttachment: provisioningFieldValue(false),
     },
   },
@@ -100,14 +102,17 @@ describe('buildComputeInstanceStepSchema', () => {
   it('requires catalog item on catalog step', async () => {
     const errors = await validateStep('catalog', emptyValues);
     expect(errors).toEqual({
-      catalogItemId: 'catalogProvision.validation.catalogItemRequired',
+      catalogItemReference: {
+        name: 'catalogProvision.validation.catalogItemRequired',
+        id: 'catalogProvision.validation.catalogItemRequired',
+      },
     });
   });
 
   it('requires name on general step without validating configuration fields', async () => {
     const errors = await validateStep('general', {
       ...emptyValues,
-      catalogItemId: vmCatalogItem.id,
+      catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
       metadata: { name: '', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -120,7 +125,7 @@ describe('buildComputeInstanceStepSchema', () => {
   it('rejects invalid DNS label names on general step', async () => {
     const errors = await validateStep('general', {
       ...emptyValues,
-      catalogItemId: vmCatalogItem.id,
+      catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
       metadata: { name: 'MyVM', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -137,7 +142,7 @@ describe('buildComputeInstanceStepSchema', () => {
   it('accepts valid DNS label name on general step', async () => {
     const errors = await validateStep('general', {
       ...emptyValues,
-      catalogItemId: vmCatalogItem.id,
+      catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
       metadata: { name: 'my-vm', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -150,7 +155,7 @@ describe('buildComputeInstanceStepSchema', () => {
   it('requires a disk image on general step', async () => {
     const errors = await validateStep('general', {
       ...emptyValues,
-      catalogItemId: vmCatalogItem.id,
+      catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
       metadata: { name: 'my-vm', project: '' },
     });
     expect(errors).toEqual({
@@ -161,7 +166,7 @@ describe('buildComputeInstanceStepSchema', () => {
   it('validates boot disk as numeric on storage step', async () => {
     const errors = await validateStep('storage', {
       ...emptyValues,
-      catalogItemId: vmCatalogItem.id,
+      catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
       metadata: { name: 'web-01', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -179,7 +184,7 @@ describe('buildComputeInstanceStepSchema', () => {
   it('does not validate boot disk on configuration step', async () => {
     const errors = await validateStep('configuration', {
       ...emptyValues,
-      catalogItemId: vmCatalogItem.id,
+      catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
       metadata: { name: 'web-01', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -196,7 +201,7 @@ describe('buildComputeInstanceStepSchema', () => {
   it('does not require networking when leaving the storage step', async () => {
     const errors = await validateStep('storage', {
       ...emptyValues,
-      catalogItemId: vmCatalogItem.id,
+      catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
       metadata: { name: 'web-01', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -212,7 +217,7 @@ describe('buildComputeInstanceStepSchema', () => {
   it('does not require networking pickers on networking step', async () => {
     const errors = await validateStep('networking', {
       ...emptyValues,
-      catalogItemId: vmCatalogItem.id,
+      catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
       metadata: { name: 'web-01', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -224,7 +229,7 @@ describe('buildComputeInstanceStepSchema', () => {
   it('requires instance type on configuration step', async () => {
     const errors = await validateStep('configuration', {
       ...emptyValues,
-      catalogItemId: vmCatalogItem.id,
+      catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
       metadata: { name: 'web-01', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -240,7 +245,7 @@ describe('buildComputeInstanceStepSchema', () => {
   it('validates inline user data with the shared 64 KB limit', async () => {
     const errors = await validateStep('configuration', {
       ...emptyValues,
-      catalogItemId: vmCatalogItem.id,
+      catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
       metadata: { name: 'web-01', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -255,7 +260,7 @@ describe('buildComputeInstanceStepSchema', () => {
     await expect(
       validateStep('configuration', {
         ...emptyValues,
-        catalogItemId: vmCatalogItem.id,
+        catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
         metadata: { name: 'web-01', project: '' },
         spec: {
           ...emptyValues.spec,
@@ -268,7 +273,7 @@ describe('buildComputeInstanceStepSchema', () => {
     await expect(
       validateStep('configuration', {
         ...emptyValues,
-        catalogItemId: vmCatalogItem.id,
+        catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
         metadata: { name: 'web-01', project: '' },
         spec: {
           ...emptyValues.spec,
@@ -284,7 +289,7 @@ describe('buildComputeInstanceStepSchema', () => {
   it('requires boot disk on storage step', async () => {
     const errors = await validateStep('storage', {
       ...emptyValues,
-      catalogItemId: vmCatalogItem.id,
+      catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
       metadata: { name: 'web-01', project: '' },
     });
     expect(errors).toEqual({
@@ -300,7 +305,7 @@ describe('buildComputeInstanceStepSchema', () => {
   it('requires storage tier on each additional disk on storage step', async () => {
     const errors = await validateStep('storage', {
       ...emptyValues,
-      catalogItemId: vmCatalogItem.id,
+      catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
       metadata: { name: 'web-01', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -327,7 +332,7 @@ describe('buildComputeInstanceStepSchema', () => {
   it('requires a boot disk storage tier on storage step', async () => {
     const errors = await validateStep('storage', {
       ...emptyValues,
-      catalogItemId: vmCatalogItem.id,
+      catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
       metadata: { name: 'web-01', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -347,7 +352,7 @@ describe('buildComputeInstanceStepSchema', () => {
   it('accepts a name-only storage tier on additional disks', async () => {
     const errors = await validateStep('storage', {
       ...emptyValues,
-      catalogItemId: vmCatalogItem.id,
+      catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
       metadata: { name: 'web-01', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -373,7 +378,7 @@ describe('buildComputeInstanceStepSchema', () => {
   ])('rejects an additional disk size that is %s', async (_label, sizeGib) => {
     const errors = await validateStep('storage', {
       ...emptyValues,
-      catalogItemId: vmCatalogItem.id,
+      catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
       metadata: { name: 'web-01', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -406,7 +411,7 @@ describe('buildComputeInstanceStepSchema', () => {
     async (_label, sizeGib) => {
       const errors = await validateStep('storage', {
         ...emptyValues,
-        catalogItemId: vmCatalogItem.id,
+        catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
         metadata: { name: 'web-01', project: '' },
         spec: {
           ...emptyValues.spec,
@@ -426,7 +431,7 @@ describe('buildComputeInstanceStepSchema', () => {
   it('does not validate additional disks on configuration step', async () => {
     const errors = await validateStep('configuration', {
       ...emptyValues,
-      catalogItemId: vmCatalogItem.id,
+      catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
       metadata: { name: 'web-01', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -442,15 +447,17 @@ describe('buildComputeInstanceStepSchema', () => {
   it('does not require networking pickers when useDefaultNetwork is true', async () => {
     const errors = await validateStep('networking', {
       ...emptyValues,
-      catalogItemId: vmCatalogItem.id,
+      catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
       metadata: { name: 'web-01', project: '' },
       spec: {
         ...emptyValues.spec,
         networking: {
-          useDefaultNetwork: provisioningFieldValue(true),
-          virtualNetwork: emptyResourceSelectValue(),
-          subnet: emptyResourceSelectValue(),
-          securityGroups: [],
+          networkAttachment: provisioningFieldValue({
+            useDefaultNetwork: true,
+            virtualNetwork: emptyResourceSelectValue(),
+            subnet: emptyResourceSelectValue(),
+            securityGroups: [],
+          }),
           autoExternalIpAttachment: provisioningFieldValue(false),
         },
       },
@@ -461,15 +468,17 @@ describe('buildComputeInstanceStepSchema', () => {
   it('requires virtual network and subnet when useDefaultNetwork is false', async () => {
     const errors = await validateStep('networking', {
       ...emptyValues,
-      catalogItemId: vmCatalogItem.id,
+      catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
       metadata: { name: 'web-01', project: '' },
       spec: {
         ...emptyValues.spec,
         networking: {
-          useDefaultNetwork: provisioningFieldValue(false),
-          virtualNetwork: emptyResourceSelectValue(),
-          subnet: emptyResourceSelectValue(),
-          securityGroups: [],
+          networkAttachment: provisioningFieldValue({
+            useDefaultNetwork: false,
+            virtualNetwork: emptyResourceSelectValue(),
+            subnet: emptyResourceSelectValue(),
+            securityGroups: [],
+          }),
           autoExternalIpAttachment: provisioningFieldValue(false),
         },
       },
@@ -477,8 +486,12 @@ describe('buildComputeInstanceStepSchema', () => {
     expect(errors).toEqual({
       spec: {
         networking: {
-          virtualNetwork: { id: 'Virtual network is required' },
-          subnet: { id: 'Subnet is required' },
+          networkAttachment: {
+            value: {
+              virtualNetwork: { id: 'Virtual network is required' },
+              subnet: { id: 'Subnet is required' },
+            },
+          },
         },
       },
     });
@@ -487,15 +500,17 @@ describe('buildComputeInstanceStepSchema', () => {
   it('accepts valid custom networking when useDefaultNetwork is false', async () => {
     const errors = await validateStep('networking', {
       ...emptyValues,
-      catalogItemId: vmCatalogItem.id,
+      catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
       metadata: { name: 'web-01', project: '' },
       spec: {
         ...emptyValues.spec,
         networking: {
-          useDefaultNetwork: provisioningFieldValue(false),
-          virtualNetwork: { id: 'vn-1', name: 'vn-1' },
-          subnet: { id: 'subnet-1', name: 'subnet-1' },
-          securityGroups: [],
+          networkAttachment: provisioningFieldValue({
+            useDefaultNetwork: false,
+            virtualNetwork: { id: 'vn-1', name: 'vn-1' },
+            subnet: { id: 'subnet-1', name: 'subnet-1' },
+            securityGroups: [],
+          }),
           autoExternalIpAttachment: provisioningFieldValue(false),
         },
       },

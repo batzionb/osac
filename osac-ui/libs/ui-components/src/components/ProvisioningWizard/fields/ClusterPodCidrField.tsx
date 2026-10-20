@@ -7,7 +7,7 @@ interface ClusterPodCidrFieldProps extends ProvisioningFieldControlProps {
 }
 
 const ClusterPodCidrField = ({
-  name = '',
+  name,
   fieldId = 'cluster-pod-cidr',
   isDisabled = false,
 }: ClusterPodCidrFieldProps) => {

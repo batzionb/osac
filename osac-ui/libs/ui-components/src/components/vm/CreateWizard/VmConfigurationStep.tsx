@@ -1,7 +1,5 @@
 import { useFormikContext } from 'formik';
 
-import { type ComputeInstanceCatalogItem } from '@osac/types';
-
 import {
   ComputeInstanceWizardValues,
   VM_USER_DATA_FORM_PATH,
@@ -13,16 +11,8 @@ import UserDataField from '../../Form/UserDataField';
 import ComputeInstanceTypeField from '../../ProvisioningWizard/fields/ComputeInstanceTypeField';
 import ProvisioningField from '../../ProvisioningWizard/fields/ProvisioningField';
 
-interface Props {
-  catalogItem: ComputeInstanceCatalogItem | null;
-}
-
-export const VmConfigurationStep = ({ catalogItem }: Props) => {
+export const VmConfigurationStep = () => {
   const { values } = useFormikContext<ComputeInstanceWizardValues>();
-
-  if (!catalogItem) {
-    return null;
-  }
 
   return (
     <OsacForm>

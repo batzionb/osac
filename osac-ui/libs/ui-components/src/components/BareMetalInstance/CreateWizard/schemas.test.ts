@@ -3,11 +3,7 @@ import { ValidationError } from 'yup';
 
 import { tIdentity } from '@osac/ui-components/test-utils/i18n';
 
-import {
-  type BareMetalInstanceWizardValues,
-  createEmptyBareMetalInstanceValues,
-  createEmptyNetworkAttachmentRow,
-} from './fields';
+import { type BareMetalInstanceWizardValues, createEmptyBareMetalInstanceValues } from './fields';
 import { buildBareMetalInstanceStepSchema } from './schemas';
 import { emptyResourceSelectValue } from '../../Form/resourceSelectValue';
 
@@ -105,7 +101,7 @@ const validateNetworking = async (values: BareMetalInstanceWizardValues) => {
 describe('Bare Metal networking validation', () => {
   it('does not require attachments when useDefaults is true', async () => {
     const values = createEmptyBareMetalInstanceValues();
-    values.spec.networking.networkAttachment.value.useDefaults = true;
+    values.spec.networkAttachment.value.useDefaultNetwork = true;
 
     const errors = await validateNetworking(values);
     expect(errors).toEqual({});
@@ -113,26 +109,17 @@ describe('Bare Metal networking validation', () => {
 
   it('requires virtual network and subnet when useDefaults is false', async () => {
     const values = createEmptyBareMetalInstanceValues();
-    values.spec.networking.networkAttachment.value.useDefaults = false;
-    values.spec.networking.networkAttachment.value.attachments = [
-      {
-        ...createEmptyNetworkAttachmentRow(),
-        virtualNetwork: emptyResourceSelectValue(),
-        subnet: emptyResourceSelectValue(),
-      },
-    ];
+    values.spec.networkAttachment.value.useDefaultNetwork = false;
+    values.spec.networkAttachment.value.virtualNetwork = emptyResourceSelectValue();
+    values.spec.networkAttachment.value.subnet = emptyResourceSelectValue();
 
     const errors = await validateNetworking(values);
     expect(errors).toEqual({
       spec: {
-        networking: {
-          networkAttachment: {
-            value: {
-              'attachments[0]': {
-                virtualNetwork: { id: 'Virtual network is required' },
-                subnet: { id: 'Subnet is required' },
-              },
-            },
+        networkAttachment: {
+          value: {
+            virtualNetwork: { id: 'Virtual network is required' },
+            subnet: { id: 'Subnet is required' },
           },
         },
       },
@@ -141,14 +128,9 @@ describe('Bare Metal networking validation', () => {
 
   it('accepts valid custom networking when useDefaults is false', async () => {
     const values = createEmptyBareMetalInstanceValues();
-    values.spec.networking.networkAttachment.value.useDefaults = false;
-    values.spec.networking.networkAttachment.value.attachments = [
-      {
-        ...createEmptyNetworkAttachmentRow(),
-        virtualNetwork: { id: 'vn-1', name: 'vn-1' },
-        subnet: { id: 'subnet-1', name: 'subnet-1' },
-      },
-    ];
+    values.spec.networkAttachment.value.useDefaultNetwork = false;
+    values.spec.networkAttachment.value.virtualNetwork = { id: 'vn-1', name: 'vn-1' };
+    values.spec.networkAttachment.value.subnet = { id: 'subnet-1', name: 'subnet-1' };
 
     const errors = await validateNetworking(values);
     expect(errors).toEqual({});

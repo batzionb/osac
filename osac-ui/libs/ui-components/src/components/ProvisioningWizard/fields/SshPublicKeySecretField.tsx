@@ -10,7 +10,7 @@ interface SshPublicKeySecretFieldProps extends ProvisioningFieldControlProps {
 }
 
 const SshPublicKeySecretField = ({
-  name = '',
+  name,
   project,
   isDisabled = false,
 }: SshPublicKeySecretFieldProps) => {

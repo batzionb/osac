@@ -2,11 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { type ComputeInstanceCatalogItem, ComputeInstanceRunStrategy } from '@osac/types';
 
-import {
-  buildComputeInstanceCreatePayload,
-  createEmptyComputeInstanceValues,
-  getComputeInstanceInitialValues,
-} from './payload';
+import { getComputeInstanceInitialValues } from './fields';
+import { buildComputeInstanceCreatePayload, createEmptyComputeInstanceValues } from './payload';
 import { emptyResourceSelectValue } from '../../Form/resourceSelectValue';
 import { provisioningFieldValue } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 
@@ -40,16 +37,18 @@ const vmCatalogItem: ComputeInstanceCatalogItem = {
 
 const buildValues = (project: string) => ({
   ...createEmptyComputeInstanceValues(),
-  catalogItemId: vmCatalogItem.id,
+  catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
   metadata: { name: 'my-vm', project },
   spec: {
     ...createEmptyComputeInstanceValues().spec,
     instanceType: provisioningFieldValue('standard-4-8'),
     networking: {
-      useDefaultNetwork: provisioningFieldValue(false),
-      virtualNetwork: { id: 'vnet-1', name: 'vnet-1' },
-      subnet: { id: 'subnet-1', name: 'subnet-1' },
-      securityGroups: [{ id: 'sg-1', name: 'sg-1' }],
+      networkAttachment: provisioningFieldValue({
+        useDefaultNetwork: false,
+        virtualNetwork: { id: 'vnet-1', name: 'vnet-1' },
+        subnet: { id: 'subnet-1', name: 'subnet-1' },
+        securityGroups: [{ id: 'sg-1', name: 'sg-1' }],
+      }),
       autoExternalIpAttachment: provisioningFieldValue(false),
     },
   },
@@ -59,16 +58,18 @@ const baseValues = () => {
   const values = createEmptyComputeInstanceValues();
   return {
     ...values,
-    catalogItemId: vmCatalogItem.id,
+    catalogItemReference: { name: vmCatalogItem.title, id: vmCatalogItem.id },
     metadata: { name: 'web-01', project: '' },
     spec: {
       ...values.spec,
       instanceType: provisioningFieldValue('standard-4-8'),
       networking: {
-        useDefaultNetwork: provisioningFieldValue(false),
-        virtualNetwork: { id: 'vnet', name: 'vnet' },
-        subnet: { id: 'subnet-1', name: 'subnet-1' },
-        securityGroups: [{ id: 'sg-1', name: 'sg-1' }],
+        networkAttachment: provisioningFieldValue({
+          useDefaultNetwork: false,
+          virtualNetwork: { id: 'vnet', name: 'vnet' },
+          subnet: { id: 'subnet-1', name: 'subnet-1' },
+          securityGroups: [{ id: 'sg-1', name: 'sg-1' }],
+        }),
         autoExternalIpAttachment: provisioningFieldValue(false),
       },
     },
@@ -240,7 +241,7 @@ describe('buildComputeInstanceCreatePayload — disk storage tiers', () => {
 describe('buildComputeInstanceCreatePayload — useDefaultNetwork', () => {
   it('sends an empty networkAttachments list when useDefaultNetwork is true', () => {
     const values = baseValues();
-    values.spec.networking.useDefaultNetwork.value = true;
+    values.spec.networking.networkAttachment.value.useDefaultNetwork = true;
 
     const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
 
@@ -249,7 +250,7 @@ describe('buildComputeInstanceCreatePayload — useDefaultNetwork', () => {
 
   it('includes networkAttachments when useDefaultNetwork is false and subnet is set', () => {
     const values = baseValues();
-    values.spec.networking.useDefaultNetwork.value = false;
+    values.spec.networking.networkAttachment.value.useDefaultNetwork = false;
 
     const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
 
@@ -263,8 +264,8 @@ describe('buildComputeInstanceCreatePayload — useDefaultNetwork', () => {
 
   it('omits networkAttachments when useDefaultNetwork is false but subnet is empty', () => {
     const values = baseValues();
-    values.spec.networking.useDefaultNetwork.value = false;
-    values.spec.networking.subnet = emptyResourceSelectValue();
+    values.spec.networking.networkAttachment.value.useDefaultNetwork = false;
+    values.spec.networking.networkAttachment.value.subnet = emptyResourceSelectValue();
 
     const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);
 
@@ -273,8 +274,8 @@ describe('buildComputeInstanceCreatePayload — useDefaultNetwork', () => {
 
   it('filters out security groups with empty IDs', () => {
     const values = baseValues();
-    values.spec.networking.useDefaultNetwork.value = false;
-    values.spec.networking.securityGroups = [
+    values.spec.networking.networkAttachment.value.useDefaultNetwork = false;
+    values.spec.networking.networkAttachment.value.securityGroups = [
       { id: 'sg-1', name: 'sg-1' },
       { id: '', name: '' },
       { id: 'sg-2', name: 'sg-2' },
@@ -404,10 +405,15 @@ describe('getComputeInstanceInitialValues — network attachments', () => {
       },
     } as ComputeInstanceCatalogItem);
 
-    expect(values.spec.networking.useDefaultNetwork).toEqual({ value: false, locked: true });
-    expect(values.spec.networking.virtualNetwork).toEqual(emptyResourceSelectValue());
-    expect(values.spec.networking.subnet).toEqual({ id: 'subnet-1', name: 'subnet-a' });
-    expect(values.spec.networking.securityGroups).toEqual([{ id: 'sg-1', name: 'sg-web' }]);
+    expect(values.spec.networking.networkAttachment).toEqual({
+      value: {
+        useDefaultNetwork: false,
+        virtualNetwork: emptyResourceSelectValue(),
+        subnet: { id: 'subnet-1', name: 'subnet-a' },
+        securityGroups: [{ id: 'sg-1', name: 'sg-web' }],
+      },
+      locked: true,
+    });
   });
 });
 
@@ -490,7 +496,10 @@ describe('buildComputeInstanceCreatePayload — locked catalog fields', () => {
       [{ sizeGib: '100', storageTier: { id: 'id-bulk', name: 'bulk' } }],
       true,
     );
-    values.spec.networking.useDefaultNetwork = provisioningFieldValue(false, true);
+    values.spec.networking.networkAttachment = provisioningFieldValue(
+      values.spec.networking.networkAttachment.value,
+      true,
+    );
     values.spec.networking.autoExternalIpAttachment = provisioningFieldValue(true, true);
 
     const payload = buildComputeInstanceCreatePayload(values, vmCatalogItem);

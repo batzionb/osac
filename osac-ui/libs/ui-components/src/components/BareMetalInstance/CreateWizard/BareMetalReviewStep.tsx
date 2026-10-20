@@ -9,18 +9,12 @@ import {
 } from '@patternfly/react-core';
 import { useFormikContext } from 'formik';
 
-import { CatalogItem } from '@osac/ui-components/components/catalog/catalogItemDisplay';
-
 import { type BareMetalInstanceWizardValues, hasBareMetalAuthentication } from './fields';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { NetworkAttachmentReviewFields } from '../../ProvisioningWizard/NetworkAttachmentReviewFields';
 import { formatReviewScalar } from '../../ProvisioningWizard/reviewFormatters';
 
-interface Props {
-  catalogItem: CatalogItem | null;
-}
-
-export const BareMetalReviewStep = ({ catalogItem }: Props) => {
+export const BareMetalReviewStep = () => {
   const { t } = useTranslation();
   const { values } = useFormikContext<BareMetalInstanceWizardValues>();
   const isSecretSource = values.spec.userDataSource.value === 'secret';
@@ -33,9 +27,8 @@ export const BareMetalReviewStep = ({ catalogItem }: Props) => {
     isSecretSource ? values.spec.userDataSecret.value : undefined,
   );
 
-  const networking = values.spec.networking;
-  const networkAttachment = networking.networkAttachment.value;
-  const isCustomNetwork = !networkAttachment.useDefaults;
+  const networkAttachment = values.spec.networkAttachment.value;
+  const isCustomNetwork = !networkAttachment.useDefaultNetwork;
 
   return (
     <Stack hasGutter>
@@ -59,7 +52,7 @@ export const BareMetalReviewStep = ({ catalogItem }: Props) => {
           <DescriptionListGroup>
             <DescriptionListTerm>{t('Catalog item')}</DescriptionListTerm>
             <DescriptionListDescription>
-              {catalogItem?.title || catalogItem?.metadata?.name || '—'}
+              {values.catalogItemReference.name || '—'}
             </DescriptionListDescription>
           </DescriptionListGroup>
 
@@ -106,18 +99,18 @@ export const BareMetalReviewStep = ({ catalogItem }: Props) => {
             </DescriptionListDescription>
           </DescriptionListGroup>
 
-          {isCustomNetwork && networkAttachment.attachments.length > 0 && (
+          {isCustomNetwork && (
             <NetworkAttachmentReviewFields
-              virtualNetwork={networkAttachment.attachments[0].virtualNetwork}
-              subnet={networkAttachment.attachments[0].subnet}
-              securityGroups={networkAttachment.attachments[0].securityGroups}
+              virtualNetwork={networkAttachment.virtualNetwork}
+              subnet={networkAttachment.subnet}
+              securityGroups={networkAttachment.securityGroups}
             />
           )}
 
           <DescriptionListGroup>
             <DescriptionListTerm>{t('External access')}</DescriptionListTerm>
             <DescriptionListDescription>
-              {networking.attachExternalIp.value ? t('Enabled') : t('Disabled')}
+              {values.spec.autoExternalIpAttachment.value ? t('Enabled') : t('Disabled')}
             </DescriptionListDescription>
           </DescriptionListGroup>
         </DescriptionList>

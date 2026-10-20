@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageSection, PageSectionTypes, Wizard, WizardStep } from '@patternfly/react-core';
-import { FormikProvider, useFormik } from 'formik';
+import { Formik } from 'formik';
 
-import { ClusterCatalogItem } from '@osac/types';
+import { ClusterCatalogItem, ClusterCatalogItems } from '@osac/types';
+import { useGetResource } from '@osac/ui-components/api/use-resource';
 import { useProvisionCluster } from '@osac/ui-components/api/v1/cluster';
-import { useClusterCatalogItems } from '@osac/ui-components/api/v1/cluster-catalog-item';
 import { FieldValidationProvider } from '@osac/ui-components/components/Form/FieldValidationContext';
 import LeaveFormConfirmation from '@osac/ui-components/components/Form/LeaveFormConfirmation';
 import { CatalogStep } from '@osac/ui-components/components/ProvisioningWizard/CatalogStep';
@@ -19,50 +19,23 @@ import { ClusterReviewStep } from './ClusterReviewStep';
 import { type ClusterWizardValues, getInitialFormValues } from './fields';
 import { buildClusterCreatePayload } from './payload';
 import { type ClusterWizardStepId, buildClusterStepSchema } from './schemas';
-import type { CatalogItem } from '../../catalog/catalogItemDisplay';
-
-export interface ClusterCreateWizardCloseHandler {
-  requestClose: () => void;
-  pending: boolean;
-}
 
 interface Props {
   initialCatalogItemId?: string;
-  onCloseHandlerChange?: (handler: ClusterCreateWizardCloseHandler) => void;
-  onClosed?: () => void;
+  onClosed: () => void;
 }
 
-const ClusterWizardBody = ({
-  stepId,
-  catalogItem,
-}: {
-  stepId: string;
-  catalogItem: ClusterCatalogItem | null;
-}) => {
-  if (stepId === 'catalog') {
-    return null;
-  }
-  if (stepId === 'general') {
-    return <ClusterGeneralStep catalogItem={catalogItem} />;
-  }
-  if (stepId === 'configuration') {
-    return <ClusterConfigurationStep catalogItem={catalogItem} />;
-  }
-  if (stepId === 'networking') {
-    return <ClusterNetworkingStep catalogItem={catalogItem} />;
-  }
-  return <ClusterReviewStep catalogItem={catalogItem} />;
-};
-
-const ClusterWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onClosed }: Props) => {
+const ClusterCreateWizard = ({ initialCatalogItemId, onClosed }: Props) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const provision = useProvisionCluster();
-  const catalogQuery = useClusterCatalogItems();
+  const catalogItemQuery = useGetResource(
+    ClusterCatalogItems,
+    { id: initialCatalogItemId ?? '' },
+    { enabled: Boolean(initialCatalogItemId) },
+  );
   const [activeStep, setActiveStep] = useState<ClusterWizardStepId>('catalog');
   const [validationAlert, setValidationAlert] = useState(false);
-  const [selectedCatalogItem, setSelectedCatalogItem] = useState<ClusterCatalogItem | null>(null);
-  const catalogItems = useMemo(() => catalogQuery.data ?? [], [catalogQuery.data]);
   const steps = ['catalog', 'general', 'configuration', 'networking', 'review'] as const;
   const stepLabels: Record<ClusterWizardStepId, string> = {
     catalog: t('Catalog item'),
@@ -74,13 +47,8 @@ const ClusterWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onCl
 
   const handleSubmit = useCallback(
     async (values: ClusterWizardValues) => {
-      if (!selectedCatalogItem) {
-        return;
-      }
       try {
-        const created = await provision.mutateAsync(
-          buildClusterCreatePayload(values, selectedCatalogItem),
-        );
+        const created = await provision.mutateAsync(buildClusterCreatePayload(values));
         if (created?.id) {
           navigate(`/clusters/${created.id}`);
         }
@@ -88,57 +56,29 @@ const ClusterWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onCl
         // Surfaced via provision.error in the footer; nothing further to do here.
       }
     },
-    [navigate, provision, selectedCatalogItem],
+    [navigate, provision],
   );
 
-  const validationSchema = useMemo(() => buildClusterStepSchema(activeStep, t), [activeStep, t]);
-
-  const formik = useFormik<ClusterWizardValues>({
-    initialValues: getInitialFormValues(),
-    validationSchema,
-    onSubmit: handleSubmit,
-    validateOnChange: false,
-  });
-
-  const handleCatalogItemSelected = useCallback(
-    (item: CatalogItem) => {
-      const clusterItem = item as ClusterCatalogItem;
-      setSelectedCatalogItem(clusterItem);
-      formik.resetForm({ values: getInitialFormValues(clusterItem) });
-    },
-    [formik],
+  const initialValues = useMemo(
+    () => getInitialFormValues(catalogItemQuery.data?.object),
+    [catalogItemQuery.data?.object],
   );
 
-  const pending = formik.isSubmitting;
-
-  useEffect(() => {
-    const item = catalogItems.find((entry) => entry.id === initialCatalogItemId);
-    if (item && !selectedCatalogItem) {
-      setSelectedCatalogItem(item);
-      formik.resetForm({ values: getInitialFormValues(item) });
-    }
-  }, [catalogItems, formik, initialCatalogItemId, selectedCatalogItem, t]);
-
-  const requestClose = useCallback(() => {
-    if (!pending) {
-      onClosed?.();
-    }
-  }, [onClosed, pending]);
-
-  useEffect(() => {
-    onCloseHandlerChange?.({ requestClose, pending });
-  }, [onCloseHandlerChange, pending, requestClose]);
-
+  const schema = useMemo(() => buildClusterStepSchema(activeStep, t), [activeStep, t]);
   const stepHasErrors = useCallback(
-    (stepId: string, errors: Record<string, unknown>) => {
-      const schema = buildClusterStepSchema(stepId as ClusterWizardStepId, t);
+    (_stepId: string, errors: Record<string, unknown>) => {
       return Boolean(schema && Object.keys(errors).length > 0);
     },
-    [t],
+    [schema],
   );
-
   return (
-    <FormikProvider value={formik}>
+    <Formik<ClusterWizardValues>
+      initialValues={initialValues}
+      enableReinitialize
+      validationSchema={schema}
+      onSubmit={handleSubmit}
+      validateOnChange={false}
+    >
       <FieldValidationProvider showErrors={validationAlert}>
         <LeaveFormConfirmation />
         <PageSection hasBodyWrapper={false} type={PageSectionTypes.wizard}>
@@ -150,7 +90,7 @@ const ClusterWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onCl
             }}
             footer={
               <OSACWizardFooter
-                onCancel={requestClose}
+                onCancel={onClosed}
                 stepHasErrors={stepHasErrors}
                 error={provision.error}
                 onErrorReset={provision.reset}
@@ -159,26 +99,24 @@ const ClusterWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onCl
           >
             {steps.map((step) => (
               <WizardStep key={step} id={step} name={stepLabels[step]}>
-                {step === 'catalog' ? (
-                  <CatalogStep
-                    catalogItems={catalogItems}
-                    catalogLoading={catalogQuery.isPending}
-                    catalogError={catalogQuery.isError}
-                    refetchCatalogItems={() => void catalogQuery.refetch()}
-                    onCatalogItemSelected={handleCatalogItemSelected}
+                {step === 'catalog' && (
+                  <CatalogStep<ClusterCatalogItem, ClusterWizardValues>
+                    catalogService={ClusterCatalogItems}
+                    isInitializing={Boolean(initialCatalogItemId) && catalogItemQuery.isPending}
+                    getInitialFormValues={getInitialFormValues}
                   />
-                ) : (
-                  <ClusterWizardBody stepId={step} catalogItem={selectedCatalogItem} />
                 )}
+                {step === 'general' && <ClusterGeneralStep />}
+                {step === 'configuration' && <ClusterConfigurationStep />}
+                {step === 'networking' && <ClusterNetworkingStep />}
+                {step === 'review' && <ClusterReviewStep />}
               </WizardStep>
             ))}
           </Wizard>
         </PageSection>
       </FieldValidationProvider>
-    </FormikProvider>
+    </Formik>
   );
 };
-
-const ClusterCreateWizard = (props: Props) => <ClusterWizardContent {...props} />;
 
 export default ClusterCreateWizard;

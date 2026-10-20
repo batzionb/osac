@@ -14,7 +14,6 @@ import { useFormikContext } from 'formik';
 
 import { useInstanceType } from '@osac/ui-components/api/v1/instance-types';
 import { useProjects } from '@osac/ui-components/api/v1/project';
-import { CatalogItem } from '@osac/ui-components/components/catalog/catalogItemDisplay';
 import {
   fullProjectPathToQueryFilter,
   getProjectName,
@@ -28,11 +27,7 @@ import { NetworkAttachmentReviewFields } from '../../ProvisioningWizard/NetworkA
 import { formatReviewScalar } from '../../ProvisioningWizard/reviewFormatters';
 import { getVmStorageRows } from '../../ProvisioningWizard/storageRows';
 
-interface Props {
-  catalogItem: CatalogItem | null;
-}
-
-export const VmReviewStep = ({ catalogItem }: Props) => {
+export const VmReviewStep = () => {
   const { t } = useTranslation();
   const { values } = useFormikContext<ComputeInstanceWizardValues>();
 
@@ -67,7 +62,8 @@ export const VmReviewStep = ({ catalogItem }: Props) => {
 
   // Read networking names directly from formik values (ResourceSelectValue stores name).
   const networking = values.spec.networking;
-  const isCustomNetwork = !networking.useDefaultNetwork.value;
+  const networkAttachment = networking.networkAttachment.value;
+  const isCustomNetwork = !networkAttachment.useDefaultNetwork;
 
   return (
     <Stack hasGutter>
@@ -94,7 +90,7 @@ export const VmReviewStep = ({ catalogItem }: Props) => {
           <DescriptionListGroup>
             <DescriptionListTerm>{t('Catalog item')}</DescriptionListTerm>
             <DescriptionListDescription>
-              {catalogItem?.title || catalogItem?.metadata?.name || '—'}
+              {values.catalogItemReference.name || '—'}
             </DescriptionListDescription>
           </DescriptionListGroup>
 
@@ -154,9 +150,9 @@ export const VmReviewStep = ({ catalogItem }: Props) => {
 
           {isCustomNetwork && (
             <NetworkAttachmentReviewFields
-              virtualNetwork={networking.virtualNetwork}
-              subnet={networking.subnet}
-              securityGroups={networking.securityGroups}
+              virtualNetwork={networkAttachment.virtualNetwork}
+              subnet={networkAttachment.subnet}
+              securityGroups={networkAttachment.securityGroups}
             />
           )}
 

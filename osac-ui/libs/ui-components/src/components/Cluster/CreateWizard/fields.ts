@@ -4,16 +4,14 @@ import type {
   ClusterNodeSetMapPolicy,
 } from '@osac/types';
 
-import { clusterNodeSetItemsFromPolicy } from '../../catalog/clusterCatalogItemResourceDisplay';
-import { type ResourceSelectValue, emptyResourceSelectValue } from '../../Form/resourceSelectValue';
 import {
-  boolFieldFromPolicy,
-  catalogAttachmentFromPolicy,
+  type NetworkAttachmentFormFields,
+  getEmptyNetworkAttachmentFormFields,
   networkAttachmentFieldsFromPolicy,
-} from '../../ProvisioningWizard/fields/networkAttachmentPolicy';
+} from '../../ProvisioningWizard/fields/networkFields';
 import {
   type ProvisioningFieldValue,
-  provisioningFieldFromPolicy,
+  getFieldFromCatalogItemPolicy,
   provisioningFieldValue,
 } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 
@@ -25,7 +23,7 @@ export interface ClusterNodeSetRow {
 }
 
 export interface ClusterWizardValues {
-  catalogItemId: string;
+  catalogItemReference: { name: string; id: string };
   metadata: {
     name: string;
     project: string;
@@ -40,12 +38,7 @@ export interface ClusterWizardValues {
       podCidr: ProvisioningFieldValue<string>;
       serviceCidr: ProvisioningFieldValue<string>;
     };
-    useDefaultNetwork: ProvisioningFieldValue<boolean>;
-    networkAttachment: {
-      virtualNetwork: ResourceSelectValue;
-      subnet: ResourceSelectValue;
-      securityGroups: ResourceSelectValue[];
-    };
+    networkAttachment: ProvisioningFieldValue<NetworkAttachmentFormFields>;
     autoExternalIpAttachment: ProvisioningFieldValue<boolean>;
   };
 }
@@ -81,24 +74,8 @@ export const createEmptyNodeSetRow = (): ClusterNodeSetRow => ({
   size: '',
 });
 
-const hostTypeFromCatalogNodeSet = (nodeSet: ClusterCatalogNodeSet): string =>
-  nodeSet.baremetalInstanceType?.id?.trim() || nodeSet.baremetalInstanceType?.name?.trim() || '';
-
-const nodeSetRowsFromPolicy = (
-  policy: ClusterNodeSetMapPolicy | undefined,
-): ClusterNodeSetRow[] => {
-  const items = clusterNodeSetItemsFromPolicy(policy);
-  const rows = Object.entries(items ?? {}).map(([name, nodeSet]) => ({
-    rowId: createNodeSetRowId(),
-    name,
-    hostType: hostTypeFromCatalogNodeSet(nodeSet),
-    size: nodeSet.size ? String(nodeSet.size) : '',
-  }));
-  return rows.length > 0 ? rows : [createEmptyNodeSetRow()];
-};
-
 export const createEmptyClusterValues = (): ClusterWizardValues => ({
-  catalogItemId: '',
+  catalogItemReference: { name: '', id: '' },
   metadata: { name: '', project: '' },
   spec: {
     sshPublicKey: provisioningFieldValue(''),
@@ -109,12 +86,7 @@ export const createEmptyClusterValues = (): ClusterWizardValues => ({
       podCidr: provisioningFieldValue(''),
       serviceCidr: provisioningFieldValue(''),
     },
-    useDefaultNetwork: provisioningFieldValue(true),
-    networkAttachment: {
-      virtualNetwork: emptyResourceSelectValue(),
-      subnet: emptyResourceSelectValue(),
-      securityGroups: [],
-    },
+    networkAttachment: provisioningFieldValue(getEmptyNetworkAttachmentFormFields()),
     autoExternalIpAttachment: provisioningFieldValue(false),
   },
 });
@@ -125,67 +97,61 @@ export const getInitialFormValues = (catalogItem?: ClusterCatalogItem): ClusterW
     return values;
   }
   const fields = catalogItem.fields;
-  const sshPublicKey =
-    fields?.sshPublicKey?.behavior.case === 'editable'
-      ? (fields.sshPublicKey.behavior.value.defaultValue ?? '')
-      : fields?.sshPublicKey?.behavior.case === 'locked'
-        ? fields.sshPublicKey.behavior.value
-        : '';
-  const pullSecret =
-    fields?.pullSecretSecret?.behavior.case === 'editable'
-      ? (fields.pullSecretSecret.behavior.value.defaultValue?.name ?? '')
-      : fields?.pullSecretSecret?.behavior.case === 'locked'
-        ? fields.pullSecretSecret.behavior.value.name
-        : '';
-  const version =
-    fields?.version?.behavior.case === 'editable'
-      ? (fields.version.behavior.value.defaultValue?.name ?? '')
-      : fields?.version?.behavior.case === 'locked'
-        ? fields.version.behavior.value.name
-        : '';
-  const podCidr =
-    fields?.network?.podCidr?.behavior.case === 'editable'
-      ? (fields.network.podCidr.behavior.value.defaultValue ?? '')
-      : fields?.network?.podCidr?.behavior.case === 'locked'
-        ? fields.network.podCidr.behavior.value
-        : '';
-  const serviceCidr =
-    fields?.network?.serviceCidr?.behavior.case === 'editable'
-      ? (fields.network.serviceCidr.behavior.value.defaultValue ?? '')
-      : fields?.network?.serviceCidr?.behavior.case === 'locked'
-        ? fields.network.serviceCidr.behavior.value
-        : '';
+  const networkAttachment = networkAttachmentFieldsFromPolicy(fields?.networkAttachment);
   return {
     ...values,
-    catalogItemId: catalogItem.id,
+    catalogItemReference: {
+      name: catalogItem.metadata?.name ?? '',
+      id: catalogItem.id,
+    },
+
     spec: {
       ...values.spec,
-      sshPublicKey: provisioningFieldFromPolicy(sshPublicKey, fields?.sshPublicKey),
-      pullSecretSecret: provisioningFieldFromPolicy(pullSecret, fields?.pullSecretSecret),
-      versionName: provisioningFieldFromPolicy(version, fields?.version),
-      nodeSetRows: provisioningFieldFromPolicy(
-        nodeSetRowsFromPolicy(fields?.nodeSets),
-        fields?.nodeSets,
-      ),
-      network: {
-        podCidr: provisioningFieldFromPolicy(podCidr, fields?.network?.podCidr),
-        serviceCidr: provisioningFieldFromPolicy(serviceCidr, fields?.network?.serviceCidr),
-      },
-      ...(() => {
-        const networkFields = networkAttachmentFieldsFromPolicy(
-          fields?.networkAttachment,
-          catalogAttachmentFromPolicy(fields?.networkAttachment),
-        );
-        return {
-          useDefaultNetwork: networkFields.useDefaultNetwork,
-          networkAttachment: {
-            virtualNetwork: networkFields.virtualNetwork,
-            subnet: networkFields.subnet,
-            securityGroups: networkFields.securityGroups,
-          },
-          autoExternalIpAttachment: boolFieldFromPolicy(fields?.autoExternalIpAttachment),
-        };
+      sshPublicKey: getFieldFromCatalogItemPolicy(fields?.sshPublicKey, ''),
+      pullSecretSecret: (() => {
+        const field = getFieldFromCatalogItemPolicy(fields?.pullSecretSecret, { name: '' });
+        return provisioningFieldValue(field.value.name ?? '', field.locked);
       })(),
+      versionName: (() => {
+        const field = getFieldFromCatalogItemPolicy(fields?.version, { name: '' });
+        return provisioningFieldValue(field.value.name ?? '', field.locked);
+      })(),
+      nodeSetRows: nodeSetRowsFromPolicy(fields?.nodeSets),
+      network: {
+        podCidr: getFieldFromCatalogItemPolicy(fields?.network?.podCidr, ''),
+        serviceCidr: getFieldFromCatalogItemPolicy(fields?.network?.serviceCidr, ''),
+      },
+      networkAttachment,
+      autoExternalIpAttachment: getFieldFromCatalogItemPolicy(
+        fields?.autoExternalIpAttachment,
+        false,
+      ),
     },
   };
+};
+
+const hostTypeFromCatalogNodeSet = (nodeSet: ClusterCatalogNodeSet): string =>
+  nodeSet.baremetalInstanceType?.id?.trim() || nodeSet.baremetalInstanceType?.name?.trim() || '';
+
+const nodeSetRowsFromPolicy = (
+  policy: ClusterNodeSetMapPolicy | undefined,
+): ProvisioningFieldValue<ClusterNodeSetRow[]> => {
+  const behavior = policy?.behavior;
+  const items =
+    behavior?.case === 'locked'
+      ? behavior.value.items
+      : behavior?.case === 'editable'
+        ? behavior.value.defaultValue?.items
+        : undefined;
+  const rows = Object.entries(items ?? {}).map(([name, nodeSet]) => ({
+    rowId: createNodeSetRowId(),
+    name,
+    hostType: hostTypeFromCatalogNodeSet(nodeSet),
+    size: nodeSet.size ? String(nodeSet.size) : '',
+  }));
+
+  return provisioningFieldValue(
+    rows.length > 0 ? rows : [createEmptyNodeSetRow()],
+    behavior?.case === 'locked',
+  );
 };

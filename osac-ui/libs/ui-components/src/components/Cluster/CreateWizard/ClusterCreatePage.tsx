@@ -1,4 +1,3 @@
-import { useCallback, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Breadcrumb,
@@ -10,16 +9,14 @@ import {
   Title,
 } from '@patternfly/react-core';
 
-import ClusterCreateWizard, { type ClusterCreateWizardCloseHandler } from './ClusterCreateWizard';
+import ClusterCreateWizard from './ClusterCreateWizard';
 import { useTranslation } from '../../../hooks/useTranslation';
 
 const ClusterCreatePage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { catalogItemId } = useParams<{ catalogItemId?: string }>();
-  const [closeHandler, setCloseHandler] = useState<ClusterCreateWizardCloseHandler | null>(null);
-
-  const handleClosed = useCallback(() => navigate('/clusters'), [navigate]);
+  const navigateToParent = () => navigate('/clusters');
 
   return (
     <>
@@ -27,12 +24,7 @@ const ClusterCreatePage = () => {
         <Stack hasGutter>
           <Breadcrumb>
             <BreadcrumbItem>
-              <Button
-                variant="link"
-                isInline
-                onClick={() => closeHandler?.requestClose()}
-                isDisabled={closeHandler?.pending}
-              >
+              <Button variant="link" isInline onClick={navigateToParent}>
                 {t('Clusters')}
               </Button>
             </BreadcrumbItem>
@@ -46,11 +38,7 @@ const ClusterCreatePage = () => {
           </Content>
         </Stack>
       </PageSection>
-      <ClusterCreateWizard
-        initialCatalogItemId={catalogItemId}
-        onClosed={handleClosed}
-        onCloseHandlerChange={setCloseHandler}
-      />
+      <ClusterCreateWizard initialCatalogItemId={catalogItemId} onClosed={navigateToParent} />
     </>
   );
 };

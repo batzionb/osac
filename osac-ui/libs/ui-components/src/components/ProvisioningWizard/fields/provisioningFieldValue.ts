@@ -1,5 +1,4 @@
 import type { FieldPolicyLike } from '../../catalog/catalogFieldPolicyDisplay';
-import { catalogFieldPolicyLocked } from '../../catalog/catalogFieldPolicyDisplay';
 
 export interface ProvisioningFieldValue<T> {
   value: T;
@@ -7,7 +6,7 @@ export interface ProvisioningFieldValue<T> {
 }
 
 export interface ProvisioningFieldControlProps {
-  name?: string;
+  name: string;
   isDisabled?: boolean;
 }
 
@@ -16,7 +15,19 @@ export const provisioningFieldValue = <T>(value: T, locked = false): Provisionin
   locked,
 });
 
-export const provisioningFieldFromPolicy = <T>(
-  value: T,
-  policy: FieldPolicyLike,
-): ProvisioningFieldValue<T> => provisioningFieldValue(value, catalogFieldPolicyLocked(policy));
+/** Extracts a catalog policy's backend value without deserializing it for a form. */
+export const getFieldFromCatalogItemPolicy = <V>(
+  policy: FieldPolicyLike<unknown>,
+  defaultValue: V,
+): ProvisioningFieldValue<V> => {
+  if (policy?.behavior?.case === 'locked') {
+    return provisioningFieldValue((policy.behavior.value as V | undefined) ?? defaultValue, true);
+  }
+
+  if (policy?.behavior?.case === 'editable') {
+    const editableValue = policy.behavior.value as { defaultValue?: V } | undefined;
+    return provisioningFieldValue(editableValue?.defaultValue ?? defaultValue, false);
+  }
+
+  return provisioningFieldValue(defaultValue, false);
+};

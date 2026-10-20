@@ -4,7 +4,6 @@ import { Formik } from 'formik';
 import { describe, expect, it } from 'vitest';
 
 import {
-  type BareMetalInstanceCatalogItem,
   BareMetalInstanceCatalogItemSchema,
   DiskImageLifecycle,
   DiskImageSchema,
@@ -34,7 +33,7 @@ describe('BareMetalConfigurationStep', () => {
   it('allows the user to select a disk image from the available images', async () => {
     const { user } = renderWithProviders(
       <Formik initialValues={createEmptyBareMetalInstanceValues()} onSubmit={() => undefined}>
-        <BareMetalConfigurationStep catalogItem={null} />
+        <BareMetalConfigurationStep />
       </Formik>,
       {
         apiFixtures: { diskImages },
@@ -73,7 +72,7 @@ describe('BareMetalConfigurationStep', () => {
         initialValues={getBareMetalInstanceInitialValues(catalogItem)}
         onSubmit={() => undefined}
       >
-        <BareMetalConfigurationStep catalogItem={catalogItem} />
+        <BareMetalConfigurationStep />
       </Formik>,
       {
         apiFixtures: { diskImages },
@@ -89,20 +88,9 @@ describe('BareMetalConfigurationStep', () => {
   });
 
   it('disables instance type selection when the catalog item locks its value', async () => {
-    const catalogItem = {
-      fields: {
-        instanceType: {
-          behavior: {
-            case: 'locked',
-            value: { id: 'instance-type-id', name: 'bare-metal.large', shared: true },
-          },
-        },
-      },
-    } as unknown as BareMetalInstanceCatalogItem;
-
     renderWithProviders(
       <Formik initialValues={createEmptyBareMetalInstanceValues()} onSubmit={() => undefined}>
-        <BareMetalConfigurationStep catalogItem={catalogItem} />
+        <BareMetalConfigurationStep />
       </Formik>,
       {
         apiFixtures: { diskImages },
@@ -123,7 +111,7 @@ describe('BareMetalConfigurationStep', () => {
 
     const { user } = renderWithProviders(
       <Formik initialValues={values} onSubmit={() => undefined}>
-        <BareMetalConfigurationStep catalogItem={null} />
+        <BareMetalConfigurationStep />
       </Formik>,
       {
         apiFixtures: {

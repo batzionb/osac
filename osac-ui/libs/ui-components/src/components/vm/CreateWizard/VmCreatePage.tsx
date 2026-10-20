@@ -1,4 +1,3 @@
-import { useCallback, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Breadcrumb,
@@ -10,16 +9,14 @@ import {
   Title,
 } from '@patternfly/react-core';
 
-import VmCreateWizard, { type VmCreateWizardCloseHandler } from './VmCreateWizard';
+import VmCreateWizard from './VmCreateWizard';
 import { useTranslation } from '../../../hooks/useTranslation';
 
 const VmCreatePage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { catalogItemId } = useParams<{ catalogItemId?: string }>();
-  const [closeHandler, setCloseHandler] = useState<VmCreateWizardCloseHandler | null>(null);
-
-  const handleClosed = useCallback(() => navigate('/vms'), [navigate]);
+  const navigateToParent = () => navigate('/vms');
 
   return (
     <>
@@ -27,12 +24,7 @@ const VmCreatePage = () => {
         <Stack hasGutter>
           <Breadcrumb>
             <BreadcrumbItem>
-              <Button
-                variant="link"
-                isInline
-                onClick={() => closeHandler?.requestClose()}
-                isDisabled={closeHandler?.pending}
-              >
+              <Button variant="link" isInline onClick={navigateToParent}>
                 {t('Virtual Machines')}
               </Button>
             </BreadcrumbItem>
@@ -46,11 +38,7 @@ const VmCreatePage = () => {
           </Content>
         </Stack>
       </PageSection>
-      <VmCreateWizard
-        initialCatalogItemId={catalogItemId}
-        onClosed={handleClosed}
-        onCloseHandlerChange={setCloseHandler}
-      />
+      <VmCreateWizard initialCatalogItemId={catalogItemId} onClosed={navigateToParent} />
     </>
   );
 };

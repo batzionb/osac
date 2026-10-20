@@ -22,7 +22,7 @@ describe('ClusterReviewStep', () => {
     const emptyValues = createEmptyClusterValues();
     renderWithProviders(
       <Formik initialValues={emptyValues} onSubmit={() => undefined}>
-        <ClusterReviewStep catalogItem={null} />
+        <ClusterReviewStep />
       </Formik>,
     );
 
@@ -44,7 +44,7 @@ describe('ClusterReviewStep', () => {
         }}
         onSubmit={() => undefined}
       >
-        <ClusterReviewStep catalogItem={null} />
+        <ClusterReviewStep />
       </Formik>,
       { apiFixtures: { clusterVersions } },
     );

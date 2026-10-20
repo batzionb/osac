@@ -9,7 +9,7 @@ interface PullSecretFieldProps extends ProvisioningFieldControlProps {
   project: string;
 }
 
-const PullSecretField = ({ name = '', project, isDisabled = false }: PullSecretFieldProps) => {
+const PullSecretField = ({ name, project, isDisabled = false }: PullSecretFieldProps) => {
   const { t } = useTranslation();
 
   return (

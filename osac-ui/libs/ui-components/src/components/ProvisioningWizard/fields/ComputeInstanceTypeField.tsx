@@ -14,7 +14,7 @@ interface ComputeInstanceTypeFieldProps extends ProvisioningFieldControlProps {
 }
 
 const ComputeInstanceTypeField = ({
-  name = '',
+  name,
   fieldId = 'vm-instance-type',
   isDisabled = false,
 }: ComputeInstanceTypeFieldProps) => {

@@ -1,6 +1,10 @@
 export type CatalogFieldPolicyBehavior = 'locked' | 'editable';
 
-export type FieldPolicyLike = { behavior?: { case?: string } } | undefined;
+export type FieldPolicyLike<T = unknown> =
+  | {
+      behavior?: { case?: string; value?: T | { defaultValue?: T } };
+    }
+  | undefined;
 
 export const catalogFieldPolicyBehavior = (
   policy: FieldPolicyLike,

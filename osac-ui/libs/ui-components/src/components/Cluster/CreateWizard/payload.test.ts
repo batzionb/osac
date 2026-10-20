@@ -31,7 +31,7 @@ describe('buildClusterCreatePayload', () => {
     const row = createEmptyNodeSetRow();
     const values = {
       ...createEmptyClusterValues(),
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...createEmptyClusterValues().spec,
@@ -74,7 +74,7 @@ describe('buildClusterCreatePayload', () => {
   it('omits blank optional fields, version, and node sets when no valid rows exist', () => {
     const values = {
       ...createEmptyClusterValues(),
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'empty-pools', project: '' },
       spec: {
         ...createEmptyClusterValues().spec,
@@ -100,7 +100,7 @@ describe('buildClusterCreatePayload', () => {
     const row = createEmptyNodeSetRow();
     const values = {
       ...createEmptyClusterValues(),
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'filtered-pools', project: '' },
       spec: {
         ...createEmptyClusterValues().spec,
@@ -127,7 +127,7 @@ describe('buildClusterCreatePayload', () => {
   it('preserves __proto__ as a node set name in the payload', () => {
     const values = {
       ...createEmptyClusterValues(),
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'proto-pool', project: '' },
       spec: {
         ...createEmptyClusterValues().spec,
@@ -156,17 +156,17 @@ describe('buildClusterCreatePayload', () => {
   it('omits networkAttachment when useDefaultNetwork is true', () => {
     const values = {
       ...createEmptyClusterValues(),
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...createEmptyClusterValues().spec,
         pullSecretSecret: provisioningFieldValue('secret'),
-        useDefaultNetwork: provisioningFieldValue(true),
-        networkAttachment: {
+        networkAttachment: provisioningFieldValue({
+          useDefaultNetwork: true,
           virtualNetwork: { id: 'vn-1', name: 'vn-1' },
           subnet: { id: 'subnet-1', name: 'subnet-1' },
           securityGroups: [{ id: 'sg-1', name: 'sg-1' }],
-        },
+        }),
       },
     };
 
@@ -177,17 +177,17 @@ describe('buildClusterCreatePayload', () => {
   it('omits networkAttachment when useDefaultNetwork is false but pickers are empty', () => {
     const values = {
       ...createEmptyClusterValues(),
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...createEmptyClusterValues().spec,
         pullSecretSecret: provisioningFieldValue('secret'),
-        useDefaultNetwork: provisioningFieldValue(false),
-        networkAttachment: {
+        networkAttachment: provisioningFieldValue({
+          useDefaultNetwork: false,
           virtualNetwork: { id: '', name: '' },
           subnet: { id: '', name: '' },
           securityGroups: [],
-        },
+        }),
       },
     };
 
@@ -198,20 +198,20 @@ describe('buildClusterCreatePayload', () => {
   it('includes networkAttachment with subnet and security groups when pickers have values', () => {
     const values = {
       ...createEmptyClusterValues(),
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...createEmptyClusterValues().spec,
         pullSecretSecret: provisioningFieldValue('secret'),
-        useDefaultNetwork: provisioningFieldValue(false),
-        networkAttachment: {
+        networkAttachment: provisioningFieldValue({
+          useDefaultNetwork: false,
           virtualNetwork: { id: 'vn-1', name: 'tenant-vn' },
           subnet: { id: 'my-subnet', name: 'tenant-subnet' },
           securityGroups: [
             { id: 'sg-1', name: 'default-sg-1' },
             { id: 'sg-2', name: 'default-sg-2' },
           ],
-        },
+        }),
       },
     };
 
@@ -225,7 +225,7 @@ describe('buildClusterCreatePayload', () => {
   it('includes autoExternalIpAttachment when true', () => {
     const values = {
       ...createEmptyClusterValues(),
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...createEmptyClusterValues().spec,
@@ -241,7 +241,7 @@ describe('buildClusterCreatePayload', () => {
   it('includes autoExternalIpAttachment when false so catalog defaults are not applied', () => {
     const values = {
       ...createEmptyClusterValues(),
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...createEmptyClusterValues().spec,
@@ -261,7 +261,7 @@ describe('buildClusterCreatePayload', () => {
   ])('passes the selected %s through to metadata.project', (_label, project) => {
     const values = {
       ...createEmptyClusterValues(),
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'my-cluster', project },
       spec: {
         ...createEmptyClusterValues().spec,
@@ -280,7 +280,7 @@ describe('buildClusterCreatePayload — locked catalog fields', () => {
   it('omits a locked version so the catalog policy can apply it', () => {
     const values = {
       ...createEmptyClusterValues(),
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'locked-version', project: '' },
       spec: {
         ...createEmptyClusterValues().spec,
@@ -297,7 +297,7 @@ describe('buildClusterCreatePayload — locked catalog fields', () => {
   it('sends version when the catalog policy is not locked', () => {
     const values = {
       ...createEmptyClusterValues(),
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'editable-version', project: '' },
       spec: {
         ...createEmptyClusterValues().spec,
@@ -314,7 +314,7 @@ describe('buildClusterCreatePayload — locked catalog fields', () => {
   it('omits locked node sets, CIDRs, SSH key, and auto external IP', () => {
     const values = {
       ...createEmptyClusterValues(),
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'locked-fields', project: '' },
       spec: {
         ...createEmptyClusterValues().spec,
@@ -349,17 +349,20 @@ describe('buildClusterCreatePayload — locked catalog fields', () => {
   it('omits a locked pull secret and custom network attachment', () => {
     const values = {
       ...createEmptyClusterValues(),
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'locked-attachment', project: '' },
       spec: {
         ...createEmptyClusterValues().spec,
         pullSecretSecret: provisioningFieldValue('catalog-secret', true),
-        useDefaultNetwork: provisioningFieldValue(false, true),
-        networkAttachment: {
-          virtualNetwork: { id: 'vn-1', name: 'vn-1' },
-          subnet: { id: 'subnet-1', name: 'subnet-1' },
-          securityGroups: [{ id: 'sg-1', name: 'sg-1' }],
-        },
+        networkAttachment: provisioningFieldValue(
+          {
+            useDefaultNetwork: false,
+            virtualNetwork: { id: 'vn-1', name: 'vn-1' },
+            subnet: { id: 'subnet-1', name: 'subnet-1' },
+            securityGroups: [{ id: 'sg-1', name: 'sg-1' }],
+          },
+          true,
+        ),
       },
     };
 

@@ -16,7 +16,7 @@ const renderReviewStep = (
       initialValues={{ ...emptyValues, spec: { ...emptyValues.spec, ...specOverrides } }}
       onSubmit={() => undefined}
     >
-      <VmReviewStep catalogItem={null} />
+      <VmReviewStep />
     </Formik>,
   );
 };

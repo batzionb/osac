@@ -1,16 +1,16 @@
 import { type MessageInitShape } from '@bufbuild/protobuf';
 
-import { type ClusterCatalogItem, ClusterSchema } from '@osac/types';
+import { ClusterSchema } from '@osac/types';
 
 import type { ClusterWizardValues } from './fields';
 
 export const buildClusterCreatePayload = (
   values: ClusterWizardValues,
-  catalogItem: ClusterCatalogItem,
+  _catalogItem?: unknown,
 ): MessageInitShape<typeof ClusterSchema> => {
   const spec: MessageInitShape<typeof ClusterSchema>['spec'] = {
     catalogItem: {
-      id: catalogItem.id,
+      id: values.catalogItemReference.id,
     },
   };
 
@@ -61,12 +61,15 @@ export const buildClusterCreatePayload = (
     };
   }
 
-  if (!values.spec.useDefaultNetwork.locked && !values.spec.useDefaultNetwork.value) {
-    const subnetId = values.spec.networkAttachment.subnet.id.trim();
+  if (
+    !values.spec.networkAttachment.locked &&
+    !values.spec.networkAttachment.value.useDefaultNetwork
+  ) {
+    const subnetId = values.spec.networkAttachment.value.subnet.id.trim();
     if (subnetId) {
       spec.networkAttachment = {
         subnet: { id: subnetId },
-        securityGroups: values.spec.networkAttachment.securityGroups
+        securityGroups: values.spec.networkAttachment.value.securityGroups
           .filter((sg) => sg.id.trim())
           .map((sg) => ({ id: sg.id })),
       };

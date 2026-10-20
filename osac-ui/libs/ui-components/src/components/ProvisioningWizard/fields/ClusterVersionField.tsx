@@ -21,7 +21,7 @@ interface ClusterVersionFieldProps extends ProvisioningFieldControlProps {
 }
 
 const ClusterVersionField = ({
-  name = '',
+  name,
   fieldId = 'cluster-version',
   isDisabled = false,
 }: ClusterVersionFieldProps) => {

@@ -63,7 +63,7 @@ describe('ClusterConfigurationStep', () => {
   it('renders a version select rather than a release-image text field', async () => {
     renderWithProviders(
       <Formik initialValues={createEmptyClusterValues()} onSubmit={() => undefined}>
-        <ClusterConfigurationStep catalogItem={clusterCatalogItem} />
+        <ClusterConfigurationStep />
       </Formik>,
       { apiFixtures: { clusterVersions } },
     );
@@ -77,7 +77,7 @@ describe('ClusterConfigurationStep', () => {
   it('offers only active and deprecated enabled versions', async () => {
     const { user } = renderWithProviders(
       <Formik initialValues={createEmptyClusterValues()} onSubmit={() => undefined}>
-        <ClusterConfigurationStep catalogItem={clusterCatalogItem} />
+        <ClusterConfigurationStep />
       </Formik>,
       { apiFixtures: { clusterVersions } },
     );
@@ -93,7 +93,7 @@ describe('ClusterConfigurationStep', () => {
   it('warns when a deprecated version is selected without blocking selection', async () => {
     const { user } = renderWithProviders(
       <Formik initialValues={createEmptyClusterValues()} onSubmit={() => undefined}>
-        <ClusterConfigurationStep catalogItem={clusterCatalogItem} />
+        <ClusterConfigurationStep />
       </Formik>,
       { apiFixtures: { clusterVersions } },
     );
@@ -113,7 +113,7 @@ describe('ClusterConfigurationStep', () => {
   it('surfaces a load error with a retry action when versions fail to load', async () => {
     renderWithProviders(
       <Formik initialValues={createEmptyClusterValues()} onSubmit={() => undefined}>
-        <ClusterConfigurationStep catalogItem={clusterCatalogItem} />
+        <ClusterConfigurationStep />
       </Formik>,
       {
         transportOverrides: {
@@ -131,7 +131,7 @@ describe('ClusterConfigurationStep', () => {
   it('starts with one node set and add action', async () => {
     renderWithProviders(
       <Formik initialValues={createEmptyClusterValues()} onSubmit={() => undefined}>
-        <ClusterConfigurationStep catalogItem={clusterCatalogItem} />
+        <ClusterConfigurationStep />
       </Formik>,
       { apiFixtures: { clusterVersions } },
     );
@@ -148,7 +148,7 @@ describe('ClusterConfigurationStep', () => {
   it('adds another node set row when Add node set is clicked', async () => {
     const { user } = renderWithProviders(
       <Formik initialValues={createEmptyClusterValues()} onSubmit={() => undefined}>
-        <ClusterConfigurationStep catalogItem={clusterCatalogItem} />
+        <ClusterConfigurationStep />
       </Formik>,
       { apiFixtures: { clusterVersions } },
     );
@@ -168,7 +168,7 @@ describe('ClusterConfigurationStep', () => {
         <Formik
           initialValues={{
             ...createEmptyClusterValues(),
-            catalogItemId: clusterCatalogItem.id,
+            catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
             spec: {
               ...createEmptyClusterValues().spec,
               versionName: provisioningFieldValue('4-17-0'),
@@ -185,7 +185,7 @@ describe('ClusterConfigurationStep', () => {
           validateOnBlur
           onSubmit={() => undefined}
         >
-          <ClusterConfigurationStep catalogItem={clusterCatalogItem} />
+          <ClusterConfigurationStep />
         </Formik>
       </FieldValidationProvider>,
       { apiFixtures: { clusterVersions } },
@@ -211,7 +211,7 @@ describe('ClusterConfigurationStep', () => {
         <Formik
           initialValues={{
             ...emptyValues,
-            catalogItemId: clusterCatalogItem.id,
+            catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
             spec: {
               ...emptyValues.spec,
               versionName: provisioningFieldValue('4-17-0'),
@@ -235,7 +235,7 @@ describe('ClusterConfigurationStep', () => {
           validateOnMount
           onSubmit={() => undefined}
         >
-          <ClusterConfigurationStep catalogItem={clusterCatalogItem} />
+          <ClusterConfigurationStep />
         </Formik>
       </FieldValidationProvider>,
       { apiFixtures: { clusterVersions } },
@@ -269,7 +269,7 @@ describe('ClusterConfigurationStep', () => {
 
     renderWithProviders(
       <Formik initialValues={getInitialFormValues(catalogItem)} onSubmit={() => undefined}>
-        <ClusterConfigurationStep catalogItem={catalogItem} />
+        <ClusterConfigurationStep />
       </Formik>,
       {
         apiFixtures: {
@@ -319,7 +319,7 @@ describe('ClusterConfigurationStep', () => {
 
     renderWithProviders(
       <Formik initialValues={getInitialFormValues(catalogItem)} onSubmit={() => undefined}>
-        <ClusterConfigurationStep catalogItem={catalogItem} />
+        <ClusterConfigurationStep />
       </Formik>,
       {
         apiFixtures: {
@@ -366,7 +366,7 @@ describe('ClusterConfigurationStep', () => {
 
     renderWithProviders(
       <Formik initialValues={getInitialFormValues(catalogItem)} onSubmit={() => undefined}>
-        <ClusterConfigurationStep catalogItem={catalogItem} />
+        <ClusterConfigurationStep />
       </Formik>,
       {
         apiFixtures: {

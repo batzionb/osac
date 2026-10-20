@@ -5,7 +5,8 @@ import { describe, expect, it } from 'vitest';
 
 import { ComputeInstanceCatalogItemSchema, DiskImageLifecycle, DiskImageSchema } from '@osac/types';
 
-import { createEmptyComputeInstanceValues, getComputeInstanceInitialValues } from './payload';
+import { getComputeInstanceInitialValues } from './fields';
+import { createEmptyComputeInstanceValues } from './payload';
 import VmGeneralStep from './VmGeneralStep';
 import { renderWithProviders } from '../../../test-utils/TestProviders';
 
@@ -26,7 +27,7 @@ describe('VmGeneralStep', () => {
   it('allows the user to select a disk image from the available images', async () => {
     const { user } = renderWithProviders(
       <Formik initialValues={createEmptyComputeInstanceValues()} onSubmit={() => undefined}>
-        <VmGeneralStep catalogItem={null} />
+        <VmGeneralStep />
       </Formik>,
       {
         apiFixtures: { diskImages },
@@ -62,7 +63,7 @@ describe('VmGeneralStep', () => {
         initialValues={getComputeInstanceInitialValues(catalogItem)}
         onSubmit={() => undefined}
       >
-        <VmGeneralStep catalogItem={catalogItem} />
+        <VmGeneralStep />
       </Formik>,
       {
         apiFixtures: { diskImages },

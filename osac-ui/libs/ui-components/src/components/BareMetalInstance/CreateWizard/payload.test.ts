@@ -9,7 +9,7 @@ import { provisioningFieldValue } from '../../ProvisioningWizard/fields/provisio
 
 const buildValues = (project: string) => ({
   ...createEmptyBareMetalInstanceValues(),
-  catalogItemId: 'catalog-bm-1',
+  catalogItemReference: { name: 'catalog-bm-1', id: 'catalog-bm-1' },
   metadata: { name: 'my-bmi', project },
 });
 
@@ -146,26 +146,24 @@ describe('buildBareMetalInstanceCreatePayload', () => {
   });
 });
 
-describe('buildBareMetalInstanceCreatePayload — useDefaults', () => {
-  it('sends an empty networkAttachments list when useDefaults is true', () => {
+describe('buildBareMetalInstanceCreatePayload — useDefaultNetwork', () => {
+  it('sends an empty networkAttachments list when useDefaultNetwork is true', () => {
     const values = buildValues('');
-    values.spec.networking.networkAttachment.value.useDefaults = true;
+    values.spec.networkAttachment.value.useDefaultNetwork = true;
 
     const payload = buildBareMetalInstanceCreatePayload(values);
 
     expect(payload.spec?.networkAttachments).toEqual([]);
   });
 
-  it('includes networkAttachments when useDefaults is false', () => {
+  it('includes networkAttachments when useDefaultNetwork is false', () => {
     const values = buildValues('');
-    values.spec.networking.networkAttachment.value.useDefaults = false;
-    values.spec.networking.networkAttachment.value.attachments[0].subnet = {
+    values.spec.networkAttachment.value.useDefaultNetwork = false;
+    values.spec.networkAttachment.value.subnet = {
       id: 'subnet-1',
       name: 'subnet-1',
     };
-    values.spec.networking.networkAttachment.value.attachments[0].securityGroups = [
-      { id: 'sg-1', name: 'sg-1' },
-    ];
+    values.spec.networkAttachment.value.securityGroups = [{ id: 'sg-1', name: 'sg-1' }];
 
     const payload = buildBareMetalInstanceCreatePayload(values);
 
@@ -180,7 +178,7 @@ describe('buildBareMetalInstanceCreatePayload — useDefaults', () => {
 describe('buildBareMetalInstanceCreatePayload — autoExternalIpAttachment', () => {
   it('includes autoExternalIpAttachment when disabled so catalog defaults are not applied', () => {
     const values = buildValues('');
-    values.spec.networking.attachExternalIp = provisioningFieldValue(false);
+    values.spec.autoExternalIpAttachment = provisioningFieldValue(false);
 
     const payload = buildBareMetalInstanceCreatePayload(values);
 
@@ -189,7 +187,7 @@ describe('buildBareMetalInstanceCreatePayload — autoExternalIpAttachment', () 
 
   it('sets autoExternalIpAttachment when enabled', () => {
     const values = buildValues('');
-    values.spec.networking.attachExternalIp = provisioningFieldValue(true);
+    values.spec.autoExternalIpAttachment = provisioningFieldValue(true);
 
     const payload = buildBareMetalInstanceCreatePayload(values);
 
@@ -198,7 +196,7 @@ describe('buildBareMetalInstanceCreatePayload — autoExternalIpAttachment', () 
 
   it('omits autoExternalIpAttachment when locked', () => {
     const values = buildValues('');
-    values.spec.networking.attachExternalIp = provisioningFieldValue(true, true);
+    values.spec.autoExternalIpAttachment = provisioningFieldValue(true, true);
 
     const payload = buildBareMetalInstanceCreatePayload(values);
 

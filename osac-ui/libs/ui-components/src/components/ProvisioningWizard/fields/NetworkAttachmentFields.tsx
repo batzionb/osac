@@ -2,9 +2,6 @@ import { useEffect } from 'react';
 import { Alert, Button, Stack, StackItem } from '@patternfly/react-core';
 import { useField, useFormikContext } from 'formik';
 
-import AutoExternalIpField from './AutoExternalIpField';
-import ProvisioningField from './ProvisioningField';
-import type { ProvisioningFieldControlProps } from './provisioningFieldValue';
 import SecurityGroupsField from './SecurityGroupsField';
 import SubnetField from './SubnetField';
 import UseDefaultNetworkField from './UseDefaultNetworkField';
@@ -40,7 +37,6 @@ const CatalogSubnetVirtualNetworkHydrator = ({
   if (!error) {
     return null;
   }
-
   return (
     <Alert variant="danger" isInline title={t('Could not load subnet')}>
       <Stack hasGutter>
@@ -55,72 +51,41 @@ const CatalogSubnetVirtualNetworkHydrator = ({
   );
 };
 
-interface NetworkAttachmentFieldsProps extends ProvisioningFieldControlProps {
-  useDefaultNetworkName: string;
-  virtualNetworkName: string;
-  subnetName: string;
-  securityGroupsName: string;
-  autoExternalIpName: string;
-  fieldIdPrefix: string;
-  autoExternalIpHelperText?: string;
+interface NetworkAttachmentFieldsProps {
+  name: string;
+  isDisabled?: boolean;
 }
 
-const NetworkAttachmentFields = ({
-  useDefaultNetworkName,
-  virtualNetworkName,
-  subnetName,
-  securityGroupsName,
-  autoExternalIpName,
-  fieldIdPrefix,
-  autoExternalIpHelperText,
-  isDisabled = false,
-}: NetworkAttachmentFieldsProps) => {
-  const [{ value: useDefaultNetwork }] = useField<boolean>(useDefaultNetworkName);
+const NetworkAttachmentFields = ({ name, isDisabled = false }: NetworkAttachmentFieldsProps) => {
+  const [{ value: useDefaultNetwork }] = useField<boolean>(`${name}.useDefaultNetwork`);
 
   return (
     <>
-      <UseDefaultNetworkField
-        name={useDefaultNetworkName}
-        fieldId={`${fieldIdPrefix}-use-default-network`}
-        isDisabled={isDisabled}
-      />
+      <UseDefaultNetworkField name={`${name}.useDefaultNetwork`} isDisabled={isDisabled} />
       {useDefaultNetwork ? null : (
         <>
           <CatalogSubnetVirtualNetworkHydrator
-            virtualNetworkName={virtualNetworkName}
-            subnetName={subnetName}
+            virtualNetworkName={`${name}.virtualNetwork`}
+            subnetName={`${name}.subnet`}
           />
           <VirtualNetworkField
-            name={virtualNetworkName}
-            fieldId={`${fieldIdPrefix}-virtual-network`}
-            subnetName={subnetName}
-            securityGroupsName={securityGroupsName}
+            name={`${name}.virtualNetwork`}
+            subnetName={`${name}.subnet`}
+            securityGroupsName={`${name}.securityGroups`}
             isDisabled={isDisabled}
           />
           <SubnetField
-            name={subnetName}
-            fieldId={`${fieldIdPrefix}-subnet`}
-            virtualNetworkName={virtualNetworkName}
+            name={`${name}.subnet`}
+            virtualNetworkName={`${name}.virtualNetwork`}
             isDisabled={isDisabled}
           />
           <SecurityGroupsField
-            name={securityGroupsName}
-            fieldId={`${fieldIdPrefix}-security-groups`}
-            virtualNetworkName={virtualNetworkName}
+            name={`${name}.securityGroups`}
+            virtualNetworkName={`${name}.virtualNetwork`}
             isDisabled={isDisabled}
           />
         </>
       )}
-      <ProvisioningField name={autoExternalIpName}>
-        {({ valueName, isDisabled: autoExternalIpDisabled }) => (
-          <AutoExternalIpField
-            name={valueName}
-            fieldId={`${fieldIdPrefix}-auto-external-ip`}
-            helperText={autoExternalIpHelperText}
-            isDisabled={autoExternalIpDisabled}
-          />
-        )}
-      </ProvisioningField>
     </>
   );
 };

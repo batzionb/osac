@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { BareMetalInstanceCatalogItemSchema } from '@osac/types';
 
-import { getBareMetalInstanceInitialValues, getBareMetalNetworkingFormValues } from './fields';
+import { getBareMetalInstanceInitialValues } from './fields';
 
 describe('getBareMetalInstanceInitialValues', () => {
   it('loads a locked catalog disk image into the wizard', () => {
@@ -66,17 +66,15 @@ describe('getBareMetalInstanceInitialValues', () => {
       },
     });
 
-    const { networking } = getBareMetalInstanceInitialValues(catalogItem).spec;
+    const { networkAttachment } = getBareMetalInstanceInitialValues(catalogItem).spec;
 
-    expect(networking.networkAttachment.locked).toBe(true);
-    expect(networking.networkAttachment.value.useDefaults).toBe(false);
-    expect(networking.networkAttachment.value.attachments[0].subnet).toEqual({
+    expect(networkAttachment.locked).toBe(true);
+    expect(networkAttachment.value.useDefaultNetwork).toBe(false);
+    expect(networkAttachment.value.subnet).toEqual({
       id: 'subnet-1',
       name: 'subnet-a',
     });
-    expect(networking.networkAttachment.value.attachments[0].securityGroups).toEqual([
-      { id: 'sg-1', name: 'sg-web' },
-    ]);
+    expect(networkAttachment.value.securityGroups).toEqual([{ id: 'sg-1', name: 'sg-web' }]);
   });
 
   it('loads locked auto external IP independently of network attachments', () => {
@@ -92,11 +90,11 @@ describe('getBareMetalInstanceInitialValues', () => {
       },
     });
 
-    const networking = getBareMetalNetworkingFormValues(catalogItem);
+    const values = getBareMetalInstanceInitialValues(catalogItem);
 
-    expect(networking.networkAttachment.locked).toBe(false);
-    expect(networking.networkAttachment.value.useDefaults).toBe(true);
-    expect(networking.attachExternalIp).toEqual({ value: true, locked: true });
+    expect(values.spec.networkAttachment.locked).toBe(false);
+    expect(values.spec.networkAttachment.value.useDefaultNetwork).toBe(true);
+    expect(values.spec.autoExternalIpAttachment).toEqual({ value: true, locked: true });
   });
 
   it('loads an editable catalog network attachment default into the wizard', () => {
@@ -121,16 +119,14 @@ describe('getBareMetalInstanceInitialValues', () => {
       },
     });
 
-    const { networking } = getBareMetalInstanceInitialValues(catalogItem).spec;
+    const { networkAttachment } = getBareMetalInstanceInitialValues(catalogItem).spec;
 
-    expect(networking.networkAttachment.locked).toBe(false);
-    expect(networking.networkAttachment.value.useDefaults).toBe(false);
-    expect(networking.networkAttachment.value.attachments[0].subnet).toEqual({
+    expect(networkAttachment.locked).toBe(false);
+    expect(networkAttachment.value.useDefaultNetwork).toBe(false);
+    expect(networkAttachment.value.subnet).toEqual({
       id: 'subnet-1',
       name: 'subnet-a',
     });
-    expect(networking.networkAttachment.value.attachments[0].securityGroups).toEqual([
-      { id: 'sg-1', name: 'sg-web' },
-    ]);
+    expect(networkAttachment.value.securityGroups).toEqual([{ id: 'sg-1', name: 'sg-web' }]);
   });
 });

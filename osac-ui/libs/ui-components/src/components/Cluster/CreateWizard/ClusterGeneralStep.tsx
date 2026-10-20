@@ -1,6 +1,5 @@
 import { useFormikContext } from 'formik';
 
-import type { ClusterCatalogItem } from '@osac/types';
 import ProjectField from '@osac/ui-components/components/Form/ProjectField';
 
 import {
@@ -14,11 +13,7 @@ import SshKeyField from '../../Form/SshKeyField';
 import ProvisioningField from '../../ProvisioningWizard/fields/ProvisioningField';
 import PullSecretField from '../../ProvisioningWizard/fields/PullSecretField';
 
-interface ClusterGeneralStepProps {
-  catalogItem: ClusterCatalogItem | null;
-}
-
-const ClusterGeneralStep = (_props: ClusterGeneralStepProps) => {
+const ClusterGeneralStep = () => {
   const { values, setFieldValue } = useFormikContext<ClusterWizardValues>();
 
   return (

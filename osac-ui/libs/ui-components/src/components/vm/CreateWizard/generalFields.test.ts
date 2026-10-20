@@ -8,16 +8,18 @@ import { provisioningFieldValue } from '../../ProvisioningWizard/fields/provisio
 describe('buildComputeInstanceCreatePayload SSH key', () => {
   const buildValues = (sshKeyName: string) => ({
     ...createEmptyComputeInstanceValues(),
-    catalogItemId: 'catalog-item',
+    catalogItemReference: { name: 'catalog-item', id: 'catalog-item' },
     metadata: { name: 'web-01', project: 'project-a' },
     spec: {
       ...createEmptyComputeInstanceValues().spec,
       sshKey: { value: sshKeyName, locked: false },
       networking: {
-        useDefaultNetwork: provisioningFieldValue(false),
-        virtualNetwork: { id: 'vn-1', name: 'vn-1' },
-        subnet: { id: 'subnet-1', name: 'subnet-1' },
-        securityGroups: [{ id: 'sg-1', name: 'sg-1' }],
+        networkAttachment: provisioningFieldValue({
+          useDefaultNetwork: false,
+          virtualNetwork: { id: 'vn-1', name: 'vn-1' },
+          subnet: { id: 'subnet-1', name: 'subnet-1' },
+          securityGroups: [{ id: 'sg-1', name: 'sg-1' }],
+        }),
         autoExternalIpAttachment: provisioningFieldValue(false),
       },
     },

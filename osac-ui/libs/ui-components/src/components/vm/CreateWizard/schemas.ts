@@ -33,7 +33,10 @@ const storageTierSchema = (t: TFunction) =>
 
 const buildComputeInstanceFieldDefinitions = (t: TFunction) => {
   return {
-    catalogItemId: yup.string().required(t('catalogProvision.validation.catalogItemRequired')),
+    catalogItemReference: yup.object({
+      name: yup.string().required(t('catalogProvision.validation.catalogItemRequired')),
+      id: yup.string().required(t('catalogProvision.validation.catalogItemRequired')),
+    }),
     metadataName: resourceNameSchema(t),
     specInstanceType: lockedField(yup.string().required(t('Instance type is required'))),
     specUserData: lockedField(yup.string()).when('userDataSource', {
@@ -70,16 +73,20 @@ const buildComputeInstanceFieldDefinitions = (t: TFunction) => {
     specNetworking: (() => {
       const na = buildNetworkAttachmentSchemas(t);
       return yup.object({
-        useDefaultNetwork: lockedField(yup.boolean()),
-        virtualNetwork: na.optionalResourceSelect.when('useDefaultNetwork', {
-          is: (field: { value?: boolean }) => field?.value === false,
-          then: () => na.requiredVirtualNetwork,
-        }),
-        subnet: na.optionalResourceSelect.when('useDefaultNetwork', {
-          is: (field: { value?: boolean }) => field?.value === false,
-          then: () => na.requiredSubnet,
-        }),
-        securityGroups: na.securityGroupsSchema,
+        networkAttachment: lockedField(
+          yup.object({
+            useDefaultNetwork: yup.boolean().required(),
+            virtualNetwork: na.optionalResourceSelect.when('useDefaultNetwork', {
+              is: false,
+              then: () => na.requiredVirtualNetwork,
+            }),
+            subnet: na.optionalResourceSelect.when('useDefaultNetwork', {
+              is: false,
+              then: () => na.requiredSubnet,
+            }),
+            securityGroups: na.securityGroupsSchema,
+          }),
+        ),
         autoExternalIpAttachment: lockedField(yup.boolean()),
       });
     })(),
@@ -108,7 +115,7 @@ export const buildComputeInstanceStepSchema = (
   switch (stepId) {
     case 'catalog':
       return yup.object({
-        catalogItemId: fields.catalogItemId,
+        catalogItemReference: fields.catalogItemReference,
       });
     case 'general':
       return yup.object({

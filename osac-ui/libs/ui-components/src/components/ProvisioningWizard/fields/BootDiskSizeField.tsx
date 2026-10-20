@@ -7,7 +7,7 @@ interface BootDiskSizeFieldProps extends ProvisioningFieldControlProps {
 }
 
 const BootDiskSizeField = ({
-  name = '',
+  name,
   fieldId = 'vm-boot-disk-size',
   isDisabled = false,
 }: BootDiskSizeFieldProps) => {

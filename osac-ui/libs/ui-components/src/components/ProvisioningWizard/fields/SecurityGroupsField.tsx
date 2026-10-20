@@ -12,13 +12,11 @@ import { useTranslation } from '../../../hooks/useTranslation';
 import type { ResourceSelectValue } from '../../Form/resourceSelectValue';
 
 interface SecurityGroupsFieldProps extends ProvisioningFieldControlProps {
-  fieldId?: string;
   virtualNetworkName: string;
 }
 
 const SecurityGroupsField = ({
-  name = '',
-  fieldId = 'security-groups',
+  name,
   virtualNetworkName,
   isDisabled = false,
 }: SecurityGroupsFieldProps) => {
@@ -79,9 +77,9 @@ const SecurityGroupsField = ({
           </Button>
         </Alert>
       ) : null}
-      <FormGroup label={t('Security groups')} fieldId={fieldId}>
+      <FormGroup label={t('Security groups')} fieldId={name}>
         <MultiTypeaheadSelect
-          id={fieldId}
+          id={name}
           initialOptions={sgMultiSelectOptions}
           placeholder={securityGroupListLoading ? t('Loading...') : t('Select security groups')}
           isDisabled={isDisabled || !virtualNetworkId || securityGroupListLoading}
@@ -95,7 +93,7 @@ const SecurityGroupsField = ({
             void sgHelpers.setTouched(true);
           }}
           toggleProps={{
-            id: fieldId,
+            id: name,
             'aria-label': t('Security groups'),
             isDisabled: isDisabled || !virtualNetworkId || securityGroupListLoading,
             isFullWidth: true,

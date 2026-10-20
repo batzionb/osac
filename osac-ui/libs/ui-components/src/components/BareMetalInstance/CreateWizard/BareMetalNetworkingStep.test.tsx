@@ -43,7 +43,7 @@ describe('BareMetalNetworkingStep', () => {
         initialValues={getBareMetalInstanceInitialValues(catalogItem)}
         onSubmit={() => undefined}
       >
-        <BareMetalNetworkingStep catalogItem={catalogItem} />
+        <BareMetalNetworkingStep />
       </Formik>,
       {
         apiFixtures: {

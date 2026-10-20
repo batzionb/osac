@@ -34,7 +34,10 @@ const buildClusterFieldDefinitions = (t: TFunction) => {
   const rowSchema = nodeSetRowSchema(t);
 
   return {
-    catalogItemId: yup.string().required(t('Select a catalog item')),
+    catalogItemReference: yup.object({
+      name: yup.string().required(t('Select a catalog item')),
+      id: yup.string().required(t('Select a catalog item')),
+    }),
     metadataName: resourceNameSchema(t),
     specSshPublicKey: lockedField(
       yup
@@ -100,7 +103,6 @@ const buildClusterFieldDefinitions = (t: TFunction) => {
           });
         },
       ),
-    specUseDefaultNetwork: yup.boolean(),
     specAutoExternalIpAttachment: yup.boolean(),
   };
 };
@@ -118,7 +120,7 @@ export const buildClusterStepSchema = (
   switch (stepId) {
     case 'catalog':
       return yup.object({
-        catalogItemId: fields.catalogItemId,
+        catalogItemReference: fields.catalogItemReference,
       });
     case 'general':
       return yup.object({
@@ -142,22 +144,20 @@ export const buildClusterStepSchema = (
       return yup.object({
         spec: yup.object({
           network: fields.specNetwork,
-          useDefaultNetwork: lockedField(fields.specUseDefaultNetwork),
-          networkAttachment: yup.object().when('useDefaultNetwork', {
-            is: (field: { value?: boolean }) => field?.value === false,
-            then: () =>
-              yup.object({
-                virtualNetwork: na.requiredVirtualNetwork,
-                subnet: na.requiredSubnet,
-                securityGroups: na.securityGroupsSchema,
+          networkAttachment: lockedField(
+            yup.object({
+              useDefaultNetwork: yup.boolean().required(),
+              virtualNetwork: na.optionalResourceSelect.when('useDefaultNetwork', {
+                is: false,
+                then: () => na.requiredVirtualNetwork,
               }),
-            otherwise: () =>
-              yup.object({
-                virtualNetwork: na.optionalResourceSelect,
-                subnet: na.optionalResourceSelect,
-                securityGroups: na.securityGroupsSchema,
+              subnet: na.optionalResourceSelect.when('useDefaultNetwork', {
+                is: false,
+                then: () => na.requiredSubnet,
               }),
-          }),
+              securityGroups: na.securityGroupsSchema,
+            }),
+          ),
           autoExternalIpAttachment: lockedField(fields.specAutoExternalIpAttachment),
         }),
       });

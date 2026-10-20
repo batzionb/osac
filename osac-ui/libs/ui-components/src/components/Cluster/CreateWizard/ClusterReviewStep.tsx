@@ -17,7 +17,6 @@ import {
   useClusterVersions,
 } from '@osac/ui-components/api/v1/cluster-versions';
 import { useProjects } from '@osac/ui-components/api/v1/project';
-import { CatalogItem } from '@osac/ui-components/components/catalog/catalogItemDisplay';
 import {
   fullProjectPathToQueryFilter,
   getProjectName,
@@ -43,11 +42,7 @@ const formatNodeSetsForReview = (
     .join(', ');
 };
 
-interface Props {
-  catalogItem: CatalogItem | null;
-}
-
-export const ClusterReviewStep = ({ catalogItem }: Props) => {
+export const ClusterReviewStep = () => {
   const { t } = useTranslation();
   const { values } = useFormikContext<ClusterWizardValues>();
 
@@ -61,7 +56,7 @@ export const ClusterReviewStep = ({ catalogItem }: Props) => {
     error: projectsError,
   } = useProjects({ filter: fullProjectPathToQueryFilter(values.metadata.project) });
 
-  const isCustomNetwork = !values.spec.useDefaultNetwork.value;
+  const isCustomNetwork = !values.spec.networkAttachment.value.useDefaultNetwork;
 
   const versionDisplay = versionDisplayName(
     findVersionByName(versions, values.spec.versionName.value),
@@ -94,7 +89,7 @@ export const ClusterReviewStep = ({ catalogItem }: Props) => {
           <DescriptionListGroup>
             <DescriptionListTerm>{t('Catalog item')}</DescriptionListTerm>
             <DescriptionListDescription>
-              {catalogItem?.title || catalogItem?.metadata?.name || '—'}
+              {values.catalogItemReference.name || '—'}
             </DescriptionListDescription>
           </DescriptionListGroup>
 
@@ -152,9 +147,9 @@ export const ClusterReviewStep = ({ catalogItem }: Props) => {
 
           {isCustomNetwork && (
             <NetworkAttachmentReviewFields
-              virtualNetwork={values.spec.networkAttachment.virtualNetwork}
-              subnet={values.spec.networkAttachment.subnet}
-              securityGroups={values.spec.networkAttachment.securityGroups}
+              virtualNetwork={values.spec.networkAttachment.value.virtualNetwork}
+              subnet={values.spec.networkAttachment.value.subnet}
+              securityGroups={values.spec.networkAttachment.value.securityGroups}
             />
           )}
 

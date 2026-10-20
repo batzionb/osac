@@ -1,8 +1,6 @@
 import { Stack, StackItem } from '@patternfly/react-core';
 import { useFormikContext } from 'formik';
 
-import type { BareMetalInstanceCatalogItem } from '@osac/types';
-
 import {
   BM_DISK_IMAGE_FORM_PATH,
   BM_INSTANCE_TYPE_FORM_PATH,
@@ -11,17 +9,13 @@ import {
   BM_USER_DATA_SOURCE_FORM_PATH,
   type BareMetalInstanceWizardValues,
 } from './fields';
+import BareMetalInstanceTypeField from './fields/BareMetalInstanceTypeField';
 import OsacForm from '../../Form/OsacForm';
 import UserDataField from '../../Form/UserDataField';
-import BareMetalInstanceTypeField from '../../ProvisioningWizard/fields/BareMetalInstanceTypeField';
 import DiskImageField from '../../ProvisioningWizard/fields/DiskImageField';
 import ProvisioningField from '../../ProvisioningWizard/fields/ProvisioningField';
 
-interface Props {
-  catalogItem: BareMetalInstanceCatalogItem | null;
-}
-
-const BareMetalConfigurationStep = (_props: Props) => {
+const BareMetalConfigurationStep = () => {
   const { values } = useFormikContext<BareMetalInstanceWizardValues>();
 
   return (

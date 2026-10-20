@@ -1,23 +1,13 @@
 import { FormSection, Stack, StackItem } from '@patternfly/react-core';
 
-import { type ClusterCatalogItem } from '@osac/types';
-
 import ClusterNodeSetsArrayField from './ClusterNodeSetsArrayField';
 import { useTranslation } from '../../../hooks/useTranslation';
 import OsacForm from '../../Form/OsacForm';
 import ClusterVersionField from '../../ProvisioningWizard/fields/ClusterVersionField';
 import ProvisioningField from '../../ProvisioningWizard/fields/ProvisioningField';
 
-interface Props {
-  catalogItem: ClusterCatalogItem | null;
-}
-
-const ClusterConfigurationStep = ({ catalogItem }: Props) => {
+const ClusterConfigurationStep = () => {
   const { t } = useTranslation();
-
-  if (!catalogItem) {
-    return null;
-  }
 
   return (
     <Stack hasGutter>

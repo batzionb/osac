@@ -22,7 +22,7 @@ export const buildBareMetalInstanceCreatePayload = (
     metadata: { name: values.metadata.name.trim(), project: values.metadata.project },
     spec: {
       catalogItem: {
-        id: values.catalogItemId,
+        id: values.catalogItemReference.id,
       },
       ...(!catalogFieldPolicyLocked(catalogItem?.fields?.runStrategy) && {
         runStrategy: BareMetalInstanceRunStrategy.ALWAYS,
@@ -48,33 +48,31 @@ export const buildBareMetalInstanceCreatePayload = (
   };
 
   // Add networking configuration
-  const networking = values.spec.networking;
+  const networkAttachment = values.spec.networkAttachment;
 
-  if (!networking.networkAttachment.locked) {
-    if (networking.networkAttachment.value.useDefaults) {
+  if (!networkAttachment.locked) {
+    if (networkAttachment.value.useDefaultNetwork) {
       bmi.spec = {
         ...bmi.spec,
         networkAttachments: [],
       };
-    } else if (networking.networkAttachment.value.attachments.length > 0) {
+    } else {
       bmi.spec = {
         ...bmi.spec,
-        networkAttachments: networking.networkAttachment.value.attachments
-          .slice(0, 1)
-          .map((attachment) =>
-            create(BareMetalNetworkAttachmentSchema, {
-              subnet: { id: attachment.subnet.id },
-              securityGroups: attachment.securityGroups.map((sg) => ({ id: sg.id })),
-            }),
-          ),
+        networkAttachments: [
+          create(BareMetalNetworkAttachmentSchema, {
+            subnet: { id: networkAttachment.value.subnet.id },
+            securityGroups: networkAttachment.value.securityGroups.map((sg) => ({ id: sg.id })),
+          }),
+        ],
       };
     }
   }
 
-  if (!networking.attachExternalIp.locked) {
+  if (!values.spec.autoExternalIpAttachment.locked) {
     bmi.spec = {
       ...bmi.spec,
-      autoExternalIpAttachment: networking.attachExternalIp.value,
+      autoExternalIpAttachment: values.spec.autoExternalIpAttachment.value,
     };
   }
 

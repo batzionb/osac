@@ -39,8 +39,19 @@ const clusterCatalogItem = create(ClusterCatalogItemSchema, {
     version: {
       behavior: { case: 'locked', value: { id: VERSION_ID, name: '4-17-0' } },
     },
+    sshPublicKey: {
+      behavior: {
+        case: 'locked',
+        value:
+          'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBJACfzqANDyW1ygNn0FWP7YBZ6XLt+XPGpSw5PyknOW user@host',
+      },
+    },
     pullSecretSecret: {
       behavior: { case: 'locked', value: { id: PULL_SECRET_ID, name: 'my-pull-secret' } },
+    },
+    network: {
+      podCidr: { behavior: { case: 'locked', value: '10.128.0.0/14' } },
+      serviceCidr: { behavior: { case: 'locked', value: '172.30.0.0/16' } },
     },
     nodeSets: {
       behavior: {
@@ -51,6 +62,12 @@ const clusterCatalogItem = create(ClusterCatalogItemSchema, {
           },
         },
       },
+    },
+    autoExternalIpAttachment: {
+      behavior: { case: 'locked', value: false },
+    },
+    networkAttachment: {
+      behavior: { case: 'locked', value: {} },
     },
   },
 });

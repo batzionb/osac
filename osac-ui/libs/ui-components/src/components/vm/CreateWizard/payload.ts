@@ -1,143 +1,13 @@
 import { type MessageInitShape } from '@bufbuild/protobuf';
 
-import { type ComputeInstanceCatalogItem, ComputeInstanceSchema } from '@osac/types';
+import { ComputeInstanceSchema } from '@osac/types';
 import { ComputeInstanceRunStrategy } from '@osac/types';
+import type { ComputeInstanceCatalogItem } from '@osac/types';
 
-import type { ComputeInstanceWizardValues } from './fields';
-import {
-  computeDiskImageReferenceFromPolicy,
-  computeInstanceTypeReferenceFromPolicy,
-} from '../../catalog/computeCatalogItemResourceDisplay';
-import { type ResourceSelectValue, emptyResourceSelectValue } from '../../Form/resourceSelectValue';
-import {
-  boolFieldFromPolicy,
-  catalogAttachmentFromPolicy,
-  networkAttachmentFieldsFromPolicy,
-} from '../../ProvisioningWizard/fields/networkAttachmentPolicy';
-import {
-  provisioningFieldFromPolicy,
-  provisioningFieldValue,
-} from '../../ProvisioningWizard/fields/provisioningFieldValue';
+import { type ComputeInstanceWizardValues } from './fields';
+import type { ResourceSelectValue } from '../../Form/resourceSelectValue';
 
-export const createEmptyComputeInstanceValues = (): ComputeInstanceWizardValues => ({
-  catalogItemId: '',
-  metadata: { name: '', project: '' },
-  spec: {
-    sshKey: provisioningFieldValue(''),
-    diskImage: provisioningFieldValue(emptyResourceSelectValue()),
-    instanceType: provisioningFieldValue(''),
-    userDataSource: provisioningFieldValue('inline'),
-    userData: provisioningFieldValue(''),
-    userDataSecret: provisioningFieldValue(''),
-    bootDisk: {
-      sizeGib: provisioningFieldValue(''),
-      storageTier: provisioningFieldValue(emptyResourceSelectValue()),
-    },
-    additionalDisks: provisioningFieldValue([]),
-    networking: {
-      useDefaultNetwork: provisioningFieldValue(true),
-      virtualNetwork: emptyResourceSelectValue(),
-      subnet: emptyResourceSelectValue(),
-      securityGroups: [],
-      autoExternalIpAttachment: provisioningFieldValue(false),
-    },
-  },
-});
-
-export const getComputeInstanceInitialValues = (
-  catalogItem?: ComputeInstanceCatalogItem,
-): ComputeInstanceWizardValues => {
-  const values = createEmptyComputeInstanceValues();
-  if (!catalogItem) {
-    return values;
-  }
-  const fields = catalogItem.fields;
-  const stringValue = (value: string | number | undefined): string =>
-    value === undefined ? '' : String(value);
-  const sizeGib =
-    fields?.bootDisk?.sizeGib?.behavior.case === 'editable'
-      ? fields.bootDisk.sizeGib.behavior.value.defaultValue
-      : fields?.bootDisk?.sizeGib?.behavior.case === 'locked'
-        ? fields.bootDisk.sizeGib.behavior.value
-        : undefined;
-  const storageTier =
-    fields?.bootDisk?.storageTier?.behavior.case === 'editable'
-      ? fields.bootDisk.storageTier.behavior.value.defaultValue
-      : fields?.bootDisk?.storageTier?.behavior.case === 'locked'
-        ? fields.bootDisk.storageTier.behavior.value
-        : undefined;
-  const tier =
-    typeof storageTier === 'string'
-      ? { id: '', name: storageTier }
-      : storageTier && typeof storageTier === 'object' && !Array.isArray(storageTier)
-        ? {
-            id:
-              typeof (storageTier as { id?: unknown }).id === 'string'
-                ? (storageTier as { id: string }).id
-                : '',
-            name:
-              typeof (storageTier as { name?: unknown }).name === 'string'
-                ? (storageTier as { name: string }).name
-                : '',
-          }
-        : emptyResourceSelectValue();
-  const additional =
-    fields?.additionalDisks?.behavior.case === 'editable'
-      ? fields.additionalDisks.behavior.value.defaultValue
-      : fields?.additionalDisks?.behavior.case === 'locked'
-        ? fields.additionalDisks.behavior.value
-        : undefined;
-  const sshKeyName =
-    catalogItem.fields?.sshKey?.behavior?.case === 'locked'
-      ? catalogItem.fields.sshKey.behavior.value.name
-      : catalogItem.fields?.sshKey?.behavior?.case === 'editable'
-        ? (catalogItem.fields.sshKey.behavior.value.defaultValue?.name ?? '')
-        : '';
-  const userData =
-    fields?.userData?.behavior.case === 'editable'
-      ? (fields.userData.behavior.value.defaultValue ?? '')
-      : fields?.userData?.behavior.case === 'locked'
-        ? fields.userData.behavior.value
-        : '';
-  const instanceTypeRef = computeInstanceTypeReferenceFromPolicy(fields?.instanceType);
-  const instanceTypeValue = instanceTypeRef?.id?.trim() || instanceTypeRef?.name?.trim() || '';
-  const diskImageRef = computeDiskImageReferenceFromPolicy(fields?.diskImage);
-  const diskImageValue =
-    !diskImageRef?.id && !diskImageRef?.name
-      ? emptyResourceSelectValue()
-      : { id: diskImageRef.id, name: diskImageRef.name };
-  return {
-    ...values,
-    catalogItemId: catalogItem.id,
-    spec: {
-      ...values.spec,
-      userData: provisioningFieldFromPolicy(userData, fields?.userData),
-      sshKey: provisioningFieldFromPolicy(sshKeyName, catalogItem.fields?.sshKey),
-      diskImage: provisioningFieldFromPolicy(diskImageValue, fields?.diskImage),
-      instanceType: provisioningFieldFromPolicy(instanceTypeValue, fields?.instanceType),
-      bootDisk: {
-        sizeGib: provisioningFieldFromPolicy(stringValue(sizeGib), fields?.bootDisk?.sizeGib),
-        storageTier: provisioningFieldFromPolicy(tier, fields?.bootDisk?.storageTier),
-      },
-      additionalDisks: provisioningFieldFromPolicy(
-        additional?.items.map((entry) => ({
-          sizeGib: String(entry.sizeGib ?? ''),
-          storageTier: entry.storageTier
-            ? { id: entry.storageTier.id, name: entry.storageTier.name }
-            : emptyResourceSelectValue(),
-        })) ?? [],
-        fields?.additionalDisks,
-      ),
-      networking: {
-        ...networkAttachmentFieldsFromPolicy(
-          fields?.networkAttachments,
-          catalogAttachmentFromPolicy(fields?.networkAttachments)?.items[0],
-        ),
-        autoExternalIpAttachment: boolFieldFromPolicy(fields?.autoExternalIpAttachment),
-      },
-    },
-  };
-};
+export { createEmptyComputeInstanceValues } from './fields';
 
 const tierField = (
   storageTier: ResourceSelectValue,
@@ -157,15 +27,15 @@ const tierField = (
 
 export const buildComputeInstanceCreatePayload = (
   values: ComputeInstanceWizardValues,
-  catalogItem: ComputeInstanceCatalogItem,
+  catalogItem?: ComputeInstanceCatalogItem,
 ): MessageInitShape<typeof ComputeInstanceSchema> => {
   const spec: MessageInitShape<typeof ComputeInstanceSchema>['spec'] = {
     catalogItem: {
-      id: catalogItem.id,
+      id: values.catalogItemReference.id,
     },
   };
 
-  if (catalogItem.fields?.runStrategy?.behavior.case !== 'locked') {
+  if (catalogItem?.fields?.runStrategy?.behavior.case !== 'locked') {
     spec.runStrategy = ComputeInstanceRunStrategy.COMPUTE_INSTANCE_RUN_STRATEGY_ALWAYS;
   }
 
@@ -175,16 +45,17 @@ export const buildComputeInstanceCreatePayload = (
     };
   }
 
-  if (!values.spec.networking.useDefaultNetwork.locked) {
-    if (values.spec.networking.useDefaultNetwork.value) {
+  const networkAttachment = values.spec.networking.networkAttachment;
+  if (!networkAttachment.locked) {
+    if (networkAttachment.value.useDefaultNetwork) {
       spec.networkAttachments = [];
     } else {
-      const subnetId = values.spec.networking.subnet.id.trim();
+      const subnetId = networkAttachment.value.subnet.id.trim();
       if (subnetId) {
         spec.networkAttachments = [
           {
             subnet: { id: subnetId },
-            securityGroups: values.spec.networking.securityGroups
+            securityGroups: networkAttachment.value.securityGroups
               .filter((sg) => sg.id.trim())
               .map((sg) => ({ id: sg.id })),
           },
@@ -238,7 +109,7 @@ export const buildComputeInstanceCreatePayload = (
       .filter((disk) => disk.sizeGib.trim())
       .map((disk) => ({ sizeGib: Number(disk.sizeGib.trim()), ...tierField(disk.storageTier) }));
     const hasAdditionalDisksDefault =
-      catalogItem.fields?.additionalDisks?.behavior.case !== undefined;
+      catalogItem?.fields?.additionalDisks?.behavior.case !== undefined;
     if (additionalDisks.length > 0 || hasAdditionalDisksDefault) {
       spec.additionalDisks = additionalDisks;
     }

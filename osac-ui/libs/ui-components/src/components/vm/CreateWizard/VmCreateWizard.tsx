@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageSection, PageSectionTypes, Wizard, WizardStep } from '@patternfly/react-core';
-import { FormikProvider, useFormik } from 'formik';
+import { Formik } from 'formik';
 
-import { ComputeInstanceCatalogItem } from '@osac/types';
+import { ComputeInstanceCatalogItem, ComputeInstanceCatalogItems } from '@osac/types';
+import { useGetResource } from '@osac/ui-components/api/use-resource';
 import { useProvisionComputeInstance } from '@osac/ui-components/api/v1/compute-instance';
-import { useComputeInstanceCatalogItems } from '@osac/ui-components/api/v1/compute-instance-catalog-item';
 import { FieldValidationProvider } from '@osac/ui-components/components/Form/FieldValidationContext';
 import LeaveFormConfirmation from '@osac/ui-components/components/Form/LeaveFormConfirmation';
 import { CatalogStep } from '@osac/ui-components/components/ProvisioningWizard/CatalogStep';
@@ -13,62 +13,32 @@ import { OSACWizardFooter } from '@osac/ui-components/components/Wizard/OSACWiza
 import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 
 import type { ComputeInstanceWizardValues } from './fields';
-import { buildComputeInstanceCreatePayload, getComputeInstanceInitialValues } from './payload';
+import { getComputeInstanceInitialValues } from './fields';
+import { buildComputeInstanceCreatePayload } from './payload';
 import { type VmWizardStepId, buildComputeInstanceStepSchema } from './schemas';
 import { VmConfigurationStep } from './VmConfigurationStep';
 import VmGeneralStep from './VmGeneralStep';
 import { VmNetworkingStep } from './VmNetworkingStep';
 import { VmReviewStep } from './VmReviewStep';
 import { VmStorageStep } from './VmStorageStep';
-import type { CatalogItem } from '../../catalog/catalogItemDisplay';
-
-export interface VmCreateWizardCloseHandler {
-  requestClose: () => void;
-  pending: boolean;
-}
 
 interface Props {
   initialCatalogItemId?: string;
-  onCloseHandlerChange?: (handler: VmCreateWizardCloseHandler) => void;
-  onClosed?: () => void;
+  onClosed: () => void;
 }
 
-const VmWizardBody = ({
-  stepId,
-  catalogItem,
-}: {
-  stepId: string;
-  catalogItem: ComputeInstanceCatalogItem | null;
-}) => {
-  if (stepId === 'catalog') {
-    return null;
-  }
-  if (stepId === 'general') {
-    return <VmGeneralStep catalogItem={catalogItem} />;
-  }
-  if (stepId === 'configuration') {
-    return <VmConfigurationStep catalogItem={catalogItem} />;
-  }
-  if (stepId === 'storage') {
-    return <VmStorageStep />;
-  }
-  if (stepId === 'networking') {
-    return <VmNetworkingStep catalogItem={catalogItem} />;
-  }
-  return <VmReviewStep catalogItem={catalogItem} />;
-};
-
-const VmWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onClosed }: Props) => {
+const VmCreateWizard = ({ initialCatalogItemId, onClosed }: Props) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const provision = useProvisionComputeInstance();
-  const catalogQuery = useComputeInstanceCatalogItems();
+  const catalogItemQuery = useGetResource(
+    ComputeInstanceCatalogItems,
+    { id: initialCatalogItemId ?? '' },
+    { enabled: Boolean(initialCatalogItemId) },
+  );
   const [activeStep, setActiveStep] = useState<VmWizardStepId>('catalog');
   const [validationAlert, setValidationAlert] = useState(false);
-  const [selectedCatalogItem, setSelectedCatalogItem] = useState<ComputeInstanceCatalogItem | null>(
-    null,
-  );
-  const catalogItems = useMemo(() => catalogQuery.data ?? [], [catalogQuery.data]);
+  const [selectedCatalogItem, setSelectedCatalogItem] = useState<ComputeInstanceCatalogItem>();
   const steps = ['catalog', 'general', 'configuration', 'storage', 'networking', 'review'] as const;
   const stepLabels: Record<VmWizardStepId, string> = {
     catalog: t('Catalog item'),
@@ -81,12 +51,15 @@ const VmWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onClosed 
 
   const handleSubmit = useCallback(
     async (values: ComputeInstanceWizardValues) => {
-      if (!selectedCatalogItem) {
+      if (!values.catalogItemReference.id || !values.catalogItemReference.name) {
         return;
       }
       try {
         const created = await provision.mutateAsync(
-          buildComputeInstanceCreatePayload(values, selectedCatalogItem),
+          buildComputeInstanceCreatePayload(
+            values,
+            selectedCatalogItem ?? catalogItemQuery.data?.object,
+          ),
         );
         if (created?.id) {
           navigate(`/vms/${created.id}`);
@@ -95,62 +68,28 @@ const VmWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onClosed 
         // Surfaced via provision.error in the footer; nothing further to do here.
       }
     },
-    [navigate, provision, selectedCatalogItem],
+    [catalogItemQuery.data?.object, navigate, provision, selectedCatalogItem],
   );
 
-  const validationSchema = useMemo(
-    () => buildComputeInstanceStepSchema(activeStep, t),
-    [activeStep, t],
+  const initialValues = useMemo(
+    () => getComputeInstanceInitialValues(catalogItemQuery.data?.object),
+    [catalogItemQuery.data?.object],
   );
-
-  const formik = useFormik<ComputeInstanceWizardValues>({
-    initialValues: getComputeInstanceInitialValues(),
-    validationSchema,
-    onSubmit: handleSubmit,
-    validateOnChange: false,
-  });
-
-  const handleCatalogItemSelected = useCallback(
-    (item: CatalogItem) => {
-      const computeItem = item as ComputeInstanceCatalogItem;
-      setSelectedCatalogItem(computeItem);
-      formik.resetForm({
-        values: getComputeInstanceInitialValues(computeItem),
-      });
-    },
-    [formik],
-  );
-
-  const pending = formik.isSubmitting;
-
-  useEffect(() => {
-    const item = catalogItems.find((entry) => entry.id === initialCatalogItemId);
-    if (item && !selectedCatalogItem) {
-      setSelectedCatalogItem(item);
-      formik.resetForm({ values: getComputeInstanceInitialValues(item) });
-    }
-  }, [catalogItems, formik, initialCatalogItemId, selectedCatalogItem, t]);
-
-  const requestClose = useCallback(() => {
-    if (!pending) {
-      onClosed?.();
-    }
-  }, [onClosed, pending]);
-
-  useEffect(() => {
-    onCloseHandlerChange?.({ requestClose, pending });
-  }, [onCloseHandlerChange, pending, requestClose]);
-
+  const schema = useMemo(() => buildComputeInstanceStepSchema(activeStep, t), [activeStep, t]);
   const stepHasErrors = useCallback(
-    (stepId: string, errors: Record<string, unknown>) => {
-      const schema = buildComputeInstanceStepSchema(stepId as VmWizardStepId, t);
+    (_stepId: string, errors: Record<string, unknown>) => {
       return Boolean(schema && Object.keys(errors).length > 0);
     },
-    [t],
+    [schema],
   );
-
   return (
-    <FormikProvider value={formik}>
+    <Formik<ComputeInstanceWizardValues>
+      initialValues={initialValues}
+      enableReinitialize
+      validationSchema={schema}
+      onSubmit={handleSubmit}
+      validateOnChange={false}
+    >
       <FieldValidationProvider showErrors={validationAlert}>
         <LeaveFormConfirmation />
         <PageSection hasBodyWrapper={false} type={PageSectionTypes.wizard}>
@@ -162,7 +101,7 @@ const VmWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onClosed 
             }}
             footer={
               <OSACWizardFooter
-                onCancel={requestClose}
+                onCancel={onClosed}
                 stepHasErrors={stepHasErrors}
                 error={provision.error}
                 onErrorReset={provision.reset}
@@ -171,26 +110,26 @@ const VmWizardContent = ({ initialCatalogItemId, onCloseHandlerChange, onClosed 
           >
             {steps.map((step) => (
               <WizardStep key={step} id={step} name={stepLabels[step]}>
-                {step === 'catalog' ? (
-                  <CatalogStep
-                    catalogItems={catalogItems}
-                    catalogLoading={catalogQuery.isPending}
-                    catalogError={catalogQuery.isError}
-                    refetchCatalogItems={() => void catalogQuery.refetch()}
-                    onCatalogItemSelected={handleCatalogItemSelected}
+                {step === 'catalog' && (
+                  <CatalogStep<ComputeInstanceCatalogItem, ComputeInstanceWizardValues>
+                    catalogService={ComputeInstanceCatalogItems}
+                    isInitializing={Boolean(initialCatalogItemId) && catalogItemQuery.isPending}
+                    getInitialFormValues={getComputeInstanceInitialValues}
+                    onCatalogItemSelected={setSelectedCatalogItem}
                   />
-                ) : (
-                  <VmWizardBody stepId={step} catalogItem={selectedCatalogItem} />
                 )}
+                {step === 'general' && <VmGeneralStep />}
+                {step === 'configuration' && <VmConfigurationStep />}
+                {step === 'storage' && <VmStorageStep />}
+                {step === 'networking' && <VmNetworkingStep />}
+                {step === 'review' && <VmReviewStep />}
               </WizardStep>
             ))}
           </Wizard>
         </PageSection>
       </FieldValidationProvider>
-    </FormikProvider>
+    </Formik>
   );
 };
-
-const VmCreateWizard = (props: Props) => <VmWizardContent {...props} />;
 
 export default VmCreateWizard;

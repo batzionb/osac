@@ -133,8 +133,14 @@ describe('getInitialFormValues — network attachment', () => {
       }),
     );
 
-    expect(values.spec.useDefaultNetwork).toEqual({ value: false, locked: true });
-    expect(values.spec.networkAttachment.subnet).toEqual({ id: 'subnet-1', name: 'subnet-a' });
-    expect(values.spec.networkAttachment.securityGroups).toEqual([{ id: 'sg-1', name: 'sg-web' }]);
+    expect(values.spec.networkAttachment).toEqual({
+      value: {
+        useDefaultNetwork: false,
+        virtualNetwork: { id: '', name: '' },
+        subnet: { id: 'subnet-1', name: 'subnet-a' },
+        securityGroups: [{ id: 'sg-1', name: 'sg-web' }],
+      },
+      locked: true,
+    });
   });
 });

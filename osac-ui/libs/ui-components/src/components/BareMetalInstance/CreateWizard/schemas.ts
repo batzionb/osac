@@ -23,7 +23,10 @@ const lockedField = (valueSchema: yup.AnySchema) =>
 
 const buildBareMetalInstanceFieldDefinitions = (t: TFunction) => {
   return {
-    catalogItemId: yup.string().required(t('catalogProvision.validation.catalogItemRequired')),
+    catalogItemReference: yup.object({
+      name: yup.string().required(t('catalogProvision.validation.catalogItemRequired')),
+      id: yup.string().required(t('catalogProvision.validation.catalogItemRequired')),
+    }),
     metadataName: resourceNameSchema(t),
     specSshKey: lockedField(
       yup
@@ -98,7 +101,7 @@ export const buildBareMetalInstanceStepSchema = (
   switch (stepId) {
     case 'catalog':
       return yup.object({
-        catalogItemId: fields.catalogItemId,
+        catalogItemReference: fields.catalogItemReference,
       });
     case 'general':
       return yup.object({
@@ -130,38 +133,25 @@ export const buildBareMetalInstanceStepSchema = (
   }
 };
 
-const buildAttachmentRowSchema = (t: TFunction) => {
+const buildNetworkingSchema = (t: TFunction) => {
   const na = buildNetworkAttachmentSchemas(t);
   return yup.object({
-    id: yup.string().required(),
-    virtualNetwork: na.requiredVirtualNetwork,
-    subnet: na.requiredSubnet,
-    securityGroups: na.securityGroupsSchema,
-  });
-};
-
-const buildCustomAttachmentsSchema = (t: TFunction) =>
-  yup
-    .array()
-    .of(buildAttachmentRowSchema(t))
-    .min(1, t('At least one attachment is required'))
-    .length(1, t('Exactly one network attachment is required'));
-
-const buildNetworkingSchema = (t: TFunction) =>
-  yup.object({
     spec: yup.object({
-      networking: yup.object({
-        networkAttachment: lockedField(
-          yup.object({
-            useDefaults: yup.boolean().required(),
-            attachments: yup.array().when('useDefaults', {
-              is: false,
-              then: () => buildCustomAttachmentsSchema(t),
-              otherwise: () => yup.array(),
-            }),
+      networkAttachment: lockedField(
+        yup.object({
+          useDefaultNetwork: yup.boolean().required(),
+          virtualNetwork: na.optionalResourceSelect.when('useDefaultNetwork', {
+            is: false,
+            then: () => na.requiredVirtualNetwork,
           }),
-        ),
-        attachExternalIp: lockedField(yup.boolean().required()),
-      }),
+          subnet: na.optionalResourceSelect.when('useDefaultNetwork', {
+            is: false,
+            then: () => na.requiredSubnet,
+          }),
+          securityGroups: na.securityGroupsSchema,
+        }),
+      ),
+      autoExternalIpAttachment: lockedField(yup.boolean().required()),
     }),
   });
+};

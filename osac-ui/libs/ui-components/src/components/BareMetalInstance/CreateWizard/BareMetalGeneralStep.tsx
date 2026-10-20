@@ -1,6 +1,5 @@
 import { useFormikContext } from 'formik';
 
-import type { BareMetalInstanceCatalogItem } from '@osac/types';
 import ProjectField from '@osac/ui-components/components/Form/ProjectField';
 
 import {
@@ -13,11 +12,7 @@ import OsacForm from '../../Form/OsacForm';
 import SshKeyField from '../../Form/SshKeyField';
 import ProvisioningField from '../../ProvisioningWizard/fields/ProvisioningField';
 
-interface BareMetalGeneralStepProps {
-  catalogItem: BareMetalInstanceCatalogItem | null;
-}
-
-const BareMetalGeneralStep = (_props: BareMetalGeneralStepProps) => {
+const BareMetalGeneralStep = () => {
   const { values, setFieldValue } = useFormikContext<BareMetalInstanceWizardValues>();
 
   return (

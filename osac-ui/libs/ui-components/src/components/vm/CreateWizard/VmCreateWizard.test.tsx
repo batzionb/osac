@@ -3,7 +3,7 @@ import { Code, ConnectError } from '@connectrpc/connect';
 import { screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ComputeInstanceCatalogItemSchema } from '@osac/types';
+import { ComputeInstanceCatalogItemSchema, ComputeInstanceRunStrategy } from '@osac/types';
 
 import VmCreateWizard from './VmCreateWizard';
 import { renderWithProviders } from '../../../test-utils/TestProviders';
@@ -37,6 +37,12 @@ const vmCatalogItem = create(ComputeInstanceCatalogItemSchema, {
   description: 'A small RHEL 9 compute instance',
   published: true,
   fields: {
+    runStrategy: {
+      behavior: {
+        case: 'locked',
+        value: ComputeInstanceRunStrategy.COMPUTE_INSTANCE_RUN_STRATEGY_HALTED,
+      },
+    },
     instanceType: {
       behavior: { case: 'locked', value: { id: INSTANCE_TYPE_ID, name: 'standard-4-8' } },
     },
@@ -121,6 +127,7 @@ describe('VmCreateWizard', () => {
     expect(request.object?.spec).not.toHaveProperty('instanceType');
     expect(request.object?.spec).not.toHaveProperty('diskImage');
     expect(request.object?.spec).not.toHaveProperty('bootDisk');
+    expect(request.object?.spec).not.toHaveProperty('runStrategy');
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/vms/vm-new-1');

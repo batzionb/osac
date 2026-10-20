@@ -1,15 +1,17 @@
-import { BareMetalInstanceCatalogItem } from '@osac/types';
+import type { BareMetalInstanceCatalogItem } from '@osac/types';
 
 import { bareMetalDiskImageReferenceFromPolicy } from '../../catalog/bareMetalCatalogItemResourceDisplay';
+import { catalogFieldPolicyLocked } from '../../catalog/catalogFieldPolicyDisplay';
 import type { ResourceSelectValue } from '../../Form/resourceSelectValue';
 import { emptyResourceSelectValue } from '../../Form/resourceSelectValue';
 import {
-  boolFieldFromPolicy,
-  catalogAttachmentFromPolicy,
-} from '../../ProvisioningWizard/fields/networkAttachmentPolicy';
+  type NetworkAttachmentFormFields,
+  getEmptyNetworkAttachmentFormFields,
+  networkAttachmentFieldsFromPolicy,
+} from '../../ProvisioningWizard/fields/networkFields';
 import type { ProvisioningFieldValue } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 import {
-  provisioningFieldFromPolicy,
+  getFieldFromCatalogItemPolicy,
   provisioningFieldValue,
 } from '../../ProvisioningWizard/fields/provisioningFieldValue';
 
@@ -23,25 +25,8 @@ export const BM_INSTANCE_TYPE_FORM_PATH = 'spec.instanceType';
 
 export const BM_DISK_IMAGE_FORM_PATH = 'spec.diskImage';
 
-export interface BareMetalNetworkAttachmentRow {
-  id: string;
-  virtualNetwork: ResourceSelectValue;
-  subnet: ResourceSelectValue;
-  securityGroups: ResourceSelectValue[];
-}
-
-export interface BareMetalNetworkAttachmentUnit {
-  useDefaults: boolean;
-  attachments: BareMetalNetworkAttachmentRow[];
-}
-
-export interface BareMetalNetworkingFormValues {
-  networkAttachment: ProvisioningFieldValue<BareMetalNetworkAttachmentUnit>;
-  attachExternalIp: ProvisioningFieldValue<boolean>;
-}
-
 export interface BareMetalInstanceWizardValues {
-  catalogItemId: string;
+  catalogItemReference: { name: string; id: string };
   metadata: {
     name: string;
     project: string;
@@ -53,7 +38,8 @@ export interface BareMetalInstanceWizardValues {
     userDataSecret: ProvisioningFieldValue<string>;
     instanceType: ProvisioningFieldValue<string>;
     diskImage: ProvisioningFieldValue<ResourceSelectValue>;
-    networking: BareMetalNetworkingFormValues;
+    networkAttachment: ProvisioningFieldValue<NetworkAttachmentFormFields>;
+    autoExternalIpAttachment: ProvisioningFieldValue<boolean>;
   };
 }
 
@@ -63,70 +49,15 @@ export const hasBareMetalAuthentication = (
   userDataSecretName?: string,
 ): boolean => Boolean(sshKey?.trim() || userData?.trim() || userDataSecretName?.trim());
 
-let nextAttachmentId = 1;
-
-export const createNetworkAttachmentRowId = (): string => {
-  return `attachment-${nextAttachmentId++}`;
-};
-
-export const createEmptyNetworkAttachmentRow = (): BareMetalNetworkAttachmentRow => ({
-  id: createNetworkAttachmentRowId(),
-  virtualNetwork: emptyResourceSelectValue(),
-  subnet: emptyResourceSelectValue(),
-  securityGroups: [],
-});
-
-export const createEmptyBareMetalNetworkingValues = (): BareMetalNetworkingFormValues => ({
-  networkAttachment: provisioningFieldValue({
-    useDefaults: true,
-    attachments: [createEmptyNetworkAttachmentRow()],
-  }),
-  attachExternalIp: provisioningFieldValue(false),
-});
-
-const resourceSelectFromReference = (reference?: {
-  id?: string;
-  name?: string;
-}): ResourceSelectValue => {
-  const id = reference?.id?.trim() ?? '';
-  const name = reference?.name?.trim() ?? '';
-  return id || name ? { id, name } : emptyResourceSelectValue();
-};
-
-export const getBareMetalNetworkingFormValues = (
-  catalogItem?: BareMetalInstanceCatalogItem,
-): BareMetalNetworkingFormValues => {
+export const getBareMetalNetworkAttachment = (catalogItem?: BareMetalInstanceCatalogItem) => {
   if (!catalogItem) {
-    return createEmptyBareMetalNetworkingValues();
+    return networkAttachmentFieldsFromPolicy(undefined);
   }
-
-  const policy = catalogItem.fields?.networkAttachments;
-  const attachment = catalogAttachmentFromPolicy(policy)?.items[0];
-  const subnet = resourceSelectFromReference(attachment?.subnet);
-  const hasCustomAttachment = Boolean(subnet.id || subnet.name);
-
-  return {
-    networkAttachment: provisioningFieldFromPolicy(
-      {
-        useDefaults: !hasCustomAttachment,
-        attachments: [
-          {
-            ...createEmptyNetworkAttachmentRow(),
-            subnet: hasCustomAttachment ? subnet : emptyResourceSelectValue(),
-            securityGroups: (attachment?.securityGroups ?? []).map((group) =>
-              resourceSelectFromReference(group),
-            ),
-          },
-        ],
-      },
-      policy,
-    ),
-    attachExternalIp: boolFieldFromPolicy(catalogItem.fields?.autoExternalIpAttachment),
-  };
+  return networkAttachmentFieldsFromPolicy(catalogItem.fields?.networkAttachments);
 };
 
 export const createEmptyBareMetalInstanceValues = (): BareMetalInstanceWizardValues => ({
-  catalogItemId: '',
+  catalogItemReference: { name: '', id: '' },
   metadata: { name: '', project: '' },
   spec: {
     sshKey: provisioningFieldValue(''),
@@ -135,7 +66,8 @@ export const createEmptyBareMetalInstanceValues = (): BareMetalInstanceWizardVal
     userDataSecret: provisioningFieldValue(''),
     instanceType: provisioningFieldValue(''),
     diskImage: provisioningFieldValue(emptyResourceSelectValue()),
-    networking: createEmptyBareMetalNetworkingValues(),
+    networkAttachment: provisioningFieldValue(getEmptyNetworkAttachmentFormFields()),
+    autoExternalIpAttachment: provisioningFieldValue(false),
   },
 });
 
@@ -158,38 +90,31 @@ export const getBareMetalInstanceInitialValues = (
   }
   return {
     ...values,
-    catalogItemId: catalogItem.id,
+    catalogItemReference: {
+      name: catalogItem.title || catalogItem.metadata?.name || '',
+      id: catalogItem.id,
+    },
     spec: {
       ...values.spec,
-      sshKey: provisioningFieldFromPolicy(
-        catalogItem.fields?.sshPublicKey?.behavior.case === 'editable'
-          ? (catalogItem.fields.sshPublicKey.behavior.value.defaultValue ?? '')
-          : catalogItem.fields?.sshPublicKey?.behavior.case === 'locked'
-            ? catalogItem.fields.sshPublicKey.behavior.value
-            : '',
-        catalogItem.fields?.sshPublicKey,
-      ),
-      userData: provisioningFieldFromPolicy(
-        catalogItem.fields?.userData?.behavior.case === 'editable'
-          ? (catalogItem.fields.userData.behavior.value.defaultValue ?? '')
-          : catalogItem.fields?.userData?.behavior.case === 'locked'
-            ? catalogItem.fields.userData.behavior.value
-            : '',
-        catalogItem.fields?.userData,
-      ),
-      instanceType: provisioningFieldFromPolicy(
-        catalogItem.fields?.instanceType?.behavior.case === 'editable'
-          ? (catalogItem.fields.instanceType.behavior.value.defaultValue?.name ?? '')
-          : catalogItem.fields?.instanceType?.behavior.case === 'locked'
-            ? catalogItem.fields.instanceType.behavior.value.name
-            : '',
-        catalogItem.fields?.instanceType,
-      ),
-      diskImage: provisioningFieldFromPolicy(
+      sshKey: getFieldFromCatalogItemPolicy(catalogItem.fields?.sshPublicKey, ''),
+      userData: getFieldFromCatalogItemPolicy(catalogItem.fields?.userData, ''),
+      instanceType: (() => {
+        const field = getFieldFromCatalogItemPolicy(catalogItem.fields?.instanceType, undefined);
+        const reference = field.value as { id?: string; name?: string } | undefined;
+        return provisioningFieldValue(
+          reference?.id?.trim() || reference?.name?.trim() || '',
+          field.locked,
+        );
+      })(),
+      diskImage: provisioningFieldValue(
         diskImageSelectValueFromCatalog(catalogItem),
-        catalogItem.fields?.diskImage,
+        catalogFieldPolicyLocked(catalogItem.fields?.diskImage),
       ),
-      networking: getBareMetalNetworkingFormValues(catalogItem),
+      networkAttachment: getBareMetalNetworkAttachment(catalogItem),
+      autoExternalIpAttachment: getFieldFromCatalogItemPolicy(
+        catalogItem.fields?.autoExternalIpAttachment,
+        false,
+      ),
     },
   };
 };

@@ -15,13 +15,13 @@ interface BareMetalInstanceTypeFieldProps extends ProvisioningFieldControlProps 
 }
 
 const BareMetalInstanceTypeField = ({
-  name = '',
+  name,
   fieldId = 'instance-type',
   isDisabled = false,
 }: BareMetalInstanceTypeFieldProps) => {
   const { t } = useTranslation();
   const { getFieldProps } = useFormikContext();
-  const selectedName = String(getFieldProps<string>(name).value ?? '');
+  const selectedName = getFieldProps<string>(name).value;
 
   const { data, isLoading, error, refetch } = useListResource(BareMetalInstanceTypes);
 

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import type { DescMessage } from '@bufbuild/protobuf';
 import {
   Alert,
   Bullseye,
@@ -15,6 +16,7 @@ import {
 } from '@patternfly/react-core';
 import { useFormikContext } from 'formik';
 
+import { type ResourceService, useListResource } from '../../api/use-resource';
 import { useTranslation } from '../../hooks/useTranslation';
 import CatalogItemCard from '../catalog/CatalogItemCard';
 import { CatalogItem, filterCatalogItemsBySearch } from '../catalog/catalogItemDisplay';
@@ -23,45 +25,55 @@ import { getVisibleFieldError } from '../Form/fieldError';
 import { useShowFieldValidationErrors } from '../Form/FieldValidationContext';
 import { FormFieldHelper } from '../Form/FormFieldHelper';
 
-interface Props {
-  catalogItems: CatalogItem[];
-  catalogLoading: boolean;
-  catalogError: boolean;
-  refetchCatalogItems: () => void;
-  onCatalogItemSelected: (item: CatalogItem) => void | Promise<void>;
+interface CatalogFormValues {
+  catalogItemReference: { id?: string; name?: string };
 }
 
-export const CatalogStep = ({
-  catalogItems,
-  catalogLoading,
-  catalogError,
-  refetchCatalogItems,
+interface Props<T extends CatalogItem, V extends CatalogFormValues> {
+  catalogService: ResourceService<'list', DescMessage, DescMessage>;
+  isInitializing?: boolean;
+  getInitialFormValues: (item: T) => V;
+  onCatalogItemSelected?: (item: T) => void;
+}
+
+export const CatalogStep = <T extends CatalogItem, V extends CatalogFormValues>({
+  catalogService,
+  isInitializing = false,
+  getInitialFormValues,
   onCatalogItemSelected,
-}: Props) => {
+}: Props<T, V>) => {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
-  const formik = useFormikContext<{ catalogItemId: string }>();
+  const formik = useFormikContext<V>();
   const { values } = formik;
-
-  const filtered = useMemo(
-    () => filterCatalogItemsBySearch(catalogItems, search),
-    [catalogItems, search],
+  const catalogQuery = useListResource<DescMessage, DescMessage, T[]>(
+    catalogService,
+    {},
+    {},
+    (data) => data.items,
   );
+  const items = useMemo(() => catalogQuery.data ?? [], [catalogQuery.data]);
+  const loading = isInitializing || catalogQuery.isPending;
+  const error = catalogQuery.isError;
+  const retry = () => void catalogQuery.refetch();
+
+  const filtered = useMemo(() => filterCatalogItemsBySearch(items, search), [items, search]);
 
   const resourceLookups = useCatalogItemResourceLookups({
-    enabled: !catalogLoading && !catalogError && filtered.length > 0,
+    enabled: !loading && !error && filtered.length > 0,
   });
 
   const count = filtered.length;
   const countPhrase = t('catalogProvision.catalog.count', { count });
   const showValidationErrors = useShowFieldValidationErrors();
   const catalogItemError = getVisibleFieldError(
-    formik.getFieldMeta('catalogItemId'),
+    formik.getFieldMeta('catalogItemReference'),
     showValidationErrors,
   );
 
-  const handleSelect = async (item: CatalogItem) => {
-    await onCatalogItemSelected(item);
+  const handleSelect = (item: T) => {
+    formik.resetForm({ values: getInitialFormValues(item) });
+    onCatalogItemSelected?.(item);
   };
 
   return (
@@ -86,7 +98,7 @@ export const CatalogStep = ({
       </StackItem>
       <StackItem>
         <Content component="p">
-          {catalogLoading ? t('catalogProvision.catalog.loading') : countPhrase}
+          {loading ? t('catalogProvision.catalog.loading') : countPhrase}
         </Content>
       </StackItem>
       {catalogItemError ? (
@@ -94,7 +106,7 @@ export const CatalogStep = ({
           <FormFieldHelper error={catalogItemError} fieldId="catalog-item-selection" />
         </StackItem>
       ) : null}
-      {catalogError ? (
+      {error ? (
         <StackItem>
           <Stack hasGutter>
             <StackItem>
@@ -103,7 +115,7 @@ export const CatalogStep = ({
               </Alert>
             </StackItem>
             <StackItem>
-              <Button variant="primary" onClick={() => void refetchCatalogItems()}>
+              <Button variant="primary" onClick={() => void retry()}>
                 {t('catalogProvision.actions.retry')}
               </Button>
             </StackItem>
@@ -117,22 +129,23 @@ export const CatalogStep = ({
           role="radiogroup"
           aria-label={t('catalogProvision.steps.catalog.title')}
         >
-          {catalogLoading ? (
+          {loading ? (
             <GalleryItem>
               <Bullseye>
                 <Spinner aria-label={t('catalogProvision.catalog.loading')} />
               </Bullseye>
             </GalleryItem>
           ) : null}
-          {!catalogLoading && !catalogError && count === 0 ? (
+          {!loading && !error && count === 0 ? (
             <GalleryItem>
               <Content component="p">{t('catalogProvision.catalog.empty')}</Content>
             </GalleryItem>
           ) : null}
-          {!catalogLoading &&
-            !catalogError &&
+          {!loading &&
+            !error &&
             filtered.map((item) => {
-              const selected = values.catalogItemId === item.id;
+              const selected =
+                (values.catalogItemReference as { id?: string } | undefined)?.id === item.id;
               return (
                 <GalleryItem key={item.id}>
                   <CatalogItemCard
@@ -141,7 +154,7 @@ export const CatalogStep = ({
                     selection={{
                       selected,
                       onSelect: () => {
-                        void handleSelect(item);
+                        handleSelect(item as T);
                       },
                     }}
                   />

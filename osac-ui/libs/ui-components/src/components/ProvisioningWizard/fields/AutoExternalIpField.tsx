@@ -3,13 +3,11 @@ import { useTranslation } from '../../../hooks/useTranslation';
 import { CheckboxField } from '../../Form/CheckboxField';
 
 interface AutoExternalIpFieldProps extends ProvisioningFieldControlProps {
-  fieldId?: string;
   helperText?: string;
 }
 
 const AutoExternalIpField = ({
-  name = '',
-  fieldId = 'auto-external-ip',
+  name,
   helperText,
   isDisabled = false,
 }: AutoExternalIpFieldProps) => {
@@ -19,7 +17,7 @@ const AutoExternalIpField = ({
     <CheckboxField
       name={name}
       label={t('Auto External IP Attachment')}
-      fieldId={fieldId}
+      fieldId={name}
       helperText={helperText}
       isDisabled={isDisabled}
     />

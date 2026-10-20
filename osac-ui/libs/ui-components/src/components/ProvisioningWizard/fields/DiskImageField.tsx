@@ -10,7 +10,7 @@ interface DiskImageFieldProps extends ProvisioningFieldControlProps {
 }
 
 const DiskImageField = ({
-  name = '',
+  name,
   fieldId = 'disk-image',
   isDisabled = false,
 }: DiskImageFieldProps) => {

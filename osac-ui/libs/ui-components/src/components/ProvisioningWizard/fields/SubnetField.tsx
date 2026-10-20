@@ -9,16 +9,10 @@ import { ResourceSelectField } from '../../Form/ResourceSelectField';
 import type { ResourceSelectValue } from '../../Form/resourceSelectValue';
 
 interface SubnetFieldProps extends ProvisioningFieldControlProps {
-  fieldId?: string;
   virtualNetworkName: string;
 }
 
-const SubnetField = ({
-  name = '',
-  fieldId = 'subnet',
-  virtualNetworkName,
-  isDisabled = false,
-}: SubnetFieldProps) => {
+const SubnetField = ({ name, virtualNetworkName, isDisabled = false }: SubnetFieldProps) => {
   const { t } = useTranslation();
   const [virtualNetwork] = useField<ResourceSelectValue>(virtualNetworkName);
   const virtualNetworkId = virtualNetwork.value?.id ?? '';
@@ -27,7 +21,7 @@ const SubnetField = ({
     <ResourceSelectField
       name={name}
       label={t('Subnet')}
-      fieldId={fieldId}
+      fieldId={name}
       service={Subnets}
       request={
         virtualNetworkId ? { filter: virtualNetworkFilterForSubnetList(virtualNetworkId) } : {}

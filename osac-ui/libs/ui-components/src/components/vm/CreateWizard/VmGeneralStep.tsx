@@ -1,6 +1,5 @@
 import { useFormikContext } from 'formik';
 
-import type { ComputeInstanceCatalogItem } from '@osac/types';
 import ProjectField from '@osac/ui-components/components/Form/ProjectField';
 
 import {
@@ -15,11 +14,7 @@ import DiskImageField from '../../ProvisioningWizard/fields/DiskImageField';
 import ProvisioningField from '../../ProvisioningWizard/fields/ProvisioningField';
 import SshPublicKeySecretField from '../../ProvisioningWizard/fields/SshPublicKeySecretField';
 
-interface VmGeneralStepProps {
-  catalogItem: ComputeInstanceCatalogItem | null;
-}
-
-const VmGeneralStep = (_props: VmGeneralStepProps) => {
+const VmGeneralStep = () => {
   const { values, setFieldValue } = useFormikContext<ComputeInstanceWizardValues>();
 
   return (

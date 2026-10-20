@@ -3,45 +3,15 @@ import userEvent from '@testing-library/user-event';
 import { Formik } from 'formik';
 import { describe, expect, it } from 'vitest';
 
-import type { ClusterCatalogItem } from '@osac/types';
-
 import { ClusterNetworkingStep } from './ClusterNetworkingStep';
 import { createEmptyClusterValues } from './fields';
 import { renderWithProviders } from '../../../test-utils/TestProviders';
-
-const clusterCatalogItem: ClusterCatalogItem = {
-  $typeName: 'osac.public.v1.ClusterCatalogItem',
-  id: 'catalog-openshift-4',
-  metadata: {
-    $typeName: 'osac.public.v1.Metadata',
-    displayName: '',
-    description: '',
-    name: 'catalog-openshift-4',
-    annotations: {},
-    creator: 'foo',
-    labels: {},
-    project: 'foo',
-    tenant: 'foo',
-    version: 1,
-  },
-  title: 'OpenShift 4 cluster',
-  description: 'Standard OpenShift cluster offering',
-  template: {
-    $typeName: 'osac.public.v1.ClusterTemplateReference',
-    id: 'tpl-openshift-4',
-    name: '',
-    project: '',
-    shared: false,
-  },
-  published: true,
-  templateParameters: {},
-};
 
 describe('ClusterNetworkingStep', () => {
   it('renders Infrastructure Networking and Cluster Networking sections', () => {
     renderWithProviders(
       <Formik initialValues={createEmptyClusterValues()} onSubmit={() => undefined}>
-        <ClusterNetworkingStep catalogItem={clusterCatalogItem} />
+        <ClusterNetworkingStep />
       </Formik>,
     );
 
@@ -52,7 +22,7 @@ describe('ClusterNetworkingStep', () => {
   it('hides pickers when default network toggle is ON (default)', () => {
     renderWithProviders(
       <Formik initialValues={createEmptyClusterValues()} onSubmit={() => undefined}>
-        <ClusterNetworkingStep catalogItem={clusterCatalogItem} />
+        <ClusterNetworkingStep />
       </Formik>,
     );
 
@@ -66,7 +36,7 @@ describe('ClusterNetworkingStep', () => {
     const user = userEvent.setup();
     renderWithProviders(
       <Formik initialValues={createEmptyClusterValues()} onSubmit={() => undefined}>
-        <ClusterNetworkingStep catalogItem={clusterCatalogItem} />
+        <ClusterNetworkingStep />
       </Formik>,
     );
 
@@ -81,7 +51,7 @@ describe('ClusterNetworkingStep', () => {
     const user = userEvent.setup();
     renderWithProviders(
       <Formik initialValues={createEmptyClusterValues()} onSubmit={() => undefined}>
-        <ClusterNetworkingStep catalogItem={clusterCatalogItem} />
+        <ClusterNetworkingStep />
       </Formik>,
     );
 
@@ -97,7 +67,7 @@ describe('ClusterNetworkingStep', () => {
   it('renders Auto External IP toggle independently', () => {
     renderWithProviders(
       <Formik initialValues={createEmptyClusterValues()} onSubmit={() => undefined}>
-        <ClusterNetworkingStep catalogItem={clusterCatalogItem} />
+        <ClusterNetworkingStep />
       </Formik>,
     );
 
@@ -116,7 +86,7 @@ describe('ClusterNetworkingStep', () => {
     const user = userEvent.setup();
     renderWithProviders(
       <Formik initialValues={createEmptyClusterValues()} onSubmit={() => undefined}>
-        <ClusterNetworkingStep catalogItem={clusterCatalogItem} />
+        <ClusterNetworkingStep />
       </Formik>,
     );
 
@@ -133,7 +103,7 @@ describe('ClusterNetworkingStep', () => {
   it('renders Pod CIDR and Service CIDR fields in Cluster Networking section', () => {
     renderWithProviders(
       <Formik initialValues={createEmptyClusterValues()} onSubmit={() => undefined}>
-        <ClusterNetworkingStep catalogItem={clusterCatalogItem} />
+        <ClusterNetworkingStep />
       </Formik>,
     );
 
@@ -145,7 +115,7 @@ describe('ClusterNetworkingStep', () => {
     const user = userEvent.setup();
     renderWithProviders(
       <Formik initialValues={createEmptyClusterValues()} onSubmit={() => undefined}>
-        <ClusterNetworkingStep catalogItem={clusterCatalogItem} />
+        <ClusterNetworkingStep />
       </Formik>,
     );
 

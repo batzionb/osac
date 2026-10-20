@@ -39,7 +39,7 @@ const clusterCatalogItem: ClusterCatalogItem = {
 };
 
 const emptyValues: ClusterWizardValues = {
-  catalogItemId: '',
+  catalogItemReference: { name: '', id: '' },
   metadata: { name: '', project: '' },
   spec: {
     sshPublicKey: provisioningFieldValue(''),
@@ -50,12 +50,12 @@ const emptyValues: ClusterWizardValues = {
       podCidr: provisioningFieldValue(''),
       serviceCidr: provisioningFieldValue(''),
     },
-    useDefaultNetwork: provisioningFieldValue(true),
-    networkAttachment: {
+    networkAttachment: provisioningFieldValue({
+      useDefaultNetwork: true,
       virtualNetwork: emptyResourceSelectValue(),
       subnet: emptyResourceSelectValue(),
       securityGroups: [],
-    },
+    }),
     autoExternalIpAttachment: provisioningFieldValue(false),
   },
 };
@@ -98,13 +98,18 @@ const validateStep = async (
 describe('buildClusterStepSchema', () => {
   it('requires catalog item on catalog step', async () => {
     const errors = await validateStep('catalog', emptyValues);
-    expect(errors).toEqual({ catalogItemId: 'Select a catalog item' });
+    expect(errors).toEqual({
+      catalogItemReference: {
+        name: 'Select a catalog item',
+        id: 'Select a catalog item',
+      },
+    });
   });
 
   it('rejects invalid DNS label names on general step', async () => {
     const errors = await validateStep('general', {
       ...emptyValues,
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'MyCluster', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -121,7 +126,7 @@ describe('buildClusterStepSchema', () => {
   it('rejects missing pull secret on general step', async () => {
     const errors = await validateStep('general', {
       ...emptyValues,
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -140,7 +145,7 @@ describe('buildClusterStepSchema', () => {
   it('rejects malformed ssh public key on general step', async () => {
     const errors = await validateStep('general', {
       ...emptyValues,
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -161,7 +166,7 @@ describe('buildClusterStepSchema', () => {
   it('requires pull secret on general step', async () => {
     const errors = await validateStep('general', {
       ...emptyValues,
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'my-cluster', project: '' },
     });
     expect(errors).toEqual({
@@ -173,7 +178,7 @@ describe('buildClusterStepSchema', () => {
     const row = createEmptyNodeSetRow();
     const errors = await validateStep('configuration', {
       ...emptyValues,
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -192,7 +197,7 @@ describe('buildClusterStepSchema', () => {
   it('requires at least one node set on configuration step', async () => {
     const errors = await validateStep('configuration', {
       ...emptyValues,
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -210,7 +215,7 @@ describe('buildClusterStepSchema', () => {
     const row = createEmptyNodeSetRow();
     const errors = await validateStep('configuration', {
       ...emptyValues,
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -237,7 +242,7 @@ describe('buildClusterStepSchema', () => {
     const row = createEmptyNodeSetRow();
     const errors = await validateStep('configuration', {
       ...emptyValues,
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -268,7 +273,7 @@ describe('buildClusterStepSchema', () => {
     const row = createEmptyNodeSetRow();
     const errors = await validateStep('configuration', {
       ...emptyValues,
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -304,7 +309,7 @@ describe('buildClusterStepSchema', () => {
     const row = createEmptyNodeSetRow();
     const errors = await validateStep('configuration', {
       ...emptyValues,
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -327,7 +332,7 @@ describe('buildClusterStepSchema', () => {
     const row = createEmptyNodeSetRow();
     const errors = await validateStep('configuration', {
       ...emptyValues,
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       metadata: { name: 'my-cluster', project: '' },
       spec: {
         ...emptyValues.spec,
@@ -353,7 +358,7 @@ describe('buildClusterStepSchema', () => {
   it('validates CIDR format on networking step when values are present', async () => {
     const errors = await validateStep('networking', {
       ...emptyValues,
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       spec: {
         ...emptyValues.spec,
         network: {
@@ -374,7 +379,7 @@ describe('buildClusterStepSchema', () => {
   it('rejects IPv6 pod and service CIDRs on networking step', async () => {
     const errors = await validateStep('networking', {
       ...emptyValues,
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       spec: {
         ...emptyValues.spec,
         network: {
@@ -396,7 +401,7 @@ describe('buildClusterStepSchema', () => {
   it('rejects overlapping pod and service CIDRs on networking step', async () => {
     const errors = await validateStep('networking', {
       ...emptyValues,
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       spec: {
         ...emptyValues.spec,
         network: {
@@ -417,15 +422,15 @@ describe('buildClusterStepSchema', () => {
   it('validates networking step when useDefaultNetwork is true', async () => {
     const errors = await validateStep('networking', {
       ...emptyValues,
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       spec: {
         ...emptyValues.spec,
-        useDefaultNetwork: provisioningFieldValue(true),
-        networkAttachment: {
+        networkAttachment: provisioningFieldValue({
+          useDefaultNetwork: true,
           virtualNetwork: emptyResourceSelectValue(),
           subnet: emptyResourceSelectValue(),
           securityGroups: [],
-        },
+        }),
       },
     });
     expect(errors).toEqual({});
@@ -434,22 +439,24 @@ describe('buildClusterStepSchema', () => {
   it('requires virtual network and subnet when useDefaultNetwork is false', async () => {
     const errors = await validateStep('networking', {
       ...emptyValues,
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       spec: {
         ...emptyValues.spec,
-        useDefaultNetwork: provisioningFieldValue(false),
-        networkAttachment: {
+        networkAttachment: provisioningFieldValue({
+          useDefaultNetwork: false,
           virtualNetwork: emptyResourceSelectValue(),
           subnet: emptyResourceSelectValue(),
           securityGroups: [],
-        },
+        }),
       },
     });
     expect(errors).toEqual({
       spec: {
         networkAttachment: {
-          virtualNetwork: { id: 'Virtual network is required' },
-          subnet: { id: 'Subnet is required' },
+          value: {
+            virtualNetwork: { id: 'Virtual network is required' },
+            subnet: { id: 'Subnet is required' },
+          },
         },
       },
     });
@@ -458,15 +465,15 @@ describe('buildClusterStepSchema', () => {
   it('accepts valid custom networking when useDefaultNetwork is false', async () => {
     const errors = await validateStep('networking', {
       ...emptyValues,
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       spec: {
         ...emptyValues.spec,
-        useDefaultNetwork: provisioningFieldValue(false),
-        networkAttachment: {
+        networkAttachment: provisioningFieldValue({
+          useDefaultNetwork: false,
           virtualNetwork: { id: 'vn-1', name: 'vn-1' },
           subnet: { id: 'subnet-1', name: 'subnet-1' },
           securityGroups: [],
-        },
+        }),
       },
     });
     expect(errors).toEqual({});
@@ -475,7 +482,7 @@ describe('buildClusterStepSchema', () => {
   it('validates networking step with autoExternalIpAttachment set to true', async () => {
     const errors = await validateStep('networking', {
       ...emptyValues,
-      catalogItemId: clusterCatalogItem.id,
+      catalogItemReference: { name: clusterCatalogItem.title, id: clusterCatalogItem.id },
       spec: {
         ...emptyValues.spec,
         autoExternalIpAttachment: provisioningFieldValue(true),

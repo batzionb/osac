@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { BareMetalInstanceTypeSchema } from '@osac/types';
 
 import BareMetalInstanceTypeField from './BareMetalInstanceTypeField';
-import { renderWithProviders } from '../../../test-utils/TestProviders';
+import { renderWithProviders } from '../../../../test-utils/TestProviders';
 
 const instanceTypes = [
   create(BareMetalInstanceTypeSchema, {

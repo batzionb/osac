@@ -10,7 +10,7 @@ import {
 
 import type { BareMetalInstanceType } from '@osac/types';
 
-import { useTranslation } from '../../../hooks/useTranslation';
+import { useTranslation } from '../../../../hooks/useTranslation';
 
 interface BareMetalInstanceTypeDescriptionProps {
   instanceType: BareMetalInstanceType;

@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { InstanceTypeSchema, InstanceTypeState } from '@osac/types';
 
 import ComputeInstanceTypeField from './ComputeInstanceTypeField';
-import { renderWithProviders } from '../../../test-utils/TestProviders';
+import { renderWithProviders } from '../../../../test-utils/TestProviders';
 
 const instanceTypes = [
   create(InstanceTypeSchema, {

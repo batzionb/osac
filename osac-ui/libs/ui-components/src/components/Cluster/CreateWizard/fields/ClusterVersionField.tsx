@@ -2,19 +2,15 @@ import { useMemo } from 'react';
 import { Alert, Button, Stack, StackItem } from '@patternfly/react-core';
 import { useField } from 'formik';
 
-import type { ProvisioningFieldControlProps } from './provisioningFieldValue';
 import {
   CLUSTER_VERSION_ACTIVE_LIST_FILTER,
   useClusterVersions,
-} from '../../../api/v1/cluster-versions';
-import { useTranslation } from '../../../hooks/useTranslation';
-import { getErrorMessage } from '../../../utils/error';
-import {
-  findVersionByName,
-  isDeprecatedVersion,
-  versionDisplayName,
-} from '../../Cluster/CreateWizard/versionUtils';
-import { SelectField } from '../../Form/SelectField';
+} from '../../../../api/v1/cluster-versions';
+import { useTranslation } from '../../../../hooks/useTranslation';
+import { getErrorMessage } from '../../../../utils/error';
+import { SelectField } from '../../../Form/SelectField';
+import type { ProvisioningFieldControlProps } from '../../../ProvisioningWizard/fields/provisioningFieldValue';
+import { findVersionByName, isDeprecatedVersion, versionDisplayName } from '../versionUtils';
 
 interface ClusterVersionFieldProps extends ProvisioningFieldControlProps {
   fieldId?: string;

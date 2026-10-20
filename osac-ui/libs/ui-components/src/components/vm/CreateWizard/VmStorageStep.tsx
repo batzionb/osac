@@ -1,8 +1,8 @@
 import { AdditionalDisksArrayField } from './AdditionalDisksArrayField';
+import BootDiskSizeField from './fields/BootDiskSizeField';
 import { useTranslation } from '../../../hooks/useTranslation';
 import OsacForm from '../../Form/OsacForm';
 import { StorageTierSelectField } from '../../Form/StorageTierSelectField';
-import BootDiskSizeField from '../../ProvisioningWizard/fields/BootDiskSizeField';
 import ProvisioningField from '../../ProvisioningWizard/fields/ProvisioningField';
 
 export const VmStorageStep = () => {

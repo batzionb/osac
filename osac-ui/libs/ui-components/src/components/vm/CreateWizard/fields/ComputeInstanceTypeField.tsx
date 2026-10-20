@@ -4,10 +4,13 @@ import { useField, useFormikContext } from 'formik';
 
 import { formatInstanceTypeOptionLabel } from '@osac/ui-components/components/vm/utils';
 
-import type { ProvisioningFieldControlProps } from './provisioningFieldValue';
-import { INSTANCE_TYPE_ACTIVE_LIST_FILTER, useInstanceTypes } from '../../../api/v1/instance-types';
-import { useTranslation } from '../../../hooks/useTranslation';
-import { SelectField } from '../../Form/SelectField';
+import {
+  INSTANCE_TYPE_ACTIVE_LIST_FILTER,
+  useInstanceTypes,
+} from '../../../../api/v1/instance-types';
+import { useTranslation } from '../../../../hooks/useTranslation';
+import { SelectField } from '../../../Form/SelectField';
+import type { ProvisioningFieldControlProps } from '../../../ProvisioningWizard/fields/provisioningFieldValue';
 
 interface ComputeInstanceTypeFieldProps extends ProvisioningFieldControlProps {
   fieldId?: string;

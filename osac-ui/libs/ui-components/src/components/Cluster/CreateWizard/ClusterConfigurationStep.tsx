@@ -1,9 +1,9 @@
 import { FormSection, Stack, StackItem } from '@patternfly/react-core';
 
 import ClusterNodeSetsArrayField from './ClusterNodeSetsArrayField';
+import ClusterVersionField from './fields/ClusterVersionField';
 import { useTranslation } from '../../../hooks/useTranslation';
 import OsacForm from '../../Form/OsacForm';
-import ClusterVersionField from '../../ProvisioningWizard/fields/ClusterVersionField';
 import ProvisioningField from '../../ProvisioningWizard/fields/ProvisioningField';
 
 const ClusterConfigurationStep = () => {

@@ -7,11 +7,11 @@ import {
   CLUSTER_SSH_KEY_FORM_PATH,
   ClusterWizardValues,
 } from './fields';
+import PullSecretField from './fields/PullSecretField';
 import NameField from '../../Form/NameField';
 import OsacForm from '../../Form/OsacForm';
 import SshKeyField from '../../Form/SshKeyField';
 import ProvisioningField from '../../ProvisioningWizard/fields/ProvisioningField';
-import PullSecretField from '../../ProvisioningWizard/fields/PullSecretField';
 
 const ClusterGeneralStep = () => {
   const { values, setFieldValue } = useFormikContext<ClusterWizardValues>();

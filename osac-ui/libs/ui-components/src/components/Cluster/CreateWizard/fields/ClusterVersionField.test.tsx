@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { type ClusterVersion, ClusterVersionSchema, ClusterVersionState } from '@osac/types';
 
 import ClusterVersionField from './ClusterVersionField';
-import { renderWithProviders } from '../../../test-utils/TestProviders';
+import { renderWithProviders } from '../../../../test-utils/TestProviders';
 
 const makeClusterVersion = (
   name: string,

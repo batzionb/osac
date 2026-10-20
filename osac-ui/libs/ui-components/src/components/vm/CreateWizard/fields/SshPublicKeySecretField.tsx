@@ -2,14 +2,18 @@ import { Secret, SecretType } from '@osac/types';
 import { cel } from '@osac/ui-components/api/cel';
 import SecretSelectionField from '@osac/ui-components/components/Form/SecretSelectionField';
 
-import type { ProvisioningFieldControlProps } from './provisioningFieldValue';
-import { useTranslation } from '../../../hooks/useTranslation';
+import { useTranslation } from '../../../../hooks/useTranslation';
+import type { ProvisioningFieldControlProps } from '../../../ProvisioningWizard/fields/provisioningFieldValue';
 
-interface PullSecretFieldProps extends ProvisioningFieldControlProps {
+interface SshPublicKeySecretFieldProps extends ProvisioningFieldControlProps {
   project: string;
 }
 
-const PullSecretField = ({ name, project, isDisabled = false }: PullSecretFieldProps) => {
+const SshPublicKeySecretField = ({
+  name,
+  project,
+  isDisabled = false,
+}: SshPublicKeySecretFieldProps) => {
   const { t } = useTranslation();
 
   return (
@@ -17,16 +21,15 @@ const PullSecretField = ({ name, project, isDisabled = false }: PullSecretFieldP
       filter={cel<Secret>((filter) =>
         filter.and(
           filter.field('metadata.project').equals(project),
-          filter.field('type').equals(SecretType.PULL_SECRET),
+          filter.field('type').equals(SecretType.SSH_PUBLIC_KEY),
         ),
       )}
-      label={t('Pull secret secret')}
+      label={t('SSH public key')}
       name={name}
       fieldId={name.replace(/\./g, '-')}
-      isRequired
       isDisabled={isDisabled}
     />
   );
 };
 
-export default PullSecretField;
+export default SshPublicKeySecretField;

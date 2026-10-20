@@ -3,7 +3,7 @@ import { Formik } from 'formik';
 import { describe, expect, it } from 'vitest';
 
 import BootDiskSizeField from './BootDiskSizeField';
-import { renderWithProviders } from '../../../test-utils/TestProviders';
+import { renderWithProviders } from '../../../../test-utils/TestProviders';
 
 describe('BootDiskSizeField', () => {
   it('updates the Formik boot disk size', async () => {

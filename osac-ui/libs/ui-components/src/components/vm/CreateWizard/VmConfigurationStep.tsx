@@ -6,9 +6,9 @@ import {
   VM_USER_DATA_SECRET_FORM_PATH,
   VM_USER_DATA_SOURCE_FORM_PATH,
 } from './fields';
+import ComputeInstanceTypeField from './fields/ComputeInstanceTypeField';
 import OsacForm from '../../Form/OsacForm';
 import UserDataField from '../../Form/UserDataField';
-import ComputeInstanceTypeField from '../../ProvisioningWizard/fields/ComputeInstanceTypeField';
 import ProvisioningField from '../../ProvisioningWizard/fields/ProvisioningField';
 
 export const VmConfigurationStep = () => {

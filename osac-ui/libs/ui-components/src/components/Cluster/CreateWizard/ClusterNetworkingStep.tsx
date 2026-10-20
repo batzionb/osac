@@ -1,9 +1,9 @@
 import { FormSection, Stack, StackItem } from '@patternfly/react-core';
 
+import ClusterPodCidrField from './fields/ClusterPodCidrField';
+import ClusterServiceCidrField from './fields/ClusterServiceCidrField';
 import { useTranslation } from '../../../hooks/useTranslation';
 import OsacForm from '../../Form/OsacForm';
-import ClusterPodCidrField from '../../ProvisioningWizard/fields/ClusterPodCidrField';
-import ClusterServiceCidrField from '../../ProvisioningWizard/fields/ClusterServiceCidrField';
 import NetworkFields from '../../ProvisioningWizard/fields/NetworkFields';
 import ProvisioningField from '../../ProvisioningWizard/fields/ProvisioningField';
 

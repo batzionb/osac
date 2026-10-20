@@ -1,6 +1,6 @@
-import type { ProvisioningFieldControlProps } from './provisioningFieldValue';
-import { useTranslation } from '../../../hooks/useTranslation';
-import { InputField } from '../../Form/InputField';
+import { useTranslation } from '../../../../hooks/useTranslation';
+import { InputField } from '../../../Form/InputField';
+import type { ProvisioningFieldControlProps } from '../../../ProvisioningWizard/fields/provisioningFieldValue';
 
 interface ClusterPodCidrFieldProps extends ProvisioningFieldControlProps {
   fieldId?: string;

@@ -17,7 +17,7 @@ export const provisioningFieldValue = <T>(value: T, locked = false): Provisionin
 
 /** Extracts a catalog policy's backend value without deserializing it for a form. */
 export const getFieldFromCatalogItemPolicy = <V>(
-  policy: FieldPolicyLike<unknown>,
+  policy: FieldPolicyLike<V>,
   defaultValue: V,
 ): ProvisioningFieldValue<V> => {
   if (policy?.behavior?.case === 'locked') {

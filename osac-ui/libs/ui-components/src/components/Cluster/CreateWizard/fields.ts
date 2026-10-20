@@ -109,11 +109,15 @@ export const getInitialFormValues = (catalogItem?: ClusterCatalogItem): ClusterW
       ...values.spec,
       sshPublicKey: getFieldFromCatalogItemPolicy(fields?.sshPublicKey, ''),
       pullSecretSecret: (() => {
-        const field = getFieldFromCatalogItemPolicy(fields?.pullSecretSecret, { name: '' });
+        const field = getFieldFromCatalogItemPolicy<{ name: string }>(fields?.pullSecretSecret, {
+          name: '',
+        });
         return provisioningFieldValue(field.value.name ?? '', field.locked);
       })(),
       versionName: (() => {
-        const field = getFieldFromCatalogItemPolicy(fields?.version, { name: '' });
+        const field = getFieldFromCatalogItemPolicy<{ name: string }>(fields?.version, {
+          name: '',
+        });
         return provisioningFieldValue(field.value.name ?? '', field.locked);
       })(),
       nodeSetRows: nodeSetRowsFromPolicy(fields?.nodeSets),

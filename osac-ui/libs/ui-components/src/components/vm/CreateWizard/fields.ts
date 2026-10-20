@@ -108,7 +108,9 @@ export const getComputeInstanceInitialValues = (
       ...values.spec,
       userData: getFieldFromCatalogItemPolicy(catalogItem.fields?.userData, ''),
       sshKey: (() => {
-        const field = getFieldFromCatalogItemPolicy(catalogItem.fields?.sshKey, { name: '' });
+        const field = getFieldFromCatalogItemPolicy<{ name: string }>(catalogItem.fields?.sshKey, {
+          name: '',
+        });
         return provisioningFieldValue(field.value.name ?? '', field.locked);
       })(),
       diskImage: getFieldFromCatalogItemPolicy(
@@ -116,10 +118,10 @@ export const getComputeInstanceInitialValues = (
         emptyResourceSelectValue(),
       ),
       instanceType: (() => {
-        const field = getFieldFromCatalogItemPolicy(catalogItem.fields?.instanceType, {
-          id: '',
-          name: '',
-        });
+        const field = getFieldFromCatalogItemPolicy<{ id: string; name: string }>(
+          catalogItem.fields?.instanceType,
+          { id: '', name: '' },
+        );
         return provisioningFieldValue(field.value.id || field.value.name || '', field.locked);
       })(),
       bootDisk: {

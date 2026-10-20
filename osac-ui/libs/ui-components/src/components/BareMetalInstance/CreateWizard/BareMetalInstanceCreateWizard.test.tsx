@@ -3,7 +3,7 @@ import { Code, ConnectError } from '@connectrpc/connect';
 import { screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { BareMetalInstanceCatalogItemSchema } from '@osac/types';
+import { BareMetalInstanceCatalogItemSchema, BareMetalInstanceRunStrategy } from '@osac/types';
 
 import BareMetalInstanceCreateWizard from './BareMetalInstanceCreateWizard';
 import { renderWithProviders } from '../../../test-utils/TestProviders';
@@ -37,6 +37,7 @@ const bareMetalCatalogItem = create(BareMetalInstanceCatalogItemSchema, {
   description: 'A small bare metal instance',
   published: true,
   fields: {
+    runStrategy: { behavior: { case: 'locked', value: BareMetalInstanceRunStrategy.HALTED } },
     userData: { behavior: { case: 'locked', value: '#cloud-config\nruncmd: []' } },
     instanceType: {
       behavior: { case: 'locked', value: { id: INSTANCE_TYPE_ID, name: 'standard' } },
@@ -115,6 +116,7 @@ describe('BareMetalInstanceCreateWizard', () => {
     expect(request.object?.spec).not.toHaveProperty('instanceType');
     expect(request.object?.spec).not.toHaveProperty('diskImage');
     expect(request.object?.spec).not.toHaveProperty('userData');
+    expect(request.object?.spec).not.toHaveProperty('runStrategy');
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/bare-metal/bm-new-1');

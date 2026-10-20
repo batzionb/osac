@@ -37,6 +37,7 @@ const BareMetalInstanceCreateWizard = ({ initialCatalogItemId, onClosed }: Props
   );
   const [activeStep, setActiveStep] = useState<BareMetalWizardStepId>('catalog');
   const [validationAlert, setValidationAlert] = useState(false);
+  const [selectedCatalogItem, setSelectedCatalogItem] = useState<BareMetalInstanceCatalogItem>();
   const steps = ['catalog', 'general', 'configuration', 'networking', 'review'] as const;
   const stepLabels: Record<BareMetalWizardStepId, string> = {
     catalog: t('Catalog item'),
@@ -49,7 +50,12 @@ const BareMetalInstanceCreateWizard = ({ initialCatalogItemId, onClosed }: Props
   const handleSubmit = useCallback(
     async (values: BareMetalInstanceWizardValues) => {
       try {
-        const created = await provision.mutateAsync(buildBareMetalInstanceCreatePayload(values));
+        const created = await provision.mutateAsync(
+          buildBareMetalInstanceCreatePayload(
+            values,
+            selectedCatalogItem ?? catalogItemQuery.data?.object,
+          ),
+        );
         if (created?.id) {
           navigate(`/bare-metal/${created.id}`);
         }
@@ -57,7 +63,7 @@ const BareMetalInstanceCreateWizard = ({ initialCatalogItemId, onClosed }: Props
         // Surfaced via provision.error in the footer; nothing further to do here.
       }
     },
-    [navigate, provision],
+    [catalogItemQuery.data?.object, navigate, provision, selectedCatalogItem],
   );
 
   const initialValues = useMemo(
@@ -104,6 +110,7 @@ const BareMetalInstanceCreateWizard = ({ initialCatalogItemId, onClosed }: Props
                     catalogService={BareMetalInstanceCatalogItems}
                     isInitializing={Boolean(initialCatalogItemId) && catalogItemQuery.isPending}
                     getInitialFormValues={getBareMetalInstanceInitialValues}
+                    onCatalogItemSelected={setSelectedCatalogItem}
                   />
                 )}
                 {activeStep === step && step === 'general' && <BareMetalGeneralStep />}

@@ -73,7 +73,6 @@ const CatalogItemDetails = ({
                   parentTo="/catalog"
                   parentLabel={t('Catalog')}
                   resourceName={resourceName}
-                  description={item.description?.trim() || item.metadata?.description?.trim()}
                   titlePrefix={titlePrefix}
                   titleAddon={
                     showStatus

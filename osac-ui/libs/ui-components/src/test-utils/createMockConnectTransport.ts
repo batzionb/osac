@@ -269,19 +269,12 @@ const matchesStringEqualityFilter = (
   field: string,
   value: string | undefined,
 ): boolean => {
-  const prefix = field + ' == "';
-  if (!filter?.startsWith(prefix)) {
+  if (!filter) {
     return true;
   }
-  if (!filter.endsWith('"')) {
-    return false;
-  }
-  const encodedValue = filter.slice(prefix.length, -1);
-  try {
-    return value === JSON.parse('"' + encodedValue + '"');
-  } catch {
-    return false;
-  }
+  const escapedField = field.replaceAll('.', '\\.');
+  const match = filter.match(new RegExp(`${escapedField} == "([^"]+)"`));
+  return !match || match[1] === value;
 };
 
 const matchesVirtualNetworkScopeFilter = (

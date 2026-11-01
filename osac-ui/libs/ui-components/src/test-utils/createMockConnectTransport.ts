@@ -198,6 +198,7 @@ import {
   StorageTiersListResponseSchema,
 } from '@osac/types/private';
 
+import { catalogItemMatchesListFilter } from '../api/v1/catalog-item-list-filter';
 import { UnauthorizedError } from '../utils/unauthorizedError';
 
 export type MockApiFixtures = {
@@ -614,7 +615,9 @@ export const createMockConnectTransport = (
       });
 
       router.service(ComputeInstanceCatalogItems, {
-        list: () => ({ items: catalogItems }),
+        list: (req) => ({
+          items: catalogItems.filter((item) => catalogItemMatchesListFilter(item, req.filter)),
+        }),
         get: (req) => ({
           object: catalogItems.find((i) => i.id === req.id),
         }),
@@ -662,7 +665,11 @@ export const createMockConnectTransport = (
       });
 
       router.service(ClusterCatalogItems, {
-        list: () => ({ items: clusterCatalogItems }),
+        list: (req) => ({
+          items: clusterCatalogItems.filter((item) =>
+            catalogItemMatchesListFilter(item, req.filter),
+          ),
+        }),
         get: (req) => ({
           object: clusterCatalogItems.find((i) => i.id === req.id),
         }),
@@ -687,7 +694,11 @@ export const createMockConnectTransport = (
       });
 
       router.service(BareMetalInstanceCatalogItems, {
-        list: () => ({ items: bareMetalCatalogItems }),
+        list: (req) => ({
+          items: bareMetalCatalogItems.filter((item) =>
+            catalogItemMatchesListFilter(item, req.filter),
+          ),
+        }),
         get: (req) => ({
           object: bareMetalCatalogItems.find((i) => i.id === req.id),
         }),
